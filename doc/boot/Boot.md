@@ -35,7 +35,7 @@ It loads the Loader (Second step of the bootloader).
 | 8 | 4 | LBA of First sector |
 | 12 | 4 | Numbers of sectors |
 ## Check for LBA
-```x86asm
+```assembly
 mov ah, 0x41
 mov bx, 0x55aa
 int 0x13            ; Interrupt for Low Level Disk Services
@@ -44,7 +44,7 @@ If there is a read error with the disk service, the carry bit is set.
 If after interrupt bx is not equal 0xaa55 then LBA is not supported
 ## Load Loader
 *Small explenetion on how to load with LBA*
-```x86asm
+```assembly
 ReadPackage:
 	db 0x10	; Length of ReadPackage struct
 	db 0		; Always Zero
@@ -56,7 +56,7 @@ ReadPackage:
 ```
 We read 5 sectors from the img file starting at sector 1 (Sector 0 was bootloader).
 We load it directly above the Bootloader in RAM (Bootloader 0x7c00 + 512 = 0x7e00).
-```x86asm
+```assembly
 	mov si, ReadPackage
 	mov ah, 0x42        ; Code, that we want to use discExtensionService
 	mov dl, [driveId]   ; From which drive we want to load
