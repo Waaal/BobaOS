@@ -1,6 +1,6 @@
 # Loader
 *This document is a basic Explenation what the loader from the BobaOS does.*
-## Job of the bootloader
+## Job of the loader
 The loader is loaded and called from the bootloader.
 Its basic job is to prepare everything for the kernel and load the kerner.
 In detail it does the following:
@@ -47,14 +47,14 @@ If A20 line is off, we stop the boot process.
 mov ax, 0xFFFF
 mov es, ax
 mov word[0x80C8], 0xa200
-mov word[ds:0x80D8], 0xb200     ; 0xFFFF * 16 + 0x80D8 = 0x1080C8
+mov word[es:0x80D8], 0xb200     ; 0xFFFF * 16 + 0x80D8 = 0x1080C8
 cmp word[0x80C8], 0xb200
 je A20IsOffErr
 ```
 
 ## Set Video mode 
 We set video mode to text.
-After we made the jump to protect mode, we cannot write to the screen anymore through BIOS functions, because they are not available anymore. 
+After we made the jump to protect mode, we cannot write to the screen anymore through BIOS functions, because they are not available in protected mode. 
 
 In Video mode we have 20 rows and 80 columns we cann fill with characters. One Character is 2 byte. First byte is ascii char value, the second byte is char attribute.
 The first 4 bit of the attribute byte are forground color. The second 4 bit are background color.
@@ -82,3 +82,9 @@ PrintMessage:
     add si, 1               ; Move 1 byte forward to next char in Message
     loop PrintMessage
 ```
+## Load Kernel
+**[Not Implemented]**
+## Prepare for Protected mode
+**[Not Implemented]**
+## Jump to Protected mode
+**[Not Implemented]**

@@ -1,5 +1,5 @@
 # Bootloader
-*This document is a basic Explenation what the Bootloader from the BobaOS does*
+*This document is a basic Explenation what the Bootloader from the BobaOS does.*
 ## Job of the bootloader
 Our bootloader does 2 things:
 
@@ -46,7 +46,7 @@ If after interrupt bx is not equal 0xaa55 then LBA is not supported
 *Small explenetion on how to load with LBA*
 ```assembly
 ReadPackage:
-	db 0x10	; Length of ReadPackage struct
+	db 0x10		; Length of ReadPackage struct
 	db 0		; Always Zero
 	dw 5		; Numbers of Sectors we want to read from the img file
 	dw 0x7e00	; Destination RAM address
