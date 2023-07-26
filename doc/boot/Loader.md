@@ -67,11 +67,12 @@ mov ax, 3       ; 3 means text mode
 int 0x10        ; Call Video service to change video mode.
 ```
 Write with video mode:
-```x86asm
+```assembly
     mov si, Message
     mov cx, MessageLen
     mov ax, 0xb800
     mov es, ax
+    xor di, di
 PrintMessage:
     mov al, [si]
     mov[es:di], al          ; Write character char in first byte
