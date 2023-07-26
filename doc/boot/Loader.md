@@ -13,14 +13,14 @@ In detail it does the following:
 
 ## Check CPU features
 Check for extended function. Extendet function is needed, to check for long mode and other CPU features.
-```x86asm
+```assembly
 mov eax, 0x8000000
 cpuid
 cmp eax, 0x80000001
 ```
 If eax is less than 0x80000001 that means that exteded function is not available.
 If extended function is available check for long mode.
-```x86asm
+```assembly
 mov eax, 0x80000001
 cpuid 
 est edx, 1 << 29      ; Check for bit 29, which is long mde
@@ -42,7 +42,7 @@ Then we write a **different** value to 0x1080C8.
 If we now look at 0x0080C8 and check if the value is the same value we wrote in 0x1080C8, that means that A20 Line is off, because 0x1080C8 got truncatet and overwrote 0x0080C8.
 
 If A20 line is off, we stop the boot process.
-```x86asm
+```assembly
 ; Note - please dont write in random memory addresses. This is just a example.
 mov ax, 0xFFFF
 mov es, ax
@@ -62,7 +62,7 @@ The first 4 bit of the attribute byte are forground color. The second 4 bit are 
 Video memory starts at 0xb8000.
 We write to the screen, by just writing the bytes in video memory.
 Enable video mode:
-```x86asm
+```assembly
 mov ax, 3       ; 3 means text mode
 int 0x10        ; Call Video service to change video mode.
 ```
