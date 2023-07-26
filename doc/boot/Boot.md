@@ -5,7 +5,7 @@ Our bootloader does 2 things:
 
 It checks if LBA (Logical Block Addressing) is enabled, because we use LBA to load the next files. If LBA is not supportet the Bootloader stops and prints a error message.
 
-It load the Loader (Next step of the bootloader).
+It loads the Loader (Second step of the bootloader).
 
 
 ## Basic
@@ -46,18 +46,17 @@ If after interrupt bx is not equal 0xaa55 then LBA is not supported
 *Small explenetion on how to load with LBA*
 ```x86asm
 ReadPackage:
-	db	0x10    ; Length of ReadPackage struct
-	db 0        ; Always Zero
-    dw	5		; Numbers of Sectors we want to read from the img file
-    dw	0x7e00	; Destination RAM address
-	dw	0		; in memory page zero
-    dd	1		; img file read start sector
-	dd	0		; more storage bytes
+	db 0x10	; Length of ReadPackage struct
+	db 0		; Always Zero
+	dw 5		; Numbers of Sectors we want to read from the img file
+	dw 0x7e00	; Destination RAM address
+	dw 0		; in memory page zero
+	dd 1		; img file read start sector
+	dd 0		; more storage bytes
 ```
 We read 5 sectors from the img file starting at sector 1 (Sector 0 was bootloader).
 We load it directly above the Bootloader in RAM (Bootloader 0x7c00 + 512 = 0x7e00).
 ```x86asm
-ReadPackage:
 	mov si, ReadPackage
 	mov ah, 0x42        ; Code, that we want to use discExtensionService
 	mov dl, [driveId]   ; From which drive we want to load
