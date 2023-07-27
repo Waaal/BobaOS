@@ -83,8 +83,50 @@ PrintMessage:
     loop PrintMessage
 ```
 ## Load Kernel
-**[Not Implemented]**
+Next step is to load the kernel. The memory reserved for the kernel is 500kb.
 ## Prepare for Protected mode
-**[Not Implemented]**
+We need to set up a few thing before we leave real mode and enter protected mode
+- GDT (Global Descriptor Table)
+- IDT (Interrupt Descriptor Table)
+
+### Global Descriptor Table
+GDT is a struct which lives in memory and is used by the CPU to protect memory.
+A Table entry (DPL = Descriptior Table Entry) is 8 byte long. The first 8 bytes need to be empty in the GDT.
+A GDT can have up to 8000 entries.
+
+When the processor accesses some memory, the value in the segment register is an index in the GDT. Instead in real mode, where the value in the segment register just holds a offset and is shiftet to the left 4 bits.
+
+A entry in the GDT (a DPL) holds the **base address** of a segment, **segment limit** and the **segment attributes**. 
+The segment attributes hold a priviledge level, to see if we have access to this memory segment. So with a GDT we can protect memory with different privileges levels from the user and user applications.
+
+*Note: There is also a LDT. A Local Descriptor Table. It is build exactly like a GDT with the difference, that every task/thread can have its own LDT. So a LDT can exists for every task/thread while a GDT exists only one times.*
+
+##### How to check priviledges?
+To find out at which priviledge level we are currently running (0,1,2,3) we need to check the CPL (Current Privilege Level). The CPL is stored in the lower 2 bits of cs and ss register.
+So if the lower 2 bits of ss and cs register are 0, we are running in ring0.
+
+If we try to access memory, our RPL (Requestet Privilege Level, which is stored in the selectors) is compared against the DPL, which can be found in the GDT for the current sector, and if this tests fails, we dont have access and a exception is generated.
+
+##### Example Data in a Segment Selector:
+
+```
+15                      3  2  1  0
+|     Selected Index    |  TI | RPL |
+```
+**Selected Index:** Points to the Entry in the GDT
+**TL:** Can be 0 or 1. 0 Means check in GDT. 1 Means check in LDT.
+**RPL:** Requested priviledge level. The priviledges we have.
+
+**[NOT FINSIHED]**
+
+### Interrupt Descriptor Table
+IDT is a struct which lives in memory and is used by the CPU to find interrupt handlers.
+A interrupt is a signal, send from a device to the CPU. If the CPU accepts a interrupt, it will stop the current task and process the interrupt. A IDT can have up to 256 entries.
+
+Different interrupts have different interrupt numbers. With a IDT a CPU can look up a interrupt number and find the handler, for this specific event. For example the interrupt from a keyboard has the number 1. So the CPU searches in the IDT for a handler, which can process interrupts with the interrupt number 1 (a keyboard handler).
+
+A entry in an IDT holds in which **segment** the interrupt service routine is locatet and the **offset** to the routine.
+
+**[NOT FINSIHED]**
 ## Jump to Protected mode
 **[Not Implemented]**
