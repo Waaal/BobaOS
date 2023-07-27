@@ -7,7 +7,7 @@ In detail it does the following:
 - Check CPU features (Long mode, etc)
 - Get Memory map info
 - Test for A20 Line
-- Set the Vido mode
+- Set the Video mode
 - Set up and jump to protected mode
 - Load the kernel
 
@@ -105,15 +105,15 @@ The segment attributes hold a priviledge level, to see if we have access to this
 To find out at which priviledge level we are currently running (0,1,2,3) we need to check the CPL (Current Privilege Level). The CPL is stored in the lower 2 bits of cs and ss register.
 So if the lower 2 bits of ss and cs register are 0, we are running in ring0.
 
-If we try to access memory, our RPL (Requestet Privilege Level, which is stored in the selectors) is compared against the DPL, which can be found in the GDT for the current sector, and if this tests fails, we dont have access and a exception is generated.
+If we try to access memory, our RPL (Requestet Privilege Level, which is stored in the lower to bit of segement register) is compared against the DPL, which can be found in the GDT for the current sector, and if this tests fails, we dont have access and a exception is generated.
 
-##### Example Data in a Segment Selector:
+##### Example Data in a Segment Register:
 
 ```
 15                      3  2  1  0
 |     Selected Index    |  TI | RPL |
 ```
-**Selected Index:** Points to the Entry in the GDT
+**Selected Index:** Points to the Entry in the GDT.
 **TL:** Can be 0 or 1. 0 Means check in GDT. 1 Means check in LDT.
 **RPL:** Requested priviledge level. The priviledges we have.
 

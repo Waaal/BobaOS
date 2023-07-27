@@ -7,14 +7,13 @@ It checks if LBA (Logical Block Addressing) is enabled, because we use LBA to lo
 
 It loads the Loader (Second step of the bootloader).
 
-
 ## Basic
  - Has to be exactly **512** bytes long. 
  - The last 2 bytes need to be 0xaa 0x55, so that the BIOS, which loads the Bootloader, knows that it is    bootable.
  - BIOS always load bootloader into memory address 0x7c00.
  - CPU is in real mode. Only 16 bytes and we still can use BIOS calls.
 
-## Byte distribution
+## Byte distribution in bootloader
 512 bytes in toal
 | Offset | Bytes |Descritpion |
 | ------ | ------ | ------ |
@@ -23,6 +22,7 @@ It loads the Loader (Second step of the bootloader).
 | 444| 2 | NULL |
 | 446 | 64 | 4*16 byte Partition entrys |
 | 510 | 2 |  aah 55h bootable signature|
+*It also boots without Signature, NULL and wihtout partition entrys. Importand is the code and the boot signature*
 
 ### Partition entry description
 16 bytes in total
@@ -34,6 +34,7 @@ It loads the Loader (Second step of the bootloader).
 | 5 | 3 | CHS value of last absolute sector |
 | 8 | 4 | LBA of First sector |
 | 12 | 4 | Numbers of sectors |
+*Note: Partition entrys are probably obsolete. Not needed IN THE BOOTLOADER on modern systems.*
 ## Check for LBA
 ```assembly
 mov ah, 0x41
@@ -65,3 +66,18 @@ We load it directly above the Bootloader in RAM (Bootloader 0x7c00 + 512 = 0x7e0
 
 ### Worth to mention "driveId"
 Before the BIOS calls our bootloader. He writes the driveId, where our image file is located, into the **dl** register. We safe this into the "driveId" variable, because we need this id every time we want to read from our img file.
+## Segmentation registers
+The segmentation registers are:
+- CS: Current segment
+- DS: Data segment
+- SS: Stack segment
+- ES: Extra sagment
+
+The use in **Real mode** is to access addresses, that are larger than 16bit.
+```assembly
+	; I want to access address 0xC8000. 0xC8000 is too large for 16 bit
+	mov ax, 0xC800
+	mov es, [ax]			; move 0xC800 into Segmentation register es
+	mov ax, byte[ax:0x00]	; Access variable 0xC8000 because everything in the Segmentation registers is shiftet 4 byte.
+							; ax:0x00 = 0xC800:0x00 = 0xC800 * 16 + 0x00 = 0xC8000
+```
