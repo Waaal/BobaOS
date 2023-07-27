@@ -22,7 +22,8 @@ It loads the Loader (Second step of the bootloader).
 | 444| 2 | NULL |
 | 446 | 64 | 4*16 byte Partition entrys |
 | 510 | 2 |  aah 55h bootable signature|
-*It also boots without Signature, NULL and wihtout partition entrys. Importand is the code and the boot signature*
+
+*Note: It also boots without Signature, NULL and wihtout partition entrys. Important is the code and the boot signature*
 
 ### Partition entry description
 16 bytes in total
@@ -34,6 +35,7 @@ It loads the Loader (Second step of the bootloader).
 | 5 | 3 | CHS value of last absolute sector |
 | 8 | 4 | LBA of First sector |
 | 12 | 4 | Numbers of sectors |
+
 *Note: Partition entrys are probably obsolete. Not needed IN THE BOOTLOADER on modern systems.*
 ## Check for LBA
 ```assembly
