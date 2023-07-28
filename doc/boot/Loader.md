@@ -214,7 +214,7 @@ Code32:         ; Second entry for the Code of the kernel
     db 0xcf     ; Set Flags to 1100 and Limit to 1111
     db 0
 Data32:         ; Third Entry for the Data of the Kernel
-    dw 0xfff    ; Limi to maximum
+    dw 0xfff    ; Limit to maximum
     dw 0        ; Base to 0
     db 0    
     db 0x92     ; Access bytes to 1001 0010
@@ -223,9 +223,10 @@ Data32:         ; Third Entry for the Data of the Kernel
 ```
 
 **Code access explenation:**
+
 We set P bit to 1 which means this sector is valid.
 
-We set DPL bits to 0 which means to access this sector we ned ring0 access rights 
+We set DPL bits to 0 which means to access this sector we need ring0 access rights 
 
 We set S bit to 1 which means this is a code or data segment
 
@@ -249,6 +250,7 @@ And the last bit is reserved
 
 
 **Data Access bit explenation:**
+
 We set P bit to 1 which means this sector is valid.
 
 We set DPL bits to 0 which means to access this sector we ned ring0 access rights 
@@ -276,7 +278,7 @@ GdtPtr32:
     lgdt [GdtPtr32]     ; Load our GDT
     lidt [IdtPtr32]     ; Load IDT Table. (Empty pointer struct. Same Structured as GdtPtr32 bit with all 0s)
 
-    mov eax, cr0        ; Cr0 is a CPU controll register. We load the cr0 controll register and set bit 1 to 1. Enabling protected mode 
+    mov eax, cr0        ; Cr0 is a CPU controll register. We load the cr0 controll register and set it to 1. Enabling protected mode 
     or eax, 1
     mov cr0, eax
 
@@ -287,7 +289,7 @@ GdtPtr32:
     jmp 8:PMEntry
 [Bits32]
 PMEntry:
-    ; We load 10 in all the other segment registers, for the Data. 0x10 = 16 = 00010000 = Selected index is 2; TI = 0; RPL = 0
+    ; We load 10 in all the other segment registers for the Data. 0x10 = 16 = 00010000 = Selected index is 2; TI = 0; RPL = 0
     mov ax, 0x10 
     mov es, ax
     mov ds, ax
