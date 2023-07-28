@@ -114,7 +114,9 @@ If we try to access memory, our RPL (Requestet Privilege Level, which is stored 
 |     Selected Index    |  TI | RPL |
 ```
 **Selected Index:** Points to the Entry in the GDT.
+
 **TL:** Can be 0 or 1. 0 Means check in GDT. 1 Means check in LDT.
+
 **RPL:** Requested priviledge level. The priviledges we have.
 
 ##### Data in a Table Entry:
@@ -123,7 +125,8 @@ The Data Structure of a DPL is like this:
 63      56 55   52 51   48 47           40 39       32 31           16 15           0
 |   Base  | Flags | Limit | Access Bytes  |    Base   |      Base     |     Limit   |
 ```
-**Base:** A 32 Bit value containing the address, where the segment begins
+**Base:** A 32 Bit value containing the address, where the segment begins.
+
 **Limit:** A 20 bit value containing the maximum address unit of this segment. Either in byte units or in 4KiB pages. (Flags bit 3)
 
 *Note: In 64 bit mode Base and Limit are ignored. Each entry covers the entire linear address space regardless of what they are set to*
