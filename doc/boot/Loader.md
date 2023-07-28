@@ -131,7 +131,7 @@ The Data Structure of a DPL is like this:
 
 *Note: In 64 bit mode Base and Limit are ignored. Each entry covers the entire linear address space regardless of what they are set to*
 
-
+---
 **Access Bytes:**
 ```
  7   6   5   4   3   2   1   0
@@ -155,8 +155,9 @@ The Data Structure of a DPL is like this:
 
 **A:** Access bit. Best practice is to leave this at 0. CPU will set it, when the segment is accessed.
 
-
+---
 **Access Bytes (For system segment)**
+
 The Access bytes in a system segment are stored differently, than the normal access bytes.
 ```
  7   6   5   4   3   2   1   0
@@ -174,7 +175,7 @@ The Access bytes in a system segment are stored differently, than the normal acc
     - 0x9 64-bit TSS (available)
     - 0xB 64-bit TSS (busy)
 
-
+---
 **Flags:**
 ```
  3  2   1   0
