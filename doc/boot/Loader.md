@@ -91,12 +91,12 @@ We need to set up a few thing before we leave real mode and enter protected mode
 
 ### Global Descriptor Table
 GDT is a struct which lives in memory and is used by the CPU to protect memory.
-A Table entry (DPL = Descriptior Table Entry) is 8 byte long. The first 8 bytes need to be empty in the GDT.
+A Table entry is 8 byte long. The first 8 bytes need to be empty in the GDT.
 A GDT can have up to 8000 entries.
 
 When the processor accesses some memory, the value in the segment register is an index in the GDT. Instead in real mode, where the value in the segment register just holds a offset and is shiftet to the left 4 bits.
 
-A entry in the GDT (a DPL) holds the **base address** of a segment, **segment limit** and the **segment attributes**. 
+A entry in the GDT holds the **base address** of a segment, **segment limit** and the **segment attributes**. 
 The segment attributes hold a priviledge level, to see if we have access to this memory segment. So with a GDT we can protect memory with different privileges levels from the user and user applications.
 
 *Note: There is also a LDT. A Local Descriptor Table. It is build exactly like a GDT with the difference, that every task/thread can have its own LDT. So a LDT can exists for every task/thread while a GDT exists only one times.*
@@ -117,8 +117,44 @@ If we try to access memory, our RPL (Requestet Privilege Level, which is stored 
 **TL:** Can be 0 or 1. 0 Means check in GDT. 1 Means check in LDT.
 **RPL:** Requested priviledge level. The priviledges we have.
 
-**[NOT FINSIHED]**
+##### Data in a Table Entry:
+The Data Structure of a DPL is like this:
+```
+63      56 55   52 51   48 47           40 39       32 31           16 15           0
+|   Base  | Flags | Limit | Access Bytes  |    Base   |      Base     |     Limit   |
+```
+**Base:** A 32 Bit value containing the address, where the segment begins
+**Limit:** A 20 bit value containing the maximum address unit of this segment. Either in byte units or in 4KiB pages. (Flags bit 3)
 
+*Note: In 64 bit mode Base and Limit are ignored. Each entry covers the entire linear address space regardless of what they are set to*
+
+**Access Bytes:**
+```
+ 7   6   5   4   3   2   1   0
+|P |  DPL |  S|  E|  DC| RW| A|
+```
+**P:** Present bit. Allows an entry to refer to a valid segment. Must be 1 for any valid segment
+**DPL:** Descriptor privilege level. Contains the privileges level of the segment.
+**S:** Descriptor type. 0 = Descriptor defines a System segment. 1 = Descriptor defines a code or data segment.
+**E:** Executable bit. = 0 Descriptor defines a Data sagment. 1 = Descriptor defines a code segment, which is executable.
+**DC:** Direction bit/Conforming bit
+- For Data (Direction bit): 0 = segment gorws up. 1 = segment grows down (Offset has to be grather than the limit).
+- For Code (Conforming bit): 0 = Code can only be executet from the ring, which is set in DPL 1 = Code can be executet with equal or lower priviledges rights.
+
+**RW:** Readable/Writable bit.
+- For Data (Writable): 0 = Write is denied. 1 = Write is allowed. Read is always allowed
+- For Code (Readable): 0 = Read is not allowed. 1 = Read is allowed. Write is never allowed
+
+**A:** Access bit. Best practice is to leave this at 0. CPU will set it, when the segment is accessed.
+
+**Flags:**
+```
+ 3  2   1   0
+|G |DB| L|  Reserved
+ ```
+**G:** Granularity flag. The size the Limit value is scaled by. 0 = The Limit is 1 byte blocks. 1 = The Limit is 4 kiB blocks.
+**DB:** Size flag. 0 = describtor defines a 16 bit protected mode segment. 1 = descriptor defines a 32 bit portected mode.
+**L:** Long mode code flag. 1 = defines a 64 bit code segment. If DB is 1 then L should always be 0.
 ### Interrupt Descriptor Table
 IDT is a struct which lives in memory and is used by the CPU to find interrupt handlers.
 A interrupt is a signal, send from a device to the CPU. If the CPU accepts a interrupt, it will stop the current task and process the interrupt. A IDT can have up to 256 entries.
