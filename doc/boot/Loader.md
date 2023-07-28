@@ -134,9 +134,13 @@ The Data Structure of a DPL is like this:
 |P |  DPL |  S|  E|  DC| RW| A|
 ```
 **P:** Present bit. Allows an entry to refer to a valid segment. Must be 1 for any valid segment
+
 **DPL:** Descriptor privilege level. Contains the privileges level of the segment.
+
 **S:** Descriptor type. 0 = Descriptor defines a System segment. 1 = Descriptor defines a code or data segment.
+
 **E:** Executable bit. = 0 Descriptor defines a Data sagment. 1 = Descriptor defines a code segment, which is executable.
+
 **DC:** Direction bit/Conforming bit
 - For Data (Direction bit): 0 = segment gorws up. 1 = segment grows down (Offset has to be grather than the limit).
 - For Code (Conforming bit): 0 = Code can only be executet from the ring, which is set in DPL 1 = Code can be executet with equal or lower priviledges rights.
@@ -153,7 +157,9 @@ The Data Structure of a DPL is like this:
 |G |DB| L|  Reserved
  ```
 **G:** Granularity flag. The size the Limit value is scaled by. 0 = The Limit is 1 byte blocks. 1 = The Limit is 4 kiB blocks.
+
 **DB:** Size flag. 0 = describtor defines a 16 bit protected mode segment. 1 = descriptor defines a 32 bit portected mode.
+
 **L:** Long mode code flag. 1 = defines a 64 bit code segment. If DB is 1 then L should always be 0.
 ### Interrupt Descriptor Table
 IDT is a struct which lives in memory and is used by the CPU to find interrupt handlers.
