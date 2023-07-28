@@ -91,19 +91,23 @@ We need to set up a few thing before we leave real mode and enter protected mode
 
 ### Global Descriptor Table
 GDT is a struct which lives in memory and is used by the CPU to protect memory.
-A Table entry (DPL = Descriptior Table Entry) is 8 byte long. The first 8 bytes need to be empty in the GDT.
+A Table entry is 8 byte long. The first 8 bytes need to be empty in the GDT.
 A GDT can have up to 8000 entries.
 
 When the processor accesses some memory, the value in the segment register is an index in the GDT. Instead in real mode, where the value in the segment register just holds a offset and is shiftet to the left 4 bits.
 
-A entry in the GDT (a DPL) holds the **base address** of a segment, **segment limit** and the **segment attributes**. 
+A entry in the GDT holds the **base address** of a segment, **segment limit** and the **segment attributes**. 
 The segment attributes hold a priviledge level, to see if we have access to this memory segment. So with a GDT we can protect memory with different privileges levels from the user and user applications.
 
 *Note: There is also a LDT. A Local Descriptor Table. It is build exactly like a GDT with the difference, that every task/thread can have its own LDT. So a LDT can exists for every task/thread while a GDT exists only one times.*
 
 ##### How to check priviledges?
-To find out at which priviledge level we are currently running (0,1,2,3) we need to check the CPL (Current Privilege Level). The CPL is stored in the lower 2 bits of cs and ss register.
+To find out at which priviledge level we are currently running (0,1,2,3) we need to check the CPL (Current Privilege Level). The CPL is stored in the lower 2 bits of cs, ds and or ss register.
+cs is mosty for code access. ds is mostly for data access.
 So if the lower 2 bits of ss and cs register are 0, we are running in ring0.
+
+Normally a user/process/kernel has 2 entrys in the GDP. One for code and one for data.
+Example on a kernel:
 
 If we try to access memory, our RPL (Requestet Privilege Level, which is stored in the lower to bit of segement register) is compared against the DPL, which can be found in the GDT for the current sector, and if this tests fails, we dont have access and a exception is generated.
 
@@ -114,11 +118,78 @@ If we try to access memory, our RPL (Requestet Privilege Level, which is stored 
 |     Selected Index    |  TI | RPL |
 ```
 **Selected Index:** Points to the Entry in the GDT.
+
 **TL:** Can be 0 or 1. 0 Means check in GDT. 1 Means check in LDT.
+
 **RPL:** Requested priviledge level. The priviledges we have.
 
-**[NOT FINSIHED]**
+##### Data in a Table Entry:
+The Data Structure of a DPL is like this:
+```
+63      56 55   52 51   48 47           40 39       32 31           16 15           0
+|   Base  | Flags | Limit | Access Bytes  |    Base   |      Base     |     Limit   |
+```
+**Base:** A 32 Bit value containing the address, where the segment begins.
 
+**Limit:** A 20 bit value containing the maximum address unit of this segment. Either in byte units or in 4KiB pages. (Flags bit 3)
+
+*Note: In 64 bit mode Base and Limit are ignored. Each entry covers the entire linear address space regardless of what they are set to*
+
+---
+**Access Bytes:**
+```
+ 7   6   5   4   3   2   1   0
+|P |  DPL |  S|  E|  DC| RW| A|
+```
+**P:** Present bit. Allows an entry to refer to a valid segment. Must be 1 for any valid segment
+
+**DPL:** Descriptor privilege level. Contains the privileges level of the segment.
+
+**S:** Descriptor type. 0 = Descriptor defines a System segment. 1 = Descriptor defines a code or data segment.
+
+**E:** Executable bit. = 0 Descriptor defines a Data sagment. 1 = Descriptor defines a code segment, which is executable.
+
+**DC:** Direction bit/Conforming bit
+- For Data (Direction bit): 0 = segment gorws up. 1 = segment grows down (Offset has to be grather than the limit).
+- For Code (Conforming bit): 0 = Code can only be executet from the ring, which is set in DPL 1 = Code can be executet with equal or lower priviledges rights.
+
+**RW:** Readable/Writable bit.
+- For Data (Writable): 0 = Write is denied. 1 = Write is allowed. Read is always allowed
+- For Code (Readable): 0 = Read is not allowed. 1 = Read is allowed. Write is never allowed
+
+**A:** Access bit. Best practice is to leave this at 0. CPU will set it, when the segment is accessed.
+
+---
+**Access Bytes (For system segment)**
+
+The Access bytes in a system segment are stored differently, than the normal access bytes.
+```
+ 7   6   5   4   3   2   1   0
+|P |  DPL |  S|      Type    |
+```
+**Type:** Type of system segment.
+- Types in 32 bit protected mode:
+    - 0x1: 16-bit TSS (available)
+    - 0x2: LDT
+    - 0x3: 16-bit TSS (busy)
+    - 0x9: 32-bit TSS (available)
+    - 0xB: 32-bit TSS (busy)
+- Types in Long mode:
+    - 0x2 LDT
+    - 0x9 64-bit TSS (available)
+    - 0xB 64-bit TSS (busy)
+
+---
+**Flags:**
+```
+ 3  2   1   0
+|G |DB| L|  Reserved
+ ```
+**G:** Granularity flag. The size the Limit value is scaled by. 0 = The Limit is 1 byte blocks. 1 = The Limit is 4 kiB blocks.
+
+**DB:** Size flag. 0 = describtor defines a 16 bit protected mode segment. 1 = descriptor defines a 32 bit portected mode.
+
+**L:** Long mode code flag. 1 = defines a 64 bit code segment. If DB is 1 then L should always be 0.
 ### Interrupt Descriptor Table
 IDT is a struct which lives in memory and is used by the CPU to find interrupt handlers.
 A interrupt is a signal, send from a device to the CPU. If the CPU accepts a interrupt, it will stop the current task and process the interrupt. A IDT can have up to 256 entries.
@@ -129,4 +200,101 @@ A entry in an IDT holds in which **segment** the interrupt service routine is lo
 
 **[NOT FINSIHED]**
 ## Jump to Protected mode
-**[Not Implemented]**
+In order to jump to protected mode, we need to set up and fill a GDP with data.
+The most importand fields in the GDP, are the on for the Kernel. Because the Kernel (and the loader) needs to have rights after the jump.
+After the jump, the loader ist still active and uses the rights of the Kernel, to do his work.
+``` assembly
+Gdt32:
+    dq 0        ; Fist 8 bytes are emtpy
+Code32:         ; Second entry for the Code of the kernel
+    dw 0xffff   ; Set Limit to maximum
+    dw 0        ; Set Base address to 0
+    db 0        
+    db 0x9a     ; Access bytes to 1001 1010
+    db 0xcf     ; Set Flags to 1100 and Limit to 1111
+    db 0
+Data32:         ; Third Entry for the Data of the Kernel
+    dw 0xfff    ; Limit to maximum
+    dw 0        ; Base to 0
+    db 0    
+    db 0x92     ; Access bytes to 1001 0010
+    db 0xcf     ; Flags to 1100 and Limit to 1111
+    db 0
+```
+
+**Code access explenation:**
+
+We set P bit to 1 which means this sector is valid.
+
+We set DPL bits to 0 which means to access this sector we need ring0 access rights 
+
+We set S bit to 1 which means this is a code or data segment
+
+We set E bit to 1 which means this is a Code segment
+
+We set DC bit to 0 which means code can only be executet from the rights, we wrote in DPL.
+
+We set RW bit to 1 which means Read is allowed
+
+We set A bit to 0. Because it is set by the CPU
+
+**Code Flags explenation:**
+
+We set G to 1 which means the limit is 4KiB block
+
+We set DB to 1 which means 32 bit protected mode
+
+Wet set L to 0 which means no long mode
+
+And the last bit is reserved
+
+
+**Data Access bit explenation:**
+
+We set P bit to 1 which means this sector is valid.
+
+We set DPL bits to 0 which means to access this sector we ned ring0 access rights 
+
+We set S bit to 1 which means this is a code or data segment
+
+We set E bit to 0 which means this is a Data segment
+
+We set DC bit to 0 which means data in the segment grows up.
+
+We set RW bit to 1 which means Write is allowed
+
+We set A bit to 0. Because it is set by the CPU
+
+
+Now we have defined our struct. We give it to the cpu before we leave protected mode.
+For this we make a GdtPtr struct
+``` assembly
+GdtPtr32:
+    dw GdtLen-1         ; first 2 bytes is the length of our gdt table -1
+    dd Gdt              ; Last 4 bytes is the address of the gdt. (in 64 bit mode this address is 8 bytes long)
+```
+``` assembly
+    cli                 ; Clear interrupt flag and disable all interupts. (We enable them in 64 bit mode)
+    lgdt [GdtPtr32]     ; Load our GDT
+    lidt [IdtPtr32]     ; Load IDT Table. (Empty pointer struct. Same Structured as GdtPtr32 bit with all 0s)
+
+    mov eax, cr0        ; Cr0 is a CPU controll register. We load the cr0 controll register and set it to 1. Enabling protected mode 
+    or eax, 1
+    mov cr0, eax
+
+    ; Now we do the jump. 8 is here the offset in our GDT table. We remember, our code table Entry was at index 1.
+    ; With this jump we load the cs register with the needed data.
+    ; 8 = 00001000 = Selected index is 1; TI = 0; RPL = 0;
+    ; (Look at "Example Data in a Segment Register" for more info)
+    jmp 8:PMEntry
+[Bits32]
+PMEntry:
+    ; We load 10 in all the other segment registers for the Data. 0x10 = 16 = 00010000 = Selected index is 2; TI = 0; RPL = 0
+    mov ax, 0x10 
+    mov es, ax
+    mov ds, ax
+    mov ss, ax
+```
+
+We have now completet the jump.
+
