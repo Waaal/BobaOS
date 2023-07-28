@@ -131,6 +131,7 @@ The Data Structure of a DPL is like this:
 
 *Note: In 64 bit mode Base and Limit are ignored. Each entry covers the entire linear address space regardless of what they are set to*
 
+
 **Access Bytes:**
 ```
  7   6   5   4   3   2   1   0
@@ -153,6 +154,26 @@ The Data Structure of a DPL is like this:
 - For Code (Readable): 0 = Read is not allowed. 1 = Read is allowed. Write is never allowed
 
 **A:** Access bit. Best practice is to leave this at 0. CPU will set it, when the segment is accessed.
+
+
+**Access Bytes (For system segment)**
+The Access bytes in a system segment are stored differently, than the normal access bytes.
+```
+ 7   6   5   4   3   2   1   0
+|P |  DPL |  S|      Type    |
+```
+**Type:** Type of system segment.
+- Types in 32 bit protected mode:
+    - 0x1: 16-bit TSS (available)
+    - 0x2: LDT
+    - 0x3: 16-bit TSS (busy)
+    - 0x9: 32-bit TSS (available)
+    - 0xB: 32-bit TSS (busy)
+- Types in Long mode:
+    - 0x2 LDT
+    - 0x9 64-bit TSS (available)
+    - 0xB 64-bit TSS (busy)
+
 
 **Flags:**
 ```
