@@ -193,16 +193,6 @@ The Access bytes in a system segment are stored differently, than the normal acc
 **L:** Long mode code flag. 1 = defines a 64 bit code segment. If DB is 1 then L should always be 0.
 
 
-**Importand:**
-In long mode the content of Base, Limit and some Attributes of the GDT are ignored. The offset in the segment registers are always 0 and the limit is the maximum the CPU can address.
-
-Ignored in Access bytes:
-- RW
--A
-
-Ingored in Flags:
-- G
-- Reserved
 ### Interrupt Descriptor Table
 IDT is a struct which lives in memory and is used by the CPU to find interrupt handlers.
 A interrupt is a signal, send from a device to the CPU. If the CPU accepts a interrupt, it will stop the current task and process the interrupt. A IDT can have up to 256 entries.
@@ -324,14 +314,14 @@ To prepare for long mode, we need to set up a couple of things.
 - Enable long mode and jump to it
 
 
-#### Physical address extension
-When physical address extension (PAE) is on each entry in the page table goes up to 64 bit instead opf the normal 32 bit. This allows us to locate above the 4GB boundary.
+### Physical address extension
+When physical address extension (PAE) is on, each entry in the page table goes up to 64 bit instead of the normal 32 bit. This allows us to locate above the 4GB boundary.
 ``` assembly
     mov eax, cr4            ; PAE bit is in controll register 4
     or eax (1>>5)           ; PEA is bit number 5
     mov cr4, eax            ; Write it back in controll register
 ```
-#### Paging
+### Paging
 [EXPLENATION MISSING]
 
 Create Paging struct:
@@ -353,14 +343,15 @@ Enable Paging:
     or eax, (1>>31)
     mov cr0, eax
 ```
-#### Set up GDT
+### Set up GDT
 We set up another GDT for the long mode. As mentiond the GDT in long mode is slightly different.
 The field Limit and Base are completly ignored.
+Also ignored in some Attributes are:
 
 
 Ignored in Access bytes:
 - RW
--A
+- A
 
 Ingored in Flags:
 - G
@@ -375,7 +366,7 @@ Gdt64:
 ``` assembly
     lgdt Gdt64Ptr
 ```
-#### Enable and Jump to long mode
+### Enable and Jump to long mode
 ``` assembly
     mov ecx, 0xc0000080
     rdmsr                   ; Access the model state register
@@ -383,7 +374,7 @@ Gdt64:
     wrmsr                   ; Write it back to the MSR
 
     jmp 8:LMEntry
-    
+
 [BITS 64]                   ; Dont forget bits directive
 LMEntry:
 ```
