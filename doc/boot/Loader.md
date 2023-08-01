@@ -113,7 +113,6 @@ Example on a kernel:
 If we try to access memory, our RPL (Requestet Privilege Level, which is stored in the lower to bit of segement register) is compared against the DPL, which can be found in the GDT for the current sector, and if this tests fails, we dont have access and a exception is generated.
 
 ##### Example Data in a Segment Register:
-
 ```
 15                      3  2  1  0
 |     Selected Index    |  TI | RPL |
@@ -123,6 +122,9 @@ If we try to access memory, our RPL (Requestet Privilege Level, which is stored 
 **TL:** Can be 0 or 1. 0 Means check in GDT. 1 Means check in LDT.
 
 **RPL:** Requested priviledge level. The priviledges we have.
+
+
+This Data struct is alled a **Segment Selector**.
 
 ##### Data in a Table Entry:
 The Data Structure of a DPL is like this:
@@ -194,14 +196,43 @@ The Access bytes in a system segment are stored differently, than the normal acc
 
 
 ### Interrupt Descriptor Table
-IDT is a struct which lives in memory and is used by the CPU to find interrupt handlers.
+IDT is a struct which lives in memory and is used by the CPU to find interrupt and exception handlers.
 A interrupt is a signal, send from a device to the CPU. If the CPU accepts a interrupt, it will stop the current task and process the interrupt. A IDT can have up to 256 entries.
 
-Different interrupts have different interrupt numbers. With a IDT a CPU can look up a interrupt number and find the handler, for this specific event. For example the interrupt from a keyboard has the number 1. So the CPU searches in the IDT for a handler, which can process interrupts with the interrupt number 1 (a keyboard handler).
+Different interrupts and exceptions have different Numbers which are called interrupt vectors. With a IDT a CPU can look up a interrupt number and find the handler, for this specific event. For example the interrupt from a keyboard has the number 1. So the CPU searches in the IDT for a handler, which can process interrupts with the interrupt number 1 (a keyboard handler). Vectore 0 - 31 are pre defined by the CPU. 
+Numbers from 32 - 255 can be used by the operating system.
 
 A entry in an IDT holds in which **segment** the interrupt service routine is locatet and the **offset** to the routine.
 
-**[NOT FINSIHED]**
+##### Data in a Table Entry:
+On entry is 18 bytes (128 bits) long and is structured like this:
+```
+ 127         96 95          64 63      48 47           40 39  34 34    32 31           16 15           0
+  |   //////   |    Offset    |  Offset  |  Attributes   | //// |   IST  |    Selector   |    Offset   |
+```
+
+
+**Offset:** 64 bit value split in 3 parts. Is the address of the entry point of the Interrupt service routine.
+
+**Selector:** A Segment Selector. Must point to a valid code segment.
+
+**IST:** Offset in the interrupt stack table. If bits are all zero IST is not beeing used.
+
+**Attributes:** 
+
+```
+ 7   6   5   4   3   2   1   0
+|P |  DPL |  0|   Gate Type   |
+```
+
+**P**: Present bit. Must be 1 for this entry to be valid
+
+**DPL:** A priviledge level, which are allowed to access this interrupt via INT instruction. Hardware interrupts ignore this.
+
+**Gate Type:** Describe the type of gate, this interrupt descriptor represents. In long mode there are 2 values:
+- 0xE (0b1110) = 64 bit Interrupt Gate
+- 0xb (0b1111) = 64 bit Trap Gate
+
 ## Jump to Protected mode
 In order to jump to protected mode, we need to set up and fill a GDP with data.
 The most importand fields in the GDP, are the on for the Kernel. Because the Kernel (and the loader) needs to have rights after the jump.
