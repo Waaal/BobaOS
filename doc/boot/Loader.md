@@ -10,6 +10,7 @@ In detail it does the following:
 - Set the Video mode
 - Set up and jump to protected mode
 - Load the kernel
+- Set up and jump to long mode
 
 ## Check CPU features
 Check for extended function. Extendet function is needed, to check for long mode and other CPU features.
@@ -190,6 +191,18 @@ The Access bytes in a system segment are stored differently, than the normal acc
 **DB:** Size flag. 0 = describtor defines a 16 bit protected mode segment. 1 = descriptor defines a 32 bit portected mode.
 
 **L:** Long mode code flag. 1 = defines a 64 bit code segment. If DB is 1 then L should always be 0.
+
+
+**Importand:**
+In long mode the content of Base, Limit and some Attributes of the GDT are ignored. The offset in the segment registers are always 0 and the limit is the maximum the CPU can address.
+
+Ignored in Access bytes:
+- RW
+-A
+
+Ingored in Flags:
+- G
+- Reserved
 ### Interrupt Descriptor Table
 IDT is a struct which lives in memory and is used by the CPU to find interrupt handlers.
 A interrupt is a signal, send from a device to the CPU. If the CPU accepts a interrupt, it will stop the current task and process the interrupt. A IDT can have up to 256 entries.
@@ -220,6 +233,11 @@ Data32:         ; Third Entry for the Data of the Kernel
     db 0x92     ; Access bytes to 1001 0010
     db 0xcf     ; Flags to 1100 and Limit to 1111
     db 0
+
+Gdt32Len: equ $ - Gdt32
+
+Gdt32Ptr: dw Gdt32Len       ; Pointer struct to load a GDT (load IDT has same potiner struct)
+          dd Gdt32          ; First 4 bytes are length of the table. Second 2 bytes are actuall address of the table
 ```
 
 **Code access explenation:**
@@ -297,4 +315,76 @@ PMEntry:
 ```
 
 We have now completet the jump.
+## Prepare for long mode
+Long mode comes in 2 sub modes. The actual 64 bit mode and the 32 bit compability mode. We use the 64 bit mode.
+To prepare for long mode, we need to set up a couple of things.
+- Enable Physical address extensions
+- Set up a paging struct and enable Paging
+- Set up a 64bit GDT
+- Enable long mode and jump to it
+
+
+#### Physical address extension
+When physical address extension (PAE) is on each entry in the page table goes up to 64 bit instead opf the normal 32 bit. This allows us to locate above the 4GB boundary.
+``` assembly
+    mov eax, cr4            ; PAE bit is in controll register 4
+    or eax (1>>5)           ; PEA is bit number 5
+    mov cr4, eax            ; Write it back in controll register
+```
+#### Paging
+[EXPLENATION MISSING]
+
+Create Paging struct:
+``` assembly
+    mov edi, 0x70000
+    xor eax, eax
+    mov ecx, 0x10000/4
+    rep stosd
+
+    mov dword[0x70000], 0x71007
+    mov dword[0x71000], 100000111b
+```
+Enable Paging:
+``` assembly
+    mov eax, 0x70000        ; Write paging struct in cr3
+    mov cr3, eax
+
+    mov eax, cr0            ; Enable paging in controll register 0
+    or eax, (1>>31)
+    mov cr0, eax
+```
+#### Set up GDT
+We set up another GDT for the long mode. As mentiond the GDT in long mode is slightly different.
+The field Limit and Base are completly ignored.
+
+
+Ignored in Access bytes:
+- RW
+-A
+
+Ingored in Flags:
+- G
+- Reserved
+
+``` assembly
+Gdt64:
+    dq 0                    ; First entry is empty
+    dq 0x0020980000000000   ; Access bytes: P = 1; S = 1; E = 1; Flags: L = 1;
+                            ; Dont need a data entry just yet  
+```
+``` assembly
+    lgdt Gdt64Ptr
+```
+#### Enable and Jump to long mode
+``` assembly
+    mov ecx, 0xc0000080
+    rdmsr                   ; Access the model state register
+    or eax, (1<<8)          ; Set bit 8 to 1
+    wrmsr                   ; Write it back to the MSR
+
+    jmp 8:LMEntry
+    
+[BITS 64]                   ; Dont forget bits directive
+LMEntry:
+```
 
