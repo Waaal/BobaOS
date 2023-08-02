@@ -206,6 +206,9 @@ There are 3 different types of interrupts:
 - Software Interrupts: Signaled by software running on CPU. Mostly done by System Calls with INT instruction.  
 
 
+For hardware interrupts please see [HardwareInterrupts](HardwareInterrupts.md)
+
+
 Different interrupts and exceptions have different Numbers which are called interrupt vectors. With a IDT a CPU can look up a interrupt number and find the handler, for this specific event. For example the interrupt from a keyboard has the number 1. So the CPU searches in the IDT for a handler, which can process interrupts with the interrupt number 1 (a keyboard handler). Vectore 0 - 31 are pre defined by the CPU. 
 Numbers from 32 - 255 can be used by the operating system.
 
