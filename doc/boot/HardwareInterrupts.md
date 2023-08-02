@@ -43,7 +43,7 @@ Each chip has a command register port and a data register port.
 | Slave - Data | 0x00a1 |
 
 ### Init the PIC
-In order for a PIC to work we have to send 2-4 init Initialication C Word (ICW). The actual number we have to send depends on the configuration. But ICW1 and ICW2 are needed for this chip to work.
+In order for a PIC to work we have to send 2-4 init Initialication Command Word (ICW). The actual number we have to send depends on the configuration. But ICW1 and ICW2 are needed for this chip to work.
 
 
 The order of the commands we have to send are fix. They cannot be send again.
