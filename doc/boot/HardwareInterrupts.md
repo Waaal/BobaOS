@@ -103,13 +103,14 @@ We write it in the data register of the master
 **For Slave:**
 
 This is a whole number 8 bit value and is for identification. So the slave needs to know at what IRQ he is connected to the master. If it is 2 then we write 2 = 00000010.
+
 We write in the data register of the slave.
 
 
 
 **ICW_4:**
 More init settings. Only used if we set in ICW_1 bit 0 to 1.
- **Need to be written to the data register. (If slave exists also to the slave command register)**
+ **Need to be written to the data register. (If slave exists also to the slave data register)**
 ```
   7   6   5   4   3   2   1   0
 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
@@ -142,6 +143,7 @@ Content of the Mode/Command register
 ```
 
 **BCD:** 0 = 16-bit binary mode, 1 = four digit BCD mode
+
 **Operating mode:**
 - 0 0 0 = Mode 0 (Interrupt on terminal count)
 - 0 0 1 = Mode 1 (hardware re-triggable on one-shot)
