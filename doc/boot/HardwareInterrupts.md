@@ -30,7 +30,10 @@ The slave chip is connectet to the master chip via **IRQ2**. So we have a total 
 | IRQ7 |
 
 
-Each chip has a command port and a data port.
+When a interrupt is fired, the IRQ channel gets masked. So the Chip nows, that he cannot use this channel, till the mask bit is 0.
+
+
+Each chip has a command register port and a data register port.
 
 | Chip | I/O Address |
 | ------ | ------ |
@@ -39,6 +42,78 @@ Each chip has a command port and a data port.
 | Slave - Command | 0x00a0 |
 | Slave - Data | 0x00a1 |
 
+### Init the PIC
+In order for a PIC to work we have to send 2-4 init Initialication C Word (ICW). The actual number we have to send depends on the configuration. But ICW1 and ICW2 are needed for this chip to work.
+
+
+The order of the commands we have to send are fix. They cannot be send again.
+
+
+There are also operating command words (OCW). They can be send during the operating of the chip. These commands are not fix and not needed to work.
+
+
+#### Sending ICWs
+As mention the order of this commands are fix.
+
+**ICW_1:**
+First Init command. **Need to be written to the command register. (If slave exists also to the slave command register)**
+```
+  7   6   5   4   3   2   1   0
+| 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+```
+- 0: 1 = ICW_4 is needed. 0 = ICW_4 is not needed.
+- 1: 1 = Single Mode. 0 = Cascade Mode (Has a slave).
+- 2: CALL address inerval 1 = Interval of 4. 0 = Interval of 8.
+- 3: 1 = Level Trigger mode. 0 = Edge Trigger mode
+- 4: 1 = This is first init command followed by at least 1 more init commands. 0 = Not first init command
+- 5: Not needed in ICW_1
+- 6: Not needed in ICW_1
+- 7: Not needed in ICW_1
+
+
+**ICW_2:**
+Specify the starting Interrupt vector number of the first IRQ. (Vector number = Interrupt. Speciefied in IDC table). **Need to be written to to data register (Master and slave)**
+We remeber first 32 vectors occupied by the CPU.
+```
+  7   6   5   4   3   2   1   0
+| 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+```
+This is now a whole number 8 bit value. So if our starting vector is 32 we write: 00100000 = 32 
+
+
+**ICW_3**:
+Only needed if we have set bit 1 to cascade. This value speciefies at which IRQ the master and slave are connected. On a normal system this is IRQ2
+```
+  7   6   5   4   3   2   1   0
+| 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+```
+**For Master:**
+This is **not** a whole number 8 bit value. This is one register per bit.
+So if the connection is on IRQ2 we write 4 which turns bit 4(2 in dec) to 1.
+We write it in the data register of the master
+
+
+**For Slave:**
+This is a whole number 8 bit value and is for identification. So the slave needs to know at what IRQ he is connected to the master. If it is 2 then we write 2 = 00000010.
+We write in the data register of the slave.
+
+
+
+**ICW_4:**
+More init settings. Only used if we set in ICW_1 bit 0 to 1.
+ **Need to be written to the data register. (If slave exists also to the slave command register)**
+```
+  7   6   5   4   3   2   1   0
+| 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+```
+- 0: 1 = x86 mode. 0 = MCS-80/85 mode.
+- 1: 1 = Auto End Of Interrupt. 0 = Normal End Of Interrupt.
+- 2: CALL address inerval 1 = Interval of 4. 0 = Interval of 8.
+- 3: ?????
+- 4: ?????
+- 5: Not needed in ICW_4
+- 6: Not needed in ICW_4
+- 7: Not needed in ICW_4
 
 ## The Programmable Interval Timer (PIT)
 The PIT is a external chip with a oscillator, prescaler and 3 independent frequency divider.
@@ -47,6 +122,7 @@ On this 3 frequency divider outputs (Channels) we can controll external circuits
 - Channel 1: Not in use probably didnt exists anymore. **0x41 I/O address**
 - Channel 1: Connected to PC speaker.Frequency of output determines the frequency of the sound. **0x42 I/O address**
 
+The PIT has a frequency ~1.2Mh per channel.
 
 At address **0x43** Mode/Command register. A 8 bit value for the settings of the PIT (write only).
 
