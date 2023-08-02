@@ -56,7 +56,8 @@ There are also operating command words (OCW). They can be send during the operat
 As mention the order of this commands are fix.
 
 **ICW_1:**
-First Init command. **Need to be written to the command register. (If slave exists also to the slave command register)**
+First Init command.
+**Need to be written to the command register. (If slave exists also to the slave command register)**
 ```
   7   6   5   4   3   2   1   0
 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
@@ -71,8 +72,10 @@ First Init command. **Need to be written to the command register. (If slave exis
 - 7: Not needed in ICW_1
 
 
+
 **ICW_2:**
-Specify the starting Interrupt vector number of the first IRQ. (Vector number = Interrupt. Speciefied in IDC table). **Need to be written to to data register (Master and slave)**
+Specify the starting Interrupt vector number of the first IRQ. (Vector number = Interrupt. Speciefied in IDC table). 
+**Need to be written to to data register (Master and slave)**
 We remeber first 32 vectors occupied by the CPU.
 ```
   7   6   5   4   3   2   1   0
@@ -81,19 +84,24 @@ We remeber first 32 vectors occupied by the CPU.
 This is now a whole number 8 bit value. So if our starting vector is 32 we write: 00100000 = 32 
 
 
+
 **ICW_3**:
-Only needed if we have set bit 1 to cascade. This value speciefies at which IRQ the master and slave are connected. On a normal system this is IRQ2
+Only needed if we have set bit 1 in ICW_1 to cascade. This value speciefies at which IRQ the master and slave are connected. On a normal system this is IRQ2
 ```
   7   6   5   4   3   2   1   0
 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 ```
 **For Master:**
+
 This is **not** a whole number 8 bit value. This is one register per bit.
-So if the connection is on IRQ2 we write 4 which turns bit 4(2 in dec) to 1.
+So if the connection is on IRQ2 we write 4 which is 00000100 turns bit 2 to 1.
+
+Bit 2 = IRQ2
 We write it in the data register of the master
 
 
 **For Slave:**
+
 This is a whole number 8 bit value and is for identification. So the slave needs to know at what IRQ he is connected to the master. If it is 2 then we write 2 = 00000010.
 We write in the data register of the slave.
 
