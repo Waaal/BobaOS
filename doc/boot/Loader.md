@@ -103,7 +103,7 @@ The segment attributes hold a priviledge level, to see if we have access to this
 *Note: There is also a LDT. A Local Descriptor Table. It is build exactly like a GDT with the difference, that every task/thread can have its own LDT. So a LDT can exists for every task/thread while a GDT exists only one times.*
 
 ##### How to check priviledges?
-To find out at which priviledge level we are currently running (0,1,2,3) we need to check the CPL (Current Privilege Level). The CPL is stored in the lower 2 bits of cs, ds and or ss register.
+To find out at which priviledge level we are currently running (0,1,2,3) we need to check the CPL (Current Privilege Level). The CPL is stored in the lower 2 bits of cs and ss register.
 cs is mosty for code access. ds is mostly for data access.
 So if the lower 2 bits of ss and cs register are 0, we are running in ring0.
 

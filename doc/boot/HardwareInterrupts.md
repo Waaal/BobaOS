@@ -162,7 +162,88 @@ Content of the Mode/Command register
 
 **Selected Channel**: Channel 0, Channel 1, Channel 2, or Read-back command
 
+## Set up a PIT
+We need a PIT to generate IRQ0 interrupts.
+``` assembly
+InitPIT:
+    mov al, 00110100b     ; Selected Channel = 0
+                          ; Access Mode = hibyte/lobyte
+                          ; Operating Mode = rate generator
+                          ; BCD = 16-bit Binary Mode
+
+    out 0x43, al          ; Write with out to the I/O port of command register.
+    mov ax, 11931         ; 100 times per second = 1193182/100 = 11931
+    out 0x40, al          ; Write in channel 0. (8 bit value so we write the lobyte of 11931)
+    mov al, ah            ; Write highbyte in al
+    out 0x40, al          ; Write highbyte in channel 0
+``` 
+Now our PIT is configured, to send 100 interrupts per second to IRQ0 on master chip.
+
+## Set up a PIC
+``` assembly
+    mov al, 0x11      ; ICW_1 = 00010001
+    out 0x20, al      ; out to master command register 
+    out 0xa0, al      ; out to slave command register
+    
+    mov al, 32        ; ICW_2 (Master)
+    out 0x21, al      ; Out to master data register
+    mov al, 40        ; ICW_2 (Slave)
+    out 0xa1, al      ; Out ti slave data register
+
+    mov al, 4         ; ICW_3 = 00000100 (Master)
+    out 0x21, al      ; out to master data register
+    mov al, 2         ; ICW_3 = 00000010 (Slave)
+    out 0xa1, al      ; out to slave data register
+
+    mov al, 1         ; ICW_4 = 00000001
+    out 0x21, al      ; out to master data register
+    out 0xa1, al      ; out to slave data register
+```
+**Explenation:**
+
+**ICW_1:**
+  - Bit 0: 1 because we need ICW_4
+  - Bit 1: 0 because we are in cascade mode (we have a slave)
+  - Bit 2: 0 because we set call interval to 8
+  - Bit 3: 0 set level trigger mode to edge mode
+  - Bit 4: 1 because this is the first init command 
+  - Bit 5: 0 not in use 
+  - Bit 6: 0 not in use
+  - Bit 7: 0 not in use
 
 
+**ICW_2 - Master:**
+
+Set it to 32, because interrupt vector at IRQ0 starts at 32. That also means if we receive a interrupt request on IRQ0, we can catch it with a Interrupt handler for 32 in the IDT.
+
+
+**ICW_2 - Slave:**
+
+We set it to 40, because the interrupt vector at slave IRQ0 starts at 40.
+
+
+**ICW_3 - Master:**
+
+Set it to 4 because bit 2 is 1. And bit 2 means we have slave connected at IRQ2.
+
+
+**ICW_3 - Slave:**
+
+Set it to 2. Because this is now a number again and the slave is connected with the master at IRQ2.
+
+
+**ICW_4:**
+  - Bit 0: 1 because we have a x86 bit machine
+  - Bit 1: 0 because we dont want auto interrupt
+  - Bit 2: 0 because we set call interval to 8
+  - Bit 3 and 4: 0 because we dont use a buffer
+  - Bit 5: 0 not in use 
+  - Bit 6: 0 not in use
+  - Bit 7: 0 not in use
+
+
+And thats how you set up a PIC.
+
+We now have a timer, that sends 100 times a second to IRQ0 at master and the PIC sends it to the CPU. Dont forget to handle the interrupt at vector 32 with the IDT.
 
 
