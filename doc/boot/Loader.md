@@ -108,7 +108,6 @@ cs is mosty for code access. ds is mostly for data access.
 So if the lower 2 bits of ss and cs register are 0, we are running in ring0.
 
 Normally a user/process/kernel has 2 entrys in the GDP. One for code and one for data.
-Example on a kernel:
 
 If we try to access memory, our RPL (Requestet Privilege Level, which is stored in the lower to bit of segement register) is compared against the DPL, which can be found in the GDT for the current sector, and if this tests fails, we dont have access and a exception is generated.
 
@@ -127,7 +126,7 @@ If we try to access memory, our RPL (Requestet Privilege Level, which is stored 
 This Data struct is alled a **Segment Selector**.
 
 ##### Data in a Table Entry:
-The Data Structure of a DPL is like this:
+The Data Structure of a DPL is calles a System Segment Descriptor and is structured like this:
 ```
 63      56 55   52 51   48 47           40 39       32 31           16 15           0
 |   Base  | Flags | Limit | Access Bytes  |    Base   |      Base     |     Limit   |
@@ -136,7 +135,7 @@ The Data Structure of a DPL is like this:
 
 **Limit:** A 20 bit value containing the maximum address unit of this segment. Either in byte units or in 4KiB pages. (Flags bit 3)
 
-*Note: In 64 bit mode Base and Limit are ignored. Each entry covers the entire linear address space regardless of what they are set to*
+*Note: In long mode Base and Limit are ignored. Each entry covers the entire linear address space regardless of what they are set to*. There is one case base and limit are not ignored in long mode. When we set up a TSS and add a TSS entry in the GDT. In this case the base and Limit are importand. Also the System Segment Descriptor of a TSS has 128 bits (2 Table entrys).
 
 ---
 **Access Bytes:**
@@ -193,6 +192,14 @@ The Access bytes in a system segment are stored differently, than the normal acc
 **DB:** Size flag. 0 = describtor defines a 16 bit protected mode segment. 1 = descriptor defines a 32 bit portected mode.
 
 **L:** Long mode code flag. 1 = defines a 64 bit code segment. If DB is 1 then L should always be 0.
+
+
+##### Data in a Table Entry (TSS):
+The System Segment Descriptor is for a TSS slightly different.
+```
+127    96 95        64 63     56 55   52 51   48 47           40 39       32 31           16 15           0
+ | ///// |    Base    |   Base  | Flags | Limit | Access Bytes  |    Base   |      Base     |     Limit   |
+```  
 
 
 ### Interrupt Descriptor Table
