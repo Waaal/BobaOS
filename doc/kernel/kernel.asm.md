@@ -161,22 +161,22 @@ With a TSS we can load the stackpointer for the current permission level.
 TSS can do some more crazier stuff... but this is not needed normaly.
 | 0x3 | 0x2 |0x1 | 0x0 |Offset |
 | ------ | ------ | ------ | ------ | ------ |
-| IOPB | Reserved | 0x64 |
-|  Reserved | 0x60 |
-|  Reserved | 0x5C |
-|  IST7 | 0x54 |
-|  IST6 | 0x4C |
-|  IST5 | 0x44 |
-|  IST4 | 0x3C |
-|  IST3 | 0x34 |
-|  IST2 | 0x2C |
-|  IST1 | 0x24 |
-|  Reserved | 0x20 |
-|  Reserved | 0x1C |
-|  RSP2 | 0x14 |
-|  RSP1 | 0x0C |
-|  RSP0 | 0x04 |
-|  Reserved | 0x00 |
+| IOPB | Reserved | | | 0x64 |
+|  Reserved | | | 0x60 |
+|  Reserved | | |0x5C |
+|  IST7 | | |0x54 |
+|  IST6 | | |0x4C |
+|  IST5 | | |0x44 |
+|  IST4 | | |0x3C |
+|  IST3 | | |0x34 |
+|  IST2 | | |0x2C |
+|  IST1 | | |0x24 |
+|  Reserved | | | 0x20 |
+|  Reserved | | | 0x1C |
+|  RSP2 | | |0x14 |
+|  RSP1 | | |0x0C |
+|  RSP0 | | |0x04 |
+|  Reserved | | |0x00 |
 
 ``` assembly
 Tss:
