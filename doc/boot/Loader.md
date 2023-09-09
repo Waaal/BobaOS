@@ -371,18 +371,9 @@ When physical address extension (PAE) is on, each entry in the page table goes u
     mov cr4, eax            ; Write it back in controll register
 ```
 ### Paging
-[EXPLENATION MISSING]
 
-Create Paging struct:
-``` assembly
-    mov edi, 0x70000
-    xor eax, eax
-    mov ecx, 0x10000/4
-    rep stosd
+Please see [Paging](../paging.md)
 
-    mov dword[0x70000], 0x71007
-    mov dword[0x71000], 100000111b
-```
 Enable Paging:
 ``` assembly
     mov eax, 0x70000        ; Write paging struct in cr3
