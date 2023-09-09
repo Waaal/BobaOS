@@ -20,17 +20,17 @@ So:
 ```
 Virual Address: 0x00003204
 
-31					12 11		 0
-|	   0x00003 	  	  |	  0x204  |
+31                  12 11        0
+|      0x00003        |   0x204  |
 
 
 Page Table:
 | Virual    | Physical|
-| 0x0000 	|  DISK   |
-| 0x0001 	|  0x003  |
-| 0x0002 	|  0x004  |
-| 0x0003 	|  0x006  |
-| ...	    |  ...    |
+| 0x0000    |  DISK   |
+| 0x0001    |  0x003  |
+| 0x0002    |  0x004  |
+| 0x0003    |  0x006  |
+| ...       |  ...    |
 
 (A page table also holds permissions bits but more to that later)
 
@@ -51,17 +51,17 @@ On a 64 bit system our address is 64 bit long. Because we have differnet page si
 ```
 Virual Address: 0x000000000010000b
 
-63	   48	   		39		30			0
-|Sign	| PLM4		 |PDP	 |Offset	|
-|Sign	| 0x000		 |0x40	 |0x000b	|
+63    48            39     30           0
+|Sign   | PLM4       |PDP    |Offset    |
+|Sign   | 0x000      |0x40   |0x000b    |
 (Sign is not used here)
 
-PLM4:												    ->	At location 0x002 (PDP)
-| Virual    | Physical|  							   |	| Virual    | Physical| 
-|[0x0000] 	|  0x002  | ---> Table at location 0x002 -		| 0x0035	| 0x00023 |
-| 0x0001 	|  0x003  |										|[0x0040] 	| 0x00045 |
-| 0x0002 	|  0x004  |										| 0x0050 	| 0x00067 |
-| ...	    |  ...    |										| ...	    |  ...    |
+PLM4:                                                  ->   At location 0x002 (PDP)
+| Virual    | Physical|                                |    | Virual    | Physical| 
+|[0x0000]   |  0x002  | ---> Table at location 0x002 -      | 0x0035	| 0x00023 |
+| 0x0001    |  0x003  |                                     |[0x0040] 	| 0x00045 |
+| 0x0002    |  0x004  |										| 0x0050 	| 0x00067 |
+| ...       |  ...    |										| ...	    |  ...    |
 
 
 
@@ -73,17 +73,17 @@ So Virtual address 0x000000000010000b gets translated to physical address: 0x000
 ```
 Virual Address: 0x000020000100000b
 
-63	   48	   		39		30       21			0
-|Sign	| PLM4		 |PDP	 |PD	  |Offset	|
-|Sign	| 0x000		 |0x40	 |0x010   |0x00b    |
+63     48          39      30       21          0
+|Sign   | PLM4       |PDP    |PD      |Offset   |
+|Sign   | 0x000	     |0x40   |0x010   |0x00b    |
 (Sign is not used here)
 
-PLM4:										->	At location 0x002 (PDP)						->	At location 0x045 (PD)
-| Virual    | Physical|  					|	| Virual    | Physical|   					|	| Virual    | Physical| 
-|[0x0000] 	|  0x002  | ---> location 0x002 -	| 0x0035	| 0x00023 | 					|	| 0x005 	| 0x00063 |
-| 0x0001 	|  0x003  |							|[0x0040] 	| 0x00045 |	---> location 0x045 -	|[0x010] 	| 0x00A54 |
-| 0x0002 	|  0x004  |							| 0x0050 	| 0x00067 |							| 0x015		| 0x00FFF |
-| ...	    |  ...    |							 ...	    |  ...    |							 ...	    |  ...    |
+PLM4:                                         ->At location 0x002 (PDP)	                    ->  At location 0x045 (PD)
+| Virual    | Physical|                      |  | Virual    | Physical|                     |   | Virual    | Physical| 
+|[0x0000]   |  0x002  | ---> location 0x002 -   | 0x0035    | 0x00023 |                     |   | 0x005     | 0x00063 |
+| 0x0001    |  0x003  |                         |[0x0040]   | 0x00045 | ---> location 0x045 -   |[0x010]    | 0x00A54 |
+| 0x0002    |  0x004  |                         | 0x0050    | 0x00067 |                         | 0x015     | 0x00FFF |
+| ...       |  ...    |                         | ...       |  ...    |                         |...        |  ...    |
 
 
 
@@ -97,8 +97,8 @@ The 4kb page translation is the same, but i needs one more table level.
 A entry in a Page Table is 64bit in long mode.
 It holds either the address to the next level of table, or the address of the Page in the Physical memory. But it also holds some Attributes for protection and other stuff.
 ```
- 63 62      59 58        52 51     M M-1            				 13 12   11    9 8  7 6 5   4   3  2  1 0
-|XD|    PK    |    AVL     |RESERVED|    Bits of address (M)		   | PAT|  AVL  |G|PS|D|A|PCD|PWT|US|RW|P|
+ 63 62      59 58        52 51     M M-1                             13 12   11    9 8 7 6 5   4  3  2 1 0
+|XD|    PK    |    AVL     |RESERVED|    Bits of address (M)      | PAT|  AVL  |G|PS|D|A|PCD|PWT|US|RW|P|
 ```
  - P = Present: 1 = Page is actually in physical memory at the moment. 0 = Is not (Page fault will occure on call)
  - RW = Read/Write: 1 = Read/Write allowed; 0 = Read only
@@ -165,4 +165,4 @@ So what we are doing here is we get bit 39 - 48 by shifting right 39 and then se
 Then we write a table entry at the index in eax (multiplied by 8, because each table length is 8 bytes). 
 So now the address 0xffff8000000200000 always gets translated to 0x200000.
 
-**Remember: each process has its own paging tables**
+**Remember: Each process has its own paging tables**
