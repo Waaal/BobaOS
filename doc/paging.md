@@ -141,26 +141,28 @@ So first lets clear that memory area.
 
 ```
 ``` 
-0xffff800000000000 = 				1111 1111 1111 1111 1000 0000 0000 0000
-									0000 0000 0000 0000 0000 0000 0000 0000
+0xffff800000000000 =                1111 1111 1111 1111 1000 0000 0000 0000
+                                    0000 0000 0000 0000 0000 0000 0000 0000
 
-eax, 0xffff800000000000 >> 39 =  	0000 0000 0000 0000 0000 0000 0000 0000
-									0000 0001 1111 1111 1111 1111 0000 0000
+eax, 0xffff800000000000 >> 39 =     0000 0000 0000 0000 0000 0000 0000 0000
+                                    0000 0001 1111 1111 1111 1111 0000 0000
 
 
-and eax, 0x1ff	=					0000 0000 0000 0000 0000 0000 0000 0000
-									0000 0001 1111 1111 1111 1111 0000 0000
+and eax, 0x1ff	=                   0000 0000 0000 0000 0000 0000 0000 0000
+                                    0000 0001 1111 1111 1111 1111 0000 0000
 
-								AND
-									0000 0000 0000 0000 0000 0000 0000 0000
-									0000 0000 0000 0000 0000 0001 1111 1111
+                                AND
+                                    0000 0000 0000 0000 0000 0000 0000 0000
+                                    0000 0000 0000 0000 0000 0001 1111 1111
 
-								=   0000 0000 0000 0000 0000 0001 0000 0000
+                                =   0000 0000 0000 0000 0000 0001 0000 0000
 
-								= 	256. So 256 is the index for the next page table
+                                =   256. So 256 is the index for the next page table
 ```
 
 We remember, that on the first lookup table bit 39 - 48 is taken as the index into the next table.
 So what we are doing here is we get bit 39 - 48 by shifting right 39 and then select 9 bit from it and store it into eax.
 Then we write a table entry at the index in eax (multiplied by 8, because each table length is 8 bytes). 
 So now the address 0xffff8000000200000 always gets translated to 0x200000.
+
+**Remember: each process has its own paging tables**
