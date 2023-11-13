@@ -5,5 +5,7 @@
     - [Loader](boot/Loader.md)
     - [HandleHardwareInterrupts](boot/HardwareInterrupts.md)
     - [Paging](paging.md)
+- FileSystem
+    - [Fat](fs/Fat.md)
 - Kernel
     - [Kernel(assembly)](kernel/kernel.asm.md)
