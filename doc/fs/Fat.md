@@ -114,6 +114,7 @@ We take 16 bit from index 3 = 0000 0101 1001 0000 = 0x05 0x90
 From little endian to dec = 0x9005
 Then we take the low 12 bit and got the index: 0x9005 & 0xFFF = 0x5
 
+We want to read index 4.
 If index % 2 != 0:
 We take 16 bit from index 4 = 1001 0000 0000 0000 = 0x90 0x00
 From little endian to dex = 0x0090
