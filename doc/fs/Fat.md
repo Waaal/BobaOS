@@ -79,6 +79,49 @@ On Fat32 one entry is 32 bits
 
 The size of this region in sectors can be calculated by multiplying the Numbers of File Allocation Tales (0x10) with the Numers of sectors per FAT (0x16).
 
+#### How are data structured in a FAT12?
+FAT is little endian.
+Fat12 is a little special, because it has 12 bytes. In FAT16 and FAT32 the data structure is better and dont need any explenation.
+
+So entry 0x123, 0x456 would be placed like this in a FAT:
+```
+0x123   0001 0010 0011
+0x456   0100 0101 0110
+
+0x23         0x61         0x45
+0010 0011    0110 0001    0100 0101
+```
+
+#### How to get a entry in FAT12?
+```
+FAT:
+0:    0xFF0    1111 1111 0000
+1:    0xFFF    1111 1111 1111
+2:    0x005    0000 0000 0101
+3:    0x009    0000 0000 1001
+4:    0x00B    0000 0000 1011
+5:    0x00C    0000 0000 1100
+
+Actuall on disk:
+0xF0         0xFF         0xFF         0x05         0x90         0x00         0xB          0xC0         0x00
+1111 0000    1111 1111    1111 1111    0000 0101    1001 0000    0000 0000    0000 1011    1100 0000    0000 0000
+```
+We want to read index 2.
+2 x 1.5 = 3(because 8 x 1.5 is 12 and FAT is 12 bits long)
+
+We check if 2 % 2 == 0
+We take 16 bit from index 3 = 0000 0101 1001 0000 = 0x05 0x90
+From little endian to dec = 0x9005
+Then we take the low 12 bit and got the index: 0x9005 & 0xFFF = 0x5
+
+If index % 2 != 0:
+We take 16 bit from index 4 = 1001 0000 0000 0000 = 0x90 0x00
+From little endian to dex = 0x0090
+Then we shift right 4 bits: 0x0090 >> 4 = 0x9.
+
+Tada. Thats how we read the 12 bit FAT table.
+The 16 and 32 bit are self explenatory.
+
 ### Root Directory
 On Fat12,16 the Root Directory is placed right after the FAT directory. On Fat32 its possition is given by the Extendet boot Record (0x2C).
 In the Root Directory are stored all the files. To be more exact it stores more than that. It stores file names, Attributes, Creation date, starting cluster etc. 
@@ -102,10 +145,12 @@ Struct of a root directory entry
 | 0x1A | 2 | Low 16 bit of Start cluster number |
 | 0x1C | 4 | The size of the file in bytes |
 
+*Important note: Number 0 and 1 on the starting cluster are reserved. So indexing starts at 2 and later calculate -2 to get the lba address.*
+
 ## How to get a File?
 
 We first need the file name and the search for it in the Root Directory.
-In the Root Directory we got the starting cluster. We read the content of the starting cluster and the go to the File Allocationm Table.
+In the Root Directory we got the starting cluster. We read the content of the starting cluster and the go to the File Allocation Table.
 For example if the start cluster of a file is 3 we then look at the File Allocation Table at entry 3. This entry holds the next cluster and the next entry of the FAT. For example 4. We then read all the bytes from the 4th cluster and look at the FAT at entry 4. This 4th enty points us to the next cluster etc. This is what I meant with chain. 
 
 We know if we reacht the end of a cluster if the entry of the FAT is 0xFF8. 0xFF8 marks the end of a chain.
