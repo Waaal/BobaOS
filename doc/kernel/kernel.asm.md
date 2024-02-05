@@ -164,26 +164,26 @@ TSS can do some more crazier stuff... but this is not needed normaly.
 | IOPB | Reserved | | | 0x64 |
 |  Reserved | | | 0x60 |
 |  Reserved | | |0x5C |
-|  IST7 | | | |0x54 |
-|  IST6 | | | |0x4C |
-|  IST5 | | | |0x44 |
-|  IST4 | | | |0x3C |
-|  IST3 | | | |0x34 |
-|  IST2 | | | |0x2C |
-|  IST1 | | | |0x24 |
-|  Reserved | | | |0x20 |
-|  Reserved | | | | 0x1C |
-|  RSP2 | | | |0x14 |
-|  RSP1 | | | |0x0C |
-|  RSP0 | | | |0x04 |
-|  Reserved | | | |0x00 |
+|  IST7 | | |0x54 |
+|  IST6 | | |0x4C |
+|  IST5 | | |0x44 |
+|  IST4 | | |0x3C |
+|  IST3 | | |0x34 |
+|  IST2 | | |0x2C |
+|  IST1 | | |0x24 |
+|  Reserved | | | 0x20 |
+|  Reserved | | | 0x1C |
+|  RSP2 | | |0x14 |
+|  RSP1 | | |0x0C |
+|  RSP0 | | |0x04 |
+|  Reserved | | |0x00 |
 
 ``` assembly
 Tss:
     dd 0            ; Reserved
     dq 0x150000     ; RSP
-    times 88 db 0   ; Set other field to 0
-    dd TssLen       ; IOPB = IO permission map Set it to size of TSS = IOPB is not used
+    times 88 db 0   ; Set other fieldy to 0
+    dd TssLen       ; IOPB = IO permission map Set it to size of TSS = IOBP is not used
 
 TssLen: equ $ - Tss
 ```
