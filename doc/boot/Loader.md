@@ -104,13 +104,13 @@ The segment attributes hold a priviledge level, to see if we have access to this
 *Note: There is also a LDT. A Local Descriptor Table. It is build exactly like a GDT with the difference, that every task/thread can have its own LDT. So a LDT can exists for every task/thread while a GDT exists only one times.*
 
 ##### How to check priviledges?
-To find out at which priviledge level we are currently running (0,1,2,3) we need to check the CPL (Current Privilege Level). The CPL is stored in the lower 2 bits of cs and ss register.
-cs is mosty for code access. ds is mostly for data access.
-So if the lower 2 bits of ss and cs register are 0, we are running in ring0.
+To find out at which priviledge level we are currently running (0,1,2,3) we need to check the CPL (Current Privilege Level). The CPL is stored in the lower 2 bits of a segment register.
 
-Normally a user/process/kernel has 2 entrys in the GDP. One for code and one for data.
+We remeber the segment registers in real mode was used to access memory higher than 2 bytes. But in portected and long mode the segment registers are used to store our current privliedge level and the entry in the GDT.
 
-If we try to access memory, our RPL (Requestet Privilege Level, which is stored in the lower to bit of segement register) is compared against the DPL, which can be found in the GDT for the current sector, and if this tests fails, we dont have access and a exception is generated.
+So if the lower 2 bits of a Segment Register are 0, we are running in ring 0.
+
+Normally the kernel and userspace each has 2 entrys in the GDP. One for code and one for data.
 
 ##### Example Data in a Segment Register:
 ```
@@ -125,6 +125,8 @@ If we try to access memory, our RPL (Requestet Privilege Level, which is stored 
 
 
 This Data struct is alled a **Segment Selector**.
+
+If the CS register is used, it normally points to the code entry in the gdt. For all the other registers (SS, DS, FS, ES, GS) the data entry is used.
 
 ##### Data in a Table Entry (protected mode):
 The Data Structure of a DPL is calles a System Segment Descriptor and is structured like this:
