@@ -10,13 +10,15 @@
     - [Kernel(assembly)](kernel/kernel.asm.md)
 # Documentation 2.0
 - x86 Assembly
+    - Registers
     - Instruction set
     - Modes
         - Real Mode
         - Protected Mode
         - Long Mode
     - BIOS - Boot
-- Structs / Techniques / Chips
+- Structs / Techniques / Chips / Quirks
+    - A20 Line
     - IDT
     - GDT
     - PIC (HardwareInterrupts)
