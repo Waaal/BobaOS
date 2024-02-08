@@ -88,7 +88,7 @@ PrintMessage:
 Next step is to load the kernel. The memory reserved for the kernel is 500kb.
 ## Prepare for Protected mode
 We need to set up a few thing before we leave real mode and enter protected mode
-- GDT (Global Descriptor Table)
+- GDT (Global Descriptor Table)Global Descriptor Table
 - IDT (Interrupt Descriptor Table)
 
 ### Global Descriptor Table
@@ -131,10 +131,11 @@ If the CS register is used, it normally points to the code entry in the gdt. For
 ##### Data in a Table Entry (protected mode):
 The Data Structure of a DPL is calles a System Segment Descriptor and is structured like this:
 ```
-63      56 55   52 51   48 47           40 39       32 31           16 15           0
-|   Base  | Flags | Limit | Access Bytes  |    Base   |      Base     |     Limit   |
+<--       LONG MODE      --> 
+127            96 95      64 63     56 55   52 51   48 47           40 39       32 31           16 15           0
+|    Reserved    |   Base   |   Base  | Flags | Limit | Access Bytes  |    Base   |      Base     |     Limit   |
 ```
-**Base:** A 32 Bit value containing the address, where the segment begins.
+**Base:** A 32 Bit (long mode 64 bit) value containing the address, where the segment begins.
 
 **Limit:** A 20 bit value containing the maximum address unit of this segment. Either in byte units or in 4KiB pages. (Flags bit 3)
 
