@@ -216,11 +216,13 @@ There are 3 different types of interrupts:
 - Interrupt Request (IRQ) (Hardware interrupt): Generatet by a external chipset.
 - Software Interrupts: Signaled by software running on CPU. Mostly done by System Calls with INT instruction.  
 
-
 For hardware interrupts please see [HardwareInterrupts](HardwareInterrupts.md)
 
+Different interrupts and exceptions have different Numbers which are called interrupt vectors. With a IDT a CPU can look up a interrupt number and find the handler, for this specific event. For example the interrupt from a keyboard has the number 1. So the CPU searches in the IDT for a handler, which can process interrupts with the interrupt number 1 (a keyboard handler).
 
-Different interrupts and exceptions have different Numbers which are called interrupt vectors. With a IDT a CPU can look up a interrupt number and find the handler, for this specific event. For example the interrupt from a keyboard has the number 1. So the CPU searches in the IDT for a handler, which can process interrupts with the interrupt number 1 (a keyboard handler). Vectore 0 - 31 are pre defined by the CPU. 
+The vector number is define by the order in the IDT. So Entry 0 has the vector number 0. Entry 5 has the vector number 5 and so on.
+
+Vectore 0 - 31 are pre defined by the CPU. 
 Numbers from 32 - 255 can be used by the operating system.
 
 A entry in an IDT holds in which **segment** the interrupt service routine is locatet and the **offset** to the routine.
@@ -234,9 +236,9 @@ On entry is 128 bits in long mode and 64 bits in protected mode and is structure
 ```
 
 
-**Offset:** 64 bit value split in 3 parts. Is the address of the entry point of the Interrupt service routine.
+**Offset:** 64 bit value (protected mode 32 bit) split in 3 parts. Is the address of the entry point of the Interrupt service routine.
 
-**Selector:** A Segment Selector. Must point to a valid code segment.
+**Selector:** A Segment Selector (Points to a entry in the GDT). Selector this interrupt is bound to. For example, if the selector is the Kernel code entry, than this interrupt will be with the kernel code rights in the GDT. Ideally this will always be the kernel coe selector.
 
 **IST:** Offset in the interrupt stack table. If bits are all zero IST is not beeing used.
 
@@ -247,13 +249,45 @@ On entry is 128 bits in long mode and 64 bits in protected mode and is structure
 |P |  DPL |  0|   Gate Type   |
 ```
 
-**P**: Present bit. Must be 1 for this entry to be valid
+**P**: Present bit. Must be 1 for this entry to be valid. If Value is 0 means this interrupt is not/cannot be used
 
 **DPL:** A priviledge level, which are allowed to access this interrupt via INT instruction. Hardware interrupts ignore this.
 
 **Gate Type:** Describe the type of gate, this interrupt descriptor represents. In long mode there are 2 values:
-- 0xE (0b1110) = 64 bit Interrupt Gate
-- 0xb (0b1111) = 64 bit Trap Gate
+- 0x5 (0b0101) = Task gate (protected mode only).
+- 0xE (0b1110) = 64/32 bit Interrupt Gate
+- 0xb (0b1111) = 64/32 bit Trap Gate
+
+#### Task gate
+Task gate references the TSS descriptor and can assist in multi-tasking when exceptions occure
+
+#### Interrupt Gate
+Used for interrupts, we want to invoke in our code.
+(Can also be used for exceptions, because they are easier to work with lel)
+
+#### Trap Gate
+Used for exceptions raised by the CPU.
+(They also automatically disable interrupts on entry and re-enable them on iret instruction)
+
+### Load a IDT
+To load a Interrupt Descriptor Table we need a pointer to this table.
+The pointer needs to have the following structure
+
+**32-Bit:**
+```
+31          16 15       0
+|   Offset    |  Size   |
+```
+
+**64-Bit:**
+```
+63          16 15       0
+|   Offset    |  Size   |
+```
+
+**Size:** Size of the IDT - 1;
+
+**Offset:** Staring address of the IDT.
 
 ## Jump to Protected mode
 In order to jump to protected mode, we need to set up and fill a GDP with data.
