@@ -1,5 +1,4 @@
 # BobaOS Documentation
----
 - Boot
     - [Bootloader](boot/Boot.md)
     - [Loader](boot/Loader.md)
@@ -10,4 +9,18 @@
 - Kernel
     - [Kernel(assembly)](kernel/kernel.asm.md)
 # Documentation 2.0
----
+- x86 Assembly
+    - Instruction set
+    - Modes
+        - Real Mode
+        - Protected Mode
+        - Long Mode
+    - BIOS - Boot
+- Structs / Techniques / Chips
+    - IDT
+    - GDT
+    - PIC (HardwareInterrupts)
+    - [MMU (Paging)] (paging.md)
+- FileSystem
+    - [Fat](fs/Fat.md)
+- Driver
