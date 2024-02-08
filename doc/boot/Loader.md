@@ -289,6 +289,10 @@ The pointer needs to have the following structure
 
 **Offset:** Staring address of the IDT.
 
+Load the IDT with the lidt instruction. The argument of the lidt is 
+``` assembly
+lidt [AddressOfPointer]
+```
 ## Jump to Protected mode
 In order to jump to protected mode, we need to set up and fill a GDP with data.
 The most importand fields in the GDP, are the on for the Kernel. Because the Kernel (and the loader) needs to have rights after the jump.
