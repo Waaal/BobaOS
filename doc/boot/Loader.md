@@ -131,7 +131,7 @@ If the CS register is used, it normally points to the code entry in the gdt. For
 ##### Data in a Table Entry (protected mode):
 The Data Structure of a DPL is calles a System Segment Descriptor and is structured like this:
 ```
-<--       LONG MODE      --> 
+<---------LONG MODE---------> 
 127            96 95      64 63     56 55   52 51   48 47           40 39       32 31           16 15           0
 |    Reserved    |   Base   |   Base  | Flags | Limit | Access Bytes  |    Base   |      Base     |     Limit   |
 ```
@@ -226,8 +226,9 @@ Numbers from 32 - 255 can be used by the operating system.
 A entry in an IDT holds in which **segment** the interrupt service routine is locatet and the **offset** to the routine.
 
 ##### Data in a Table Entry:
-On entry is 18 bytes (128 bits) long and is structured like this:
+On entry is 128 bits in long mode and 64 bits in protected mode and is structured like this:
 ```
+ <---------LONG MODE---------> 
  127         96 95          64 63      48 47           40 39  34 34    32 31           16 15           0
   |   //////   |    Offset    |  Offset  |  Attributes   | //// |   IST  |    Selector   |    Offset   |
 ```
