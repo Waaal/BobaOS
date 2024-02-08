@@ -22,7 +22,7 @@
     - IDT
     - GDT
     - PIC (HardwareInterrupts)
-    - [MMU (Paging)] (paging.md)
+    - [MMU (Paging)](paging.md)
 - FileSystem
     - [Fat](fs/Fat.md)
 - Driver
