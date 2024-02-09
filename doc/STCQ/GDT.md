@@ -159,5 +159,5 @@ gdt_len: equ $ - gdt_start
 
 gdt_ptr:				; gdt pointer to use in the lgdt instruction.
 	dw gdt_len			; 2 Byte
-	dd gdt_start		; 4 Byte (protected mode)
+	dd gdt_start			; 4 Byte (protected mode)
 ```

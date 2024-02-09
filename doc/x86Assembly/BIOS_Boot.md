@@ -61,12 +61,12 @@ start:
 	mov ds, ax
 	mov ax, 0x00
 	mov ss, ax
-	mov sp, 0x7c00			; We changed all segment registers to 0, because some BIOSes might set them to 0x7C0, some to 0 and some 
+	mov sp, 0x7c00				; We changed all segment registers to 0, because some BIOSes might set them to 0x7C0, some to 0 and some 
 						; dont set them at all. So it is good practice to set them to 0, or to 0x7c0 if we dont want to
 						; use org 0x7c00
 
 	sti					; Enables Interrupts	
 
-times 510- ($ - $$) db 0	; Fill up the size of the bootloader to 510 bytes
+times 510- ($ - $$) db 0		; Fill up the size of the bootloader to 510 bytes
 dw 0xAA55				; Intel = little endian, dw gets flipped. So dw AA55 = 0x55 0xAA
 ```
