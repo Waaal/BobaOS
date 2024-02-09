@@ -19,8 +19,9 @@
     - BIOS - Boot
 - Structs / Techniques / Chips / Quirks
     - A20 Line
-    - IDT
-    - GDT
+    - [IDT](STCQ/IDT.md)
+    - [GDT](STCQ/GDT.md)
+    - TSS
     - PIC (HardwareInterrupts)
     - [MMU (Paging)](paging.md)
 - FileSystem
