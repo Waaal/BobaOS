@@ -42,7 +42,7 @@ Our bootloader:
 Here is a barebone bootloader that would boot on a x86 CPU machine.
 ``` assembly
 [ORG 0x7C00]
-[BITS 16]				; Becaue CPU is in real mode
+[BITS 16]					; Becaue CPU is in real mode
 
 _start:
 	jmp short start
@@ -52,7 +52,7 @@ _start:
 						; Placeholder for BIOS parameter block, because some BIOSes want this and write in this block
 
 start:
-	jmp 0x0:$+1			; Set code segment to 0x0, because it cannot be set with mov cs. So set it with a jump.
+	jmp 0x0:$+1				; Set code segment to 0x0, because it cannot be set with mov cs. So set it with a jump.
 
 	cli					; Clear Interrupts and disable
 						; We disable interrupts bevore we change the segment registers, because this is a critical operration and we ; dont want that a interrupt occure while we doing this
@@ -61,12 +61,12 @@ start:
 	mov ds, ax
 	mov ax, 0x00
 	mov ss, ax
-	mov sp, 0x7c00		; We changed all segment registers to 0, because some BIOSes might set them to 0x7C0, some to 0 and some 
+	mov sp, 0x7c00			; We changed all segment registers to 0, because some BIOSes might set them to 0x7C0, some to 0 and some 
 						; dont set them at all. So it is good practice to set them to 0, or to 0x7c0 if we dont want to
 						; use org 0x7c00
 
 	sti					; Enables Interrupts	
 
-times 510- ($ - $$) db 0; Fill up the size of the bootloader to 510 bytes
+times 510- ($ - $$) db 0	; Fill up the size of the bootloader to 510 bytes
 dw 0xAA55				; Intel = little endian, dw gets flipped. So dw AA55 = 0x55 0xAA
 ```

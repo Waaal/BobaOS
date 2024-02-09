@@ -136,15 +136,15 @@ The only part thats need to be done in asembly is the loading of the GDT with th
 This example is in **protected mode, 32 bit**.
 ``` assembly
 gdt_start:
-gdt_null: dq 0 			; NULL Entry in gdt. One entry is 8 byte in protected mode
+gdt_null: dq 0 				; NULL Entry in gdt. One entry is 8 byte in protected mode
 
 gdt_code:		 		; Code Segment (CS should point to this). Just some default values, because we are going to use paging.
 	dw 0xffff			; Segment Limit (0-15 bits) Set to the full address range, because we use paging.
 	dw 0				; Base (0 - 15) Set to 0.
 	db 0				; Base (16 - 23) Set to 0.
 	db 0x9a				; Access bites P = 1, DPL = 0 (ring 0 entry), S = 1 (Code/Data), E = 1 (Code), DC = 0 (Code can only be
-						; executed from ring set in DPL), RW = 1 (Read is allowed), A = 0  
-	db 11001111b		; Flags to 1100 and Limit to 1111. Flags: G = 1, DB = 1 (protected mode) L = 0 (protected mode)
+					; executed from ring set in DPL), RW = 1 (Read is allowed), A = 0  
+	db 11001111b			; Flags to 1100 and Limit to 1111. Flags: G = 1, DB = 1 (protected mode) L = 0 (protected mode)
 	db 0				; Base 24-31 Set to 0.
 
 gdt_data:				; Data Segment, stack segment (DS,SS,ES,FS and GS should point to this). Also just some default values
@@ -152,8 +152,8 @@ gdt_data:				; Data Segment, stack segment (DS,SS,ES,FS and GS should point to t
 	dw 0				; Base (0 - 15) Set to 0
 	db 0				; Base (16 - 23) Set to 0
 	db 0x92				; Access bites P = 1, DPL = 0 (ring 0 entry), S = 1 (Code/Data), E = 0 (Data), DC = 0 (Grow down)
-						; RW = 1 (Read and write is allowed), A = 0  
-	db 11001111b		; Flags to 1100 and Limit to 1111. Flags: G = 1, DB = 1 (protected mode) L = 0 (protected mode)
+					; RW = 1 (Read and write is allowed), A = 0  
+	db 11001111b			; Flags to 1100 and Limit to 1111. Flags: G = 1, DB = 1 (protected mode) L = 0 (protected mode)
 	db 0				; Base 24-31 Set to 0
 gdt_len: equ $ - gdt_start
 

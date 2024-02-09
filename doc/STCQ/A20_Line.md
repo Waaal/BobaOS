@@ -2,15 +2,13 @@
 The A20 line represents the 20st line on a address bus (counting from 0). The old 8086 had a memory wraparound feature where addresses larger than 1MByte got truncated. 
 That newer processor can still be combatible with old programs who use this feature the A20 line support was added.
 
-A20 Line needs to be **on**. Because with A20 line, we can access addresses, bigger than 20 bit.
-If A20 Line is off addresses bigger than 20 bit gets truncated:
+A20 Line needs to be **on**. Because with A20 line, we can access the 20th bit.
+If A20 Line is off addresses that uses the 20th bit gets truncated.
 ```
 0x1080C8    -   1 0000 1000 0000 1100 1000
        truncated to
 0x0080C8    -   0 0000 1000 0000 1100 1000
 ```
-
-So if A20 line is not on memory addresses that uses this 20th line gets truncated.
 
 ## Test for A20 line support
 *This example test needs to be done in real mode.*
@@ -35,6 +33,7 @@ There are different ways to enable A20 line support.
 
 ### Fast A20 gate
 Many modern processors have a Fast A20 option that can quickly enable the A20 line support.
+
 *Note: This method is not recommend, because it is not 100% save that this option is supported by the current CPU*
 ```assembly
 in al, 0x92
@@ -47,7 +46,7 @@ On many CPUS it is supported to activate A20 line support trough the BIOS functi
 ```assembly
 mov ax, 0x2403					; Command to see if this action is supported
 int 0x15
-cmp ah, 0						; If ah is not 0 or the carry flag is set, than activating A20 trough int 0x15 is not supported.
+cmp ah, 0					; If ah is not 0 or the carry flag is set, than activating A20 trough int 0x15 is not supported.
 
 mov ax, 0x2401					; Command to activate A20 line support
 int 0x15						
