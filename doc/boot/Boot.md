@@ -22,7 +22,6 @@ It loads the Loader (Second step of the bootloader).
 | 444| 2 | NULL |
 | 446 | 64 | 4*16 byte Partition entrys |
 | 510 | 2 |  aah 55h bootable signature|
-
 *Note: It also boots without Signature, NULL and wihtout partition entrys. Important is the code and the boot signature*
 
 ### Partition entry description

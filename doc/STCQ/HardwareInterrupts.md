@@ -1,5 +1,4 @@
 # How to handle hardware interrutps.
-# How to handle hardware interrutps.
 Hardware interrupts are generated externally by a different chipset the Programmable Interrupt Controller (PIC).
 ## The Programmable Interrupt Controller (PIC)
 The PIC consits out of 2 chips. One Slave and one Master. Each Chip has 8 Input signals called IRQ (Interrupt Request). On each interrupt line a Hardware component can send a interrupt request to the chip, and the chip sends a interrupt request to the CPU but orderd by importance. 

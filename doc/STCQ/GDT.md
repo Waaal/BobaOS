@@ -136,7 +136,7 @@ The only part thats need to be done in asembly is the loading of the GDT with th
 This example is in **protected mode, 32 bit**.
 ``` assembly
 gdt_start:
-gdt_null: dq 0			; NULL Entry in gdt. One entry is 8 byte in protected mode
+gdt_null: dq 0 			; NULL Entry in gdt. One entry is 8 byte in protected mode
 
 gdt_code:		 		; Code Segment (CS should point to this). Just some default values, because we are going to use paging.
 	dw 0xffff			; Segment Limit (0-15 bits) Set to the full address range, because we use paging.
