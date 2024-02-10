@@ -94,7 +94,7 @@ struct idt_entry
 {
     uint16_t offset_1;  // Offset bits 0 - 15
     uint16_t selector; // Segment selector
-    uint8_t zero; // Revers and IST. we dont use interrupt stack table, so always zero
+    uint8_t zero; // Reserved and IST. we dont use interrupt stack table, so always zero
     uint8_t attributes;
     uint16_t offset_2; // Offset bits 16 - 31
 } __attribute__((packed));
