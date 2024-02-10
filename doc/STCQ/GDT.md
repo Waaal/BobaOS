@@ -129,8 +129,7 @@ lgdt [gdt_ptr]
 ```
 
 ## Implementation
-The Implementation can be done in assembly and in C code. 
-The only part thats need to be done in asembly is the loading of the GDT with the lgdt instruction, because this instruction cannot be done in C code.
+The Implementation normaly has to be done in assembly code, because a 32 bit GDT is required to jump to protected mode and a 64 bit GDT is required to jump tol ong mode.
 
 ### Assembly
 This example is in **protected mode, 32 bit**.

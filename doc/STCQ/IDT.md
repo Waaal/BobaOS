@@ -86,4 +86,22 @@ lidt [AddressOfPointer]
 
 ## Implementation
 
-*Missing IDT Implementation*
+The IDT can be implemented in Assemlby and C code.
+
+### C Code (32 bit)
+``` c
+struct idt_entry
+{
+    uint16_t offset_1;  // Offset bits 0 - 15
+    uint16_t selector; // Segment selector
+    uint8_t zero; // Revers and IST. we dont use interrupt stack table, so always zero
+    uint8_t attributes;
+    uint16_t offset_2; // Offset bits 16 - 31
+} __attribute__((packed));
+
+struct idt_ptr
+{
+    uint16_t limit; //Size -1 
+    uint32_t base; //Address of start of IDT
+} __attribute__((packed));
+```
