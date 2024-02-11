@@ -2,6 +2,7 @@
 Assembly gets compiled into a object file or directly into a bin file.
 A bin file is usefull for the bootloader.
 A objectfile is usefull if we want to use our assembly to link into a bigger file.
+
 To compile assembly nasm is a good choice.
 
 ### Compile a bin file
@@ -18,7 +19,7 @@ nasm -f elf -g ./src/kernel/kernel.asm -o ./build/kernel.asm.o
 
 **-f:** Specifies the output file format. (bin = binary, elf = object)
 
-**-g:** Enable Debug information in the output file. So for example to keep the symbol names so we can later use them in a debugger.
+**-g:** Enable Debug information in the output file. For example to keep the symbol names so we can later use them in a debugger.
 
 **-o:** Defines the output file location and name.
 
@@ -35,6 +36,7 @@ functionName:
 	mov eax, 1
 	ret
 ```
+*Note: That C can use this global functions we obviously need a header file, that specifies to C, that this function exists*
 
 ### Import functions
 ``` assembly
