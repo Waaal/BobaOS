@@ -1,33 +1,44 @@
-# How to handle hardware interrutps.
+# Programmable Interrupt Controller.
 Hardware interrupts are generated externally by a different chipset the Programmable Interrupt Controller (PIC).
-## The Programmable Interrupt Controller (PIC)
-The PIC consits out of 2 chips. One Slave and one Master. Each Chip has 8 Input signals called IRQ (Interrupt Request). On each interrupt line a Hardware component can send a interrupt request to the chip, and the chip sends a interrupt request to the CPU but orderd by importance. 
+This chip allowes hardware to interrupt the processor. For example: if you press a key on the keyboard the PIC will invoke a interrupt in the CPU.
 
-The order starts from IRQ 0 and goes to  IRQ 7. IRQ 0 is the moste important and IRQ 8 is the least important. (The keyboards sends on IRQ 1)
+## PIC structure
+The PIC consits out of 2 chips. One Slave and one Master. Each Chip has 8 Input signals called IRQ (Interrupt Request). On each interrupt line a Hardware component can send a interrupt request to the chip, and the chip sends a interrupt request to the CPU but the orderd by importance. 
+
+The order starts from IRQ 0 and goes to  IRQ 7. IRQ 0 is the moste important and IRQ 8 is the least important.
 
 The slave chip is connectet to the master chip via **IRQ2**. So we have a total of 15 Input lines.
 
-| Slave | 
-| ------ |
-| IRQ0 |
-| IRQ1 |
-| **IRQ2** |
-| IRQ3 |
-| IRQ4 |
-| IRQ5 |
-| IRQ6 |
-| IRQ7 |
+Master handles IRQ 0 - 7.
+Slave handles IRQ 8 - 15.
 
 | Master | 
 | ------ |
 | IRQ0 |
 | IRQ1 |
-| **IRQ2** |
+| **IRQ2 (Connection to slave)** |
 | IRQ3 |
 | IRQ4 |
 | IRQ5 |
 | IRQ6 |
 | IRQ7 |
+
+| Slave | 
+| ------ |
+| IRQ0 |
+| IRQ1 |
+| **IRQ2 (Connection to master)** |
+| IRQ3 |
+| IRQ4 |
+| IRQ5 |
+| IRQ6 |
+| IRQ7 |
+
+
+The IRQ 0 number can be remapped to a Interrupt vector. The others than will follow with the next vector. Example: We map IRQ 0 to interrupt vector 40. IRQ 1 will have 41. IRQ 2 will have 42 and so on.
+
+
+*Note: By default the IRQs are mapped to interrupt vectors 8 - 15. This is a problem because interrupt vectors 0 - 31 are used by the CPU exceptions, so we need to remap them*
 
 
 When a interrupt is fired, the IRQ channel gets masked. So the Chip nows, that he cannot use this channel, till the mask bit is 0.
@@ -45,12 +56,9 @@ Each chip has a command register port and a data register port.
 ### Init the PIC
 In order for a PIC to work we have to send 2-4 init Initialication Command Word (ICW). The actual number we have to send depends on the configuration. But ICW1 and ICW2 are needed for this chip to work.
 
-
 The order of the commands we have to send are fix. They cannot be send again.
 
-
 There are also operating command words (OCW). They can be send during the operating of the chip. These commands are not fix and not needed to work.
-
 
 #### Sending ICWs
 As mention the order of this commands are fix.
@@ -131,10 +139,13 @@ On this 3 frequency divider outputs (Channels) we can controll external circuits
 - Channel 1: Not in use probably didnt exists anymore. **0x41 I/O address**
 - Channel 1: Connected to PC speaker.Frequency of output determines the frequency of the sound. **0x42 I/O address**
 
+The PIT can be configured to frequently send interrupts to the CPU. This can then be use for a Task switching. For Example: We confire the PIC to send 100 interrupts per second to the CPU. The CPU uses this interrupt to switch Task 100 times per second.
+
 The PIT has a frequency ~1.2Mh per channel.
 
 At address **0x43** Mode/Command register. A 8 bit value for the settings of the PIT (write only).
 
+**The PIT is connected to the PIC at IRQ 0.**
 
 Content of the Mode/Command register
 ```
@@ -162,8 +173,7 @@ Content of the Mode/Command register
 
 **Selected Channel**: Channel 0, Channel 1, Channel 2, or Read-back command
 
-## Set up a PIT
-We need a PIT to generate IRQ0 interrupts.
+## Set up a PIT to send 100 interrupts per second (Assembly)
 ``` assembly
 InitPIT:
     mov al, 00110100b     ; Selected Channel = 0
@@ -179,7 +189,7 @@ InitPIT:
 ``` 
 Now our PIT is configured, to send 100 interrupts per second to IRQ0 on master chip.
 
-## Set up a PIC
+## Set up a PIC (Assembly)
 ``` assembly
     mov al, 0x11      ; ICW_1 = 00010001
     out 0x20, al      ; out to master command register 
@@ -246,4 +256,9 @@ And thats how you set up a PIC.
 
 We now have a timer, that sends 100 times a second to IRQ0 at master and the PIC sends it to the CPU. Dont forget to handle the interrupt at vector 32 with the IDT.
 
+### Acknowledgment
+The PIC needs acknowledgment for a interrupt so that it can send new interrupts on these lines. 
+For example if the PIC sends an interrupt on IRQ 0 and it is mapped to vector 32. You need to acknowledge back that you have handled this interrupt. Otherwies the PIC wont send any new interrupts on vector 32.
 
+#### How to send a acknowledgment
+[Missing]

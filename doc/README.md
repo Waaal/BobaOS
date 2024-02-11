@@ -12,7 +12,7 @@
     - [IDT](STCQ/IDT.md)
     - [GDT](STCQ/GDT.md)
     - [TSS (INCOMPLETE)](STCQ/TSS.md)
-    - [PIC (HardwareInterrupts)](STCQ/HardwareInterrups.md)
+    - [PIC (HardwareInterrupts)](STCQ/HardwareInterrupts.md)
     - [MMU (Paging)](paging.md)
 - FileSystem
     - [Fat](fs/Fat.md)
@@ -22,7 +22,7 @@
 - Boot
     - [Bootloader](boot/Boot.md)
     - [Loader](boot/Loader.md)
-    - [HandleHardwareInterrupts](boot/HardwareInterrupts.md)
+    - [HandleHardwareInterrupts](STCQ/HardwareInterrupts.md)
     - [Paging](paging.md)
 - FileSystem
     - [Fat](fs/Fat.md)
