@@ -59,6 +59,8 @@ Used for interrupts that can be invoked with the INT instruction.
 Used for exceptions raised by the CPU.
 (They also automatically disable interrupts on entry and re-enable them on iret instruction)
 
+*Note: Almost every gate (Inerrupt and Trap) needs a iret instruction on the end*
+
 ### Load a IDT
 To load a Interrupt Descriptor Table we need a pointer to this table.
 The pointer needs to have the following structure:

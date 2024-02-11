@@ -25,24 +25,40 @@ Slave handles IRQ 8 - 15.
 
 | Slave | 
 | ------ |
-| IRQ0 |
-| IRQ1 |
-| **IRQ2 (Connection to master)** |
-| IRQ3 |
-| IRQ4 |
-| IRQ5 |
-| IRQ6 |
-| IRQ7 |
+| IRQ8 |
+| IRQ9 |
+| IRQ10|
+| IRQ11 |
+| IRQ12 |
+| IRQ13 |
+| IRQ14 |
+| IRQ15 |
 
 
 The IRQ 0 number can be remapped to a Interrupt vector. The others than will follow with the next vector. Example: We map IRQ 0 to interrupt vector 40. IRQ 1 will have 41. IRQ 2 will have 42 and so on.
 
-
 *Note: By default the IRQs are mapped to interrupt vectors 8 - 15. This is a problem because interrupt vectors 0 - 31 are used by the CPU exceptions, so we need to remap them*
 
+#### Default ISA IRQ`s
+|IRQ|Description|
+|0|Timer (PIT)|
+|1|Keyboard|
+|2|Connection to slave (never used)|
+|3|COM2 (if enabled)|
+|4|COM1 (if enabled)|
+|5|LPT2 (if enabled)|
+|6|Floppy Disk|
+|7|LPT1|
+|8|CMOS real time clock (if enabled)|
+|9|Free for peripherals|
+|10|Free for peripherals|
+|11|Free for peripherals|
+|12|PS2 Mouse|
+|13|Intel-Processor|
+|14|Primary ATA Hard Disk|
+|15|Secondary ATA Hard Disk|
 
 When a interrupt is fired, the IRQ channel gets masked. So the Chip nows, that he cannot use this channel, till the mask bit is 0.
-
 
 Each chip has a command register port and a data register port.
 
@@ -95,6 +111,9 @@ This is now a whole number 8 bit value. So if our starting vector is 32 we write
 
 **ICW_3**:
 Only needed if we have set bit 1 in ICW_1 to cascade. This value speciefies at which IRQ the master and slave are connected. On a normal system this is IRQ2
+
+**IMPORTANT: I think this can be ignored, because it is set by default to IRQ 2**
+
 ```
   7   6   5   4   3   2   1   0
 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
@@ -256,9 +275,9 @@ And thats how you set up a PIC.
 
 We now have a timer, that sends 100 times a second to IRQ0 at master and the PIC sends it to the CPU. Dont forget to handle the interrupt at vector 32 with the IDT.
 
-### Acknowledgment
+## Acknowledgment
 The PIC needs acknowledgment for a interrupt so that it can send new interrupts on these lines. 
 For example if the PIC sends an interrupt on IRQ 0 and it is mapped to vector 32. You need to acknowledge back that you have handled this interrupt. Otherwies the PIC wont send any new interrupts on vector 32.
 
-#### How to send a acknowledgment
+### How to send a acknowledgment
 [Missing]
