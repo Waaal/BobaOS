@@ -8,10 +8,10 @@
         - Long Mode
     - [BIOS - Boot](x86Assembly/BIOS_Boot.md)
 - x86 Assembly and C
-    - Cross compiler
+    - [Cross compiler](assemblyAndC/crosscompiler.md)
     - Compiler
+        - [Compile Assembly](assemblyAndC/compileAssembly.md)
         - Compile C
-        - Compile Assembly
     - Link the Kernel
 - Structs / Techniques / Chips / Quirks
     - [A20 Line](STCQ/A20_Line.md)
