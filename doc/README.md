@@ -3,7 +3,7 @@
     - Registers
     - Instruction set
     - Modes
-        - Real Mode
+        - [Real Mode](assembly_modes/real_mode.md)
         - Protected Mode
         - Long Mode
     - [BIOS - Boot](x86Assembly/BIOS_Boot.md)
