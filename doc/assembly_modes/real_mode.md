@@ -1,8 +1,10 @@
 # Real Mode
 Real mode (Real address mode) is the mode the CPU is in after booting.
+
 In real mode the CPU and all of our registers are in 16 bit mode. 
 
 We can use 1MB of RAM and have no memory protection (pagind, GDT).
+
 The use of the segment registers are to access memory larger than 16bit.
 
 ## Usable registers
