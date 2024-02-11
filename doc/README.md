@@ -7,13 +7,23 @@
         - Protected Mode
         - Long Mode
     - [BIOS - Boot](x86Assembly/BIOS_Boot.md)
+- x86 Assembly and C
+    - Cross compiler
+    - Compiler
+        - Compile C
+        - Compile Assembly
+    - Linker
+        - Link Assembly and C
+        - Link Header files and Assembly
 - Structs / Techniques / Chips / Quirks
     - [A20 Line](STCQ/A20_Line.md)
     - [IDT](STCQ/IDT.md)
     - [GDT](STCQ/GDT.md)
     - [TSS (INCOMPLETE)](STCQ/TSS.md)
     - [PIC (HardwareInterrupts)](STCQ/HardwareInterrupts.md)
-    - [MMU (Paging)](paging.md)
+- Memory management
+    - [MMU (Paging)](memoryManagement/paging.md)
+    - Heap
 - FileSystem
     - [Fat](fs/Fat.md)
 - Driver
@@ -23,7 +33,7 @@
     - [Bootloader](boot/Boot.md)
     - [Loader](boot/Loader.md)
     - [HandleHardwareInterrupts](STCQ/HardwareInterrupts.md)
-    - [Paging](paging.md)
+    - [Paging](memoryManagement/paging.md)
 - FileSystem
     - [Fat](fs/Fat.md)
 - Kernel
