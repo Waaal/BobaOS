@@ -40,23 +40,23 @@ The IRQ 0 number can be remapped to a Interrupt vector. The others than will fol
 *Note: By default the IRQs are mapped to interrupt vectors 8 - 15. This is a problem because interrupt vectors 0 - 31 are used by the CPU exceptions, so we need to remap them*
 
 #### Default ISA IRQ`s
-|IRQ|Description|
-|0|Timer (PIT)|
-|1|Keyboard|
-|2|Connection to slave (never used)|
-|3|COM2 (if enabled)|
-|4|COM1 (if enabled)|
-|5|LPT2 (if enabled)|
-|6|Floppy Disk|
-|7|LPT1|
-|8|CMOS real time clock (if enabled)|
-|9|Free for peripherals|
-|10|Free for peripherals|
-|11|Free for peripherals|
-|12|PS2 Mouse|
-|13|Intel-Processor|
-|14|Primary ATA Hard Disk|
-|15|Secondary ATA Hard Disk|
+| IRQ | Description |
+| 0 | Timer (PIT) |
+| 1 | Keyboard |
+| 2 | Connection to slave (never used) |
+| 3 | COM2 (if enabled) |
+| 4 | COM1 (if enabled) |
+| 5 | LPT2 (if enabled) |
+| 6| Floppy Disk |
+| 7 | LPT1 |
+| 8 | CMOS real time clock (if enabled) |
+| 9 | Free for peripherals |
+| 10 | Free for peripherals |
+| 11 | Free for peripherals |
+| 12 | PS2 Mouse |
+| 13 | Intel-Processor |
+| 14 | Primary ATA Hard Disk |
+| 15 | Secondary ATA Hard Disk |
 
 When a interrupt is fired, the IRQ channel gets masked. So the Chip nows, that he cannot use this channel, till the mask bit is 0.
 
