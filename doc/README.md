@@ -12,9 +12,7 @@
     - Compiler
         - Compile C
         - Compile Assembly
-    - Linker
-        - Link Assembly and C
-        - Link Header files and Assembly
+    - Link the Kernel
 - Structs / Techniques / Chips / Quirks
     - [A20 Line](STCQ/A20_Line.md)
     - [IDT](STCQ/IDT.md)
