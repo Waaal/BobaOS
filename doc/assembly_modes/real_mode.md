@@ -33,8 +33,8 @@ To access memory larger than 16bit we use the segment registers.
 	; I want to access address 0xC8000. 0xC8000 is too large for 16 bit
 	mov ax, 0xC800
 	mov es, ax				; Move pointer to 0xC800 into Segmentation register es
-	mov ax, byte[es:0x00]	; Access variable 0xC8000 because everything in the Segmentation registers is shifted 4 byte.
-							; es:0x00 = 0xC800:0x00 = 0xC800 * 16 + 0x00 = 0xC8000
+	mov ax, byte[es:0x00]			; Access variable 0xC8000 because everything in the Segmentation registers is shifted 4 byte.
+					; es:0x00 = 0xC800:0x00 = 0xC800 * 16 + 0x00 = 0xC8000
 ```
 
 ## BIOS Functions
