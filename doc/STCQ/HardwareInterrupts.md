@@ -40,7 +40,9 @@ The IRQ 0 number can be remapped to a Interrupt vector. The others than will fol
 *Note: By default the IRQs are mapped to interrupt vectors 8 - 15. This is a problem because interrupt vectors 0 - 31 are used by the CPU exceptions, so we need to remap them*
 
 #### Default ISA IRQ`s
+
 | IRQ | Description |
+| ------ | ------ |
 | 0 | Timer (PIT) |
 | 1 | Keyboard |
 | 2 | Connection to slave (never used) |
