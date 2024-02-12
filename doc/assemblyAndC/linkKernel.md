@@ -85,22 +85,23 @@ SECTIONS
 
 **.asm** Our custom section. There goes our assembly code
 
-**ALIGN(4096)** Tell the linkre it should align every section to 4kb
+**ALIGN(4096)** Tell the linker it should align every section to 4kb
 
 ### Important 
 
-We created a custom section for our assembly, because assembly is not aligned by the nasm compiler. Our gcc c compiler aligns all the code as we specified with in [compileC](compileC.md#Alignment flags). But assembly is not aligned by the compiler, so we place it in a seperate section and place this section at the end. So our not aligned assembly cannot put all of our C stuff out of alignment.
+We created a custom section for our assembly, because assembly is not aligned by the nasm compiler. Our gcc c compiler aligns all the code as we specified with in [CompileC Alignment Flags](compileC.md#Alignmentflags). But assembly is not aligned by the compiler, so we place it in a seperate section and place this section at the end. So our not aligned assembly cannot put all of our C stuff out of alignment.
 
 Also important is, that we need to have the .text section at the beginning. Because this kernel file is a binary file and doesnt have a header that specifies where our entry point is. So when we jump from our bootloader to the kernel, it jumps at the fist instruction of our binary file. So it is important, that the .text section is at the beginning and that our entry point is the fist thing in the binary file.
 
-Every assembly file that needs to be in the text section needs to be manually aligned by us. So lets say our main kernel function is assembly so our start lable is in assembly. This assembly then needs to jump to our c entry point. 
+Every assembly file that needs to be in the text section needs to be manually aligned by us. So lets say our main kernel function is assembly, so our start lable is in assembly. This assembly then needs to jump to our c entry point. 
 Because we said the start lable needs to be the first thing in our binary file we cannot put this kernel assemlby in the asm section. So we need to put it at the start. Because everything else in the .text section is aligned by the C compiler, we need to manually align our kernel assembly entry point.
 ``` assembly
 times 512- ($ - $$) db 0 	; Aligns our kernel assembly.
 ```
 
+
 *Note: The first thing in a binary file is specified by the order we give the files to the compiler*
 ```
 CrossCompilerName-ld -g -relocatable ./build/file1.o ./build/file2.o ./build/file3.o -o ./build/kernelfull.o
 ```
-*So file 1 will be the first file in our binary. (So if we need the kernel start point at the fist byte in our binary file, we need to put kernel.asm in the compiler first)*
+*So file 1 will be the first file in our binary. (So if we need the kernel start point at the fist byte in our binary file, we need to put kernel.asm.o in the compiler first)*

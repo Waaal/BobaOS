@@ -12,7 +12,7 @@
     - Compiler
         - [Compile Assembly](assemblyAndC/compileAssembly.md)
         - [Compile C](assemblyAndC/compileC.md)
-    - Link the Kernel
+    - [Link the Kernel](assemblyAndC/linkKernel.md)
 - Structs / Techniques / Chips / Quirks
     - [A20 Line](STCQ/A20_Line.md)
     - [IDT](STCQ/IDT.md)
