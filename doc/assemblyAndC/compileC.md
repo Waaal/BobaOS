@@ -13,7 +13,7 @@ This returns a compiled object file.
 
 **-o** Output file location and name
 
-### $(FLAGS)
+### FLAGS
 $(FLAGS) is a variable and needs to be replaced with the following:
 
 #### Needed flags
@@ -72,7 +72,7 @@ If we want to include header files and didnt want to specify the relative path i
 ```
 
 ```
-i686-elf-gcc -I./src/kernel/ -I./src/kernel/memory/ -I./src/kernel/io/ $(FLAGS) -std=gnu99 -c ./src/kernel/kernel.c -o ./build/kernel.o
+CrossCompilerName-gcc -I./src/kernel/ -I./src/kernel/memory/ -I./src/kernel/io/ $(FLAGS) -std=gnu99 -c ./src/kernel/kernel.c -o ./build/kernel.o
 ```
 
 Here we need to specify where to look for the header files with the -I tag.
