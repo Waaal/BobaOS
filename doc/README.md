@@ -11,7 +11,7 @@
     - [Cross compiler](assemblyAndC/crosscompiler.md)
     - Compiler
         - [Compile Assembly](assemblyAndC/compileAssembly.md)
-        - Compile C
+        - [Compile C](assemblyAndC/compileC.md)
     - Link the Kernel
 - Structs / Techniques / Chips / Quirks
     - [A20 Line](STCQ/A20_Line.md)
