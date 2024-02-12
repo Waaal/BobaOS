@@ -97,7 +97,7 @@ The 4kb page translation is the same, but i needs one more table level.
 A entry in a Page Table is 64bit in long mode.
 It holds either the address to the next level of table, or the address of the Page in the Physical memory. But it also holds some Attributes for protection and other stuff.
 ```
- 63 62      59 58        52 51     M M-1                             13 12   11    9 8 7 6 5   4  3  2 1 0
+ 63 62      59 58        52 51     M M-1                        14   13 12   11    9 8 7 6 5   4  3  2 1 0
 |XD|    PK    |    AVL     |RESERVED|    Bits of address (M)      | PAT|  AVL  |G|PS|D|A|PCD|PWT|US|RW|P|
 ```
  - P = Present: 1 = Page is actually in physical memory at the moment. 0 = Is not (Page fault will occure on call)

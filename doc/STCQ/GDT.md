@@ -132,7 +132,7 @@ lgdt [gdt_ptr]
 The Implementation normaly has to be done in assembly code, because a 32 bit GDT is required to jump to protected mode and a 64 bit GDT is required to jump tol ong mode.
 
 ### Assembly
-This example is in **protected mode, 32 bit**.
+This example is for **protected mode, 32 bit** GDT.
 ``` assembly
 gdt_start:
 gdt_null: dq 0 				; NULL Entry in gdt. One entry is 8 byte in protected mode

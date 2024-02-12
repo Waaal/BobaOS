@@ -92,6 +92,7 @@ The IDT can be implemented in Assemlby and C code.
 
 ### C Code (32 bit)
 ``` c
+//Define structs
 struct idt_entry
 {
     uint16_t offset_1;  // Offset bits 0 - 15
@@ -106,4 +107,17 @@ struct idt_ptr
     uint16_t limit; //Size -1 
     uint32_t base; //Address of start of IDT
 } __attribute__((packed));
+
+
+//Set a idt entry
+void idt_set(int vector, void* address)
+{
+    struct idt_entry* entry = &idt_entry_array[vector];
+
+    entry->offset_1 = (uint32_t)address & 0x0000FFFF;
+    entry->offset_2 = (uint32_t)address >> 16; 
+    entry->selector = 0x8;
+    entry->zero = 0x0;
+    entry->attributes = 0xEE; //P = 1, DPL = 3, Gate Type = Interrupt gate
+}
 ```

@@ -31,9 +31,9 @@ $(FLAGS) is a variable and needs to be replaced with the following:
 | **-wall** | Enables all compiler warning while compiling |
 | **-O0** | Turs off optimization. Help while debugging, so that the compiler does not do unexpected things with our code while optimizing |
 | **-g** | Enable Debug information in the output file. For example it puts all functions to thy symbole table and we can use them later with the debugger |
-| **-Wno-unused-functions** | Disables warning that I didnt use a function |
-| **-Wno-unused-lable** | Disables warning that I didnt use a variable |
-| **-Wno-unused-parameter** | Disables warning that I didnt use a variable |
+| **-Wno-unused-functions** | Enables warning that I didnt use a function |
+| **-Wno-unused-lable** | Enables warning that I didnt use a variable |
+| **-Wno-unused-parameter** | Enables warning that I didnt use a variable |
 
 #### Alignment flags
 | Flag | Explenation |

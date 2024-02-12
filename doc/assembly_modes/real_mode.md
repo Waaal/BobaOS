@@ -15,6 +15,8 @@ We have access to the following registers:
 - BX: [BH | BL]
 - CX: [CH | CL]
 - DX: [DH | DL]
+- SI: Source Index
+- DI: Destination Index
 
 **Stack registers:**
 - SS: Stack segment (Also a segment register)
