@@ -45,6 +45,7 @@ $(FLAGS) is a variable and needs to be replaced with the following:
 
 #### Optimization Flags
 | Flag | Explenation |
+| ------ | ------ |
 | **fomit-frame-pointer** | Removes frame pointer from small functions, that dont need one. |
 | **-finline-functions** | Integrate all simple functions into their callers.  |
 | **-fstrength-reduce** | Part smaller loops into hardcoded code and dont use loop  |
