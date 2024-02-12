@@ -45,8 +45,8 @@ For this the Multi level page translation system got created. With this we have 
 The level and numbers of page tabels differs on page size and os size (32/64 bit).
 
 **On a 32 bit operating system we have**
-- [4KB pages](paging.md#32Bit4KB) (2 page tables)
-- [2MB pages](paging.md#32Bit2MB) (1 page table)
+- [4KB pages](paging.md#32-Bit-4KB) (2 page tables)
+- [2MB pages](paging.md#32-Bit-2MB) (1 page table)
 
 **On a 64 bit operating system we have**
 - 4KB pages (4 page tables)
@@ -127,8 +127,6 @@ Because the 4kb page translation needs 2 tables, we have a **PD** and a **PT** e
 Bits 11 - 0 are same as in PD Entry
 
 ## 32 Bit 2MB
-
-## 64 Bit 4KB
 
 ## 64 Bit 4KB
 
