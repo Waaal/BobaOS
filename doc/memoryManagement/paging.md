@@ -68,42 +68,54 @@ Calculating with multiple pages is called a Page translation.
 ### 4KB Lookup 32 bit
 On a 32 bit system our addres is 32 bit long. So if we want to seperate our system in 4kb pages, we need 2 Tables. 
 
-The First table is called the **page directory (PD)** with 1024 entries. Each entry in the page directory points to a **page table**with 1024 entries. Each page table entry is a 4096 kb block.
+The First table is called the **page directory (PD)** with 1024 entries. Each entry in the page directory points to a **page table (PT)**with 1024 entries. Each page table entry is a 4096 kb block.
 
 So we have 1 Page directory and 1024 page tables on a 4kb page translation on a 32 bit system.
 
 1024 * 1024 * 4096 = 4GB of max addressable memory in a 32 bit system.
 
 So a 4kb page translation would look something like this
-https://www.youtube.com/watch?v=Z4kSOv49GNc
 ```
-Virual Address: 0x00000000
+Virual Address: 0x04002204 = 00000000010000000010000000000000
 
- 31        21 20   12 11        0
-|     PD     |  PT   |Offset    |
-| 0x000      |0x00   |0x000     |
+ 31        22 21        12 11           0
+|     PD     |     PT     |    Offset    |
+| 0000000001 | 0000000010 | 100000000010 |
+|    0x1     |    0x2     |    0x204     |
 
 
-PD:                                                  ->   At location 0x002 (PT)
-| Virual    | Physical|                                |    | Virual    | Physical| 
-|[0x0000]   |  0x002  | ---> Table at location 0x002 -      | 0x0003    | 0x00023 |
-| 0x0001    |  0x003  |                                     |[0x0004]   | 0x00045 |
-| 0x0002    |  0x004  |                                     | 0x0005    | 0x00067 |
+PD: 0000000001 = 0x1                                   ->   PT: 0000000010 = 0x2
+| Entry     | Physical|                                |    | Entry     | Physical| 
+| 0x0       |  0x002  |                                |    | 0x0001    | 0x00023 |
+|[0x1]      |  0x003  |   --> PT at memory addr 0x003 --    |[0x0002]   | 0x00045 |
+| 0x2       |  0x004  |                                     | 0x0003    | 0x00067 |
 | ...       |  ...    |                                     | ...       |  ...    |
 
 
 
 
-So Virtual address 0x0000000100000000 gets translated to physical address: 0x0000000000450000
+So Virtual address 0x04002204 gets translated to physical address: 0x00045204
 ```
+So we devide our address in 3 parts. Bits 31 - 22 are the index in the **PD** table. Bits 21 - 12 are the index in the **PT** table. And bits 11 - 0 are the offset in the final 4kb page.
 
-Now each Table (PD, PT) has entrys. And each entry is 32 bit but differs a little bit in its structure
+So one PT has 1024 enties. Each entry covers 4096 byte page. So one PT can cover 1024 * 4096 = 0x400000 byte (4MB).
+The one PD can have 1024 PTs so 1024 * 0x400000 = 0x100000000 (4GB).
+
+Each entry in the PT is shiftet 4096 bytes. 
+Each entry in the PD is shiftet 0x400000 bytes.
+```
+PD[0] = virual address space        0x0         -   0x400000.
+PD[1] = virtual address space       0x400000    -   0x800000
+PD[1023] = virtual address space    0xFFC00000  -   0x100000000
+```
+Now each Table (PD, PT) has entrys. And each entry is 32 bit.
 
 ### 4KB page table structure 32 bit
 
 Because the 4kb page translation needs 2 tables, we have a **PD** and a **PT** entry struct.
 
-#### PD Entry
+#### PD & PT Entry
+Eeach the entry in the PD and PT has the same structure and bits.
 ```
  31                               12 11   9 8  7 6 5 4  3  2  1 0
 |     Bits 31 - 12 of address       | AVL  |G|PS|0|A|D|WT|US|RW|P|
@@ -119,12 +131,9 @@ Because the 4kb page translation needs 2 tables, we have a **PD** and a **PT** e
  - G = Global??????
  - AVL = Available: 1 = It is available; 0 = It is not available.
 
-#### PT Entry
-```
- 31                               12 11   9 8  7 6 5 4  3  2  1 0
-|     Bits 31 - 12 of address       | AVL  |G|PS|0|A|D|WT|US|RW|P|
-```
-Bits 11 - 0 are same as in PD Entry
+If the PD & PT holds actual physical addresses in memory (PD holds the start of the PT table, PT holds start of 4KB block) why are they addresses they hold one bits 32 - 12?
+
+**[Explenation missing]**
 
 ## 32 Bit 2MB
 
@@ -133,3 +142,6 @@ Bits 11 - 0 are same as in PD Entry
 ## 64 Bit 2MB
 
 ## 64 Bit 1GB
+
+Super cool video explaining this
+https://www.youtube.com/watch?v=Z4kSOv49GNc
