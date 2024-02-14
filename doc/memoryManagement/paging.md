@@ -134,9 +134,18 @@ Eeach the entry in the PD and PT has the same structure and bits.
  - G = Global??????
  - AVL = Available: 1 = It is available; 0 = It is not available.
 
-If the PD & PT holds actual physical addresses in memory (PD holds the start of the PT table, PT holds start of 4KB block) why are they addresses they hold one bits 32 - 12?
+If the PD & PT holds actual physical addresses in memory (PD holds the start of the PT table, PT holds start of 4KB block) why are they addresses they hold one bits 31 - 12?
 
-**[Explenation missing]**
+Because the 12th bit counting from 0 is exactly 4096. Because one table is 4096 bytes long, we only need bits 31-12 to describe the address of the table, because the other bits would point in the table.
+
+Example:
+```
+                                          12 11         0
+Table 0 is at 0x0000    00000000000000000000 000000000000
+Table 1 is at 0x1000    00000000000000000001 000000000000
+Table 2 is at 0x2000    00000000000000000010 000000000000
+``` 
+**But with this, we cannot have a table at position 0x0010. The tables need to be aligned at 4096 bytes**
 
 ## 32 Bit 2MB
 
