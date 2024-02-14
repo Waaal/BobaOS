@@ -57,6 +57,9 @@ Each page table holds some permissions and the entry in the next level of page t
 
 Calculating with multiple pages is called a Page translation.
 
+But how does page translation solve our memory problem? Becuase on a 32bit system with 4GB of RAM and 4kb pages the page tables will still add ub to 4MB.
+But this time we can dynamically genearte more page tabels. Because we have one PD which holds other PT we only need min one PD and one PT. This is 8kb. With this 8kb we have 0x400000bytes of virtual ram. If the program needs more, we can dynmalically create more PT`s.
+
 ## 32 Bit 4KB
 
 | Level | Number | Entries | Name |
