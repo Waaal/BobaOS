@@ -44,6 +44,8 @@ W = write mode. R = read mode
 
 *Note: If there are more drives/buses their ports are 0x1E0-0x1E7 for primary and  0x160-0x167 for secondary*
 
+Normaly the disk we boot from is set default as the Primary disk (0x1F0) by the BIOS.
+
 ## Reading from ATA PIO
 We can put the disk controller in read mode by sending 0x20 to the command register (0x1F7). When we send 0x20 to the command register, we need to make sure that all the other values, LBA and Total number of sectors are in there appropriate register.
 
@@ -84,7 +86,7 @@ int disk_read_sector(int lba, int total, void* buf)
         }
 
         // Copy from hard disk to memory
-        //256 because we read 2 bytes at a time. One secotr is 512 bytes so (256*2 = 512)
+        //256 because we read 2 bytes at a time. One sector is 512 bytes so (256*2 = 512)
         for(int i = 0; i < 256; i++)
         {
             *ptr = insw(0x1F0);
