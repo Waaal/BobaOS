@@ -24,7 +24,7 @@ W = write mode. R = read mode
 | 0x1F3 | R/W | 0 - 7 of starting LBA |
 | 0x1F4| R/W | 8 - 15 of starting LBA  |
 | 0x1F5 | R/W | 16 - 23 of starting LBA  |
-| 0x1F6 | R/W | 24 - 27 of starting LBA and bits 28-31 needs to be 1010 | 
+| 0x1F6 | R/W | 24 - 27 of starting LBA and bits 28-31 needs to be 1110 | 
 | 0x1F7 | R | Status register | 
 | 0x1F7 | W | Command register | 
 
@@ -38,7 +38,7 @@ W = write mode. R = read mode
 | 0x173 | R/W | 0 - 7 of starting LBA |
 | 0x174| R/W | 8 - 15 of starting LBA  |
 | 0x175 | R/W | 16 - 23 of starting LBA  |
-| 0x176 | R/W | 24 - 27 LBA and bits 28-31 needs to be 1010 | 
+| 0x176 | R/W | 24 - 27 LBA and bits 28-31 needs to be 1110 | 
 | 0x177 | R | Status register | 
 | 0x177 | W | Command register | 
 
@@ -50,3 +50,48 @@ We can put the disk controller in read mode by sending 0x20 to the command regis
 After we send the command, the command register turns into the Status register. Now we need to read from the Status register port. If we get back a number where bit 4 is set, we know the disk is ready and we can start reading.
 
 We read from the Data register (0x1F0) 2 bytes at a time.
+
+## Implementation
+
+### C - Read
+```
+//outb = outputs byte to port
+//outw = outputs 2 byte to port
+
+//insb = reads byte from port
+//insw = reads 2 bytes from port
+
+//lba = logical block starting address
+//total = total blocks to read
+//buf = buffer to save read content
+int disk_read_sector(int lba, int total, void* buf)
+{
+    outb(0x1F2, total);
+    outb(0x1F3, (unsigned char)lba);        //Bits 0 - 7 of lba
+    outb(0x1F4, (unsigned char)lba >> 8);   //Bits 8 - 15 of lba
+    outb(0x1F5, (unsigned char)lba >> 16);  //Bits 16 - 23 of lba
+    outb(0x1F6, (unsigned char)(lba >> 24) | 0xE0);  //Bits 24 - 27 of lba, bits 28 - 31 = 1110
+    outb(0x1F7, 0x20); //Put in read mode
+
+    unsigned short* ptr = (unsigned short*)buf;
+    for(int i = 0; i < total; i++)
+    {
+        //Wait for buffer to be ready
+        char c = 0x0;
+        while(!(c & 0x8))
+        {
+            c = insb(0x1F7);
+        }
+
+        // Copy from hard disk to memory
+        //256 because we read 2 bytes at a time. One secotr is 512 bytes so (256*2 = 512)
+        for(int i = 0; i < 256; i++)
+        {
+            *ptr = insw(0x1F0);
+            ptr++;
+        }
+    }
+
+    return 0;
+}
+```
