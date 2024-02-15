@@ -51,10 +51,10 @@ After we send the command, the command register turns into the Status register. 
 
 We read from the Data register (0x1F0) 2 bytes at a time.
 
-## Implementation
+## Simple Implementation
 
 ### C - Read
-```
+``` c
 //outb = outputs byte to port
 //outw = outputs 2 byte to port
 
