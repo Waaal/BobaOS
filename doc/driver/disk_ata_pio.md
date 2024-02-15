@@ -16,7 +16,7 @@ W = write mode. R = read mode
 
 **Primary**
 | Port  | Mode | Descritpion |
-| ------ | ------ |
+| ------ | ------ | ------ |
 | 0x1F0 | R/W | Data register |
 | 0x1F1 | R | Error register |
 | 0x1F1 | W | Features register |
@@ -30,7 +30,7 @@ W = write mode. R = read mode
 
 **Secondary**
 | Port  | Mode | Descritpion |
-| ------ | ------ |
+| ------ | ------ | ------ |
 | 0x170 | R/W | Data register |
 | 0x171 | R | Error register |
 | 0x171 | W | Features register |
