@@ -10,7 +10,7 @@ ATA PIO is extremly slow, because every byte must be send trough the CPU'S IO po
 
 ## Primary/Secondary
 Disk controller chips support 2 ATA buses per chip. These two are called primary and secondary. 
-The IO-ports of the Primary and Secondary drives are standardized. When the system boots the PCI dosk controller is in Legacy/Compability mode and supports these standardized IO-port settings.
+The IO-ports of the Primary and Secondary drives are standardized. When the system boots the PCI disk controller is in Legacy/Compability mode and supports these standardized IO-port settings.
 
 W = write mode. R = read mode
 
@@ -38,15 +38,15 @@ W = write mode. R = read mode
 | 0x173 | R/W | 0 - 7 of starting LBA |
 | 0x174| R/W | 8 - 15 of starting LBA  |
 | 0x175 | R/W | 16 - 23 of starting LBA  |
-| 0x176 | R/W | 24 - 31 LBA and bits 28-31 needs to be 1010 | 
+| 0x176 | R/W | 24 - 27 LBA and bits 28-31 needs to be 1010 | 
 | 0x177 | R | Status register | 
 | 0x177 | W | Command register | 
 
 *Note: If there are more drives/buses their ports are 0x1E0-0x1E7 for primary and  0x160-0x167 for secondary*
 
 ## Reading from ATA PIO
-We can but the disk controller in read mode by sending 0x20 to the command register (0x1F7). When we send 0x20 to the command register, we need to make sure that all the other values, LBA and Total number of sectors are in there appropriate register.
+We can put the disk controller in read mode by sending 0x20 to the command register (0x1F7). When we send 0x20 to the command register, we need to make sure that all the other values, LBA and Total number of sectors are in there appropriate register.
 
-After we send the command, the command register turns into the Status register. Now we need to read from the Status register port. If we get back a number where bit 3 (starting from 0) is set, we know the disk is ready and we can start reading.
+After we send the command, the command register turns into the Status register. Now we need to read from the Status register port. If we get back a number where bit 4 is set, we know the disk is ready and we can start reading.
 
-We read from the Data register (0x1F0).
+We read from the Data register (0x1F0) 2 bytes at a time.
