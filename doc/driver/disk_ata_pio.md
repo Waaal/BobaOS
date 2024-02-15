@@ -6,7 +6,7 @@ ATA PIO is extremly slow, because every byte must be send trough the CPU'S IO po
 
 **ATA PIO bits**
 - Total 8 bit
-- LBA 32 bit
+- LBA 28 bit
 
 ## Primary/Secondary
 Disk controller chips support 2 ATA buses per chip. These two are called primary and secondary. 
@@ -24,7 +24,7 @@ W = write mode. R = read mode
 | 0x1F3 | R/W | 0 - 7 of starting LBA |
 | 0x1F4| R/W | 8 - 15 of starting LBA  |
 | 0x1F5 | R/W | 16 - 23 of starting LBA  |
-| 0x1F6 | R/W | 24 - 31 of starting LBA | 
+| 0x1F6 | R/W | 24 - 27 of starting LBA and bits 28-31 needs to be 1010 | 
 | 0x1F7 | R | Status register | 
 | 0x1F7 | W | Command register | 
 
@@ -38,8 +38,15 @@ W = write mode. R = read mode
 | 0x173 | R/W | 0 - 7 of starting LBA |
 | 0x174| R/W | 8 - 15 of starting LBA  |
 | 0x175 | R/W | 16 - 23 of starting LBA  |
-| 0x176 | R/W | 24 - 31 of starting LBA | 
+| 0x176 | R/W | 24 - 31 LBA and bits 28-31 needs to be 1010 | 
 | 0x177 | R | Status register | 
 | 0x177 | W | Command register | 
 
 *Note: If there are more drives/buses their ports are 0x1E0-0x1E7 for primary and  0x160-0x167 for secondary*
+
+## Reading from ATA PIO
+We can but the disk controller in read mode by sending 0x20 to the command register (0x1F7). When we send 0x20 to the command register, we need to make sure that all the other values, LBA and Total number of sectors are in there appropriate register.
+
+After we send the command, the command register turns into the Status register. Now we need to read from the Status register port. If we get back a number where bit 3 (starting from 0) is set, we know the disk is ready and we can start reading.
+
+We read from the Data register (0x1F0).
