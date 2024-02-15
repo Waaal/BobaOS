@@ -7,4 +7,4 @@ The Heap keeps track of what memory and how much he has given away. That ensures
 
 Normally each process has its own heap. So for example if a process starts, the MMU could allocate a extra 4kb page to this process for its heap. 
 
-*Note: Some kernel heap implementations will still use block sized heap allocation in 4096 byte blocks, because it is extremly fast and kernel needs normaly bigger sized memory blocks, so giving 4096 blocks to the kernel is pretty standard*
+*Note: Some kernel heap implementations will still use block sized heap allocation in 4096 byte blocks, because it is extremly fast and kernel normaly needs bigger sized memory blocks, so giving 4096 blocks to the kernel is pretty standard*
