@@ -7,6 +7,10 @@ There is Fat12, Fat16 and Fat32.
 
 A Fat Volume is seperated into sector. Each sector is 512 bytes long on a standard fat(12,16) disk.
 
+### LBA
+Lba stands for logical block address. It is a way to index all the sectors on a disk. 
+It starts from 0 for the first sector and goes up how many sectors a disk has.
+
 ## Fat Disk 
 A typically FAT disk is orderd into 4 regions:
 - Boot Sector / Reserved
@@ -22,7 +26,7 @@ The Boot sector is normaly 1 sector long (0x0E: number of reserved sectors) and 
 
 | Offset | Size (in bytes) |Descritpion |
 | ------ | ------ | ------ |
-| 0x00 | 3 | The first 3 bytes dissassemble to JMP SHORT 3C NOP. The reason is: if this is a boot disk, then JMP SHORT would jump to your entry point of the bootloader. So if you boot from disk disk, chang 3C to your entry point (.start)|
+| 0x00 | 3 | The first 3 bytes dissassemble to JMP SHORT 3C NOP. The reason is: if this is a boot disk, then JMP SHORT would jump to your entry point of the bootloader. So if you boot from disk disk, chang 3C to your entry point (.start) |
 | 0x03 | 8 | OEM identifier. Used by microsoft example: MSWIN4.1. Can now be any string with the length of 8 |
 | 0x0B | 2 | Numbers of bytes per sector. Normaly 512 |
 | 0x0D | 1 | Numbers of sectors per cluster |
