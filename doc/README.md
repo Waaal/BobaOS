@@ -21,7 +21,7 @@
     - [PIC (HardwareInterrupts)](STCQ/HardwareInterrupts.md)
 - Memory management
     - [MMU (Paging)](memoryManagement/paging.md)
-    - Heap
+    - [Heap](memoryManagement/heap.md)
 - FileSystem
     - [Fat](fs/Fat.md)
 - Driver
