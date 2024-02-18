@@ -78,11 +78,11 @@ The Boot sector is normaly 1 sector long (0x0E: number of reserved sectors) and 
 ### File Allocation Tables
 Here are stored the File Allocation Table structs. This section is always placed right after the Boot Sector section and reserved sectors. It stores all the clusters and the status, if they are taken or if they are the end.
 
-So each entry in the FAT respresents one cluster. IF the entry for a specific cluster is 0 that means this cluster is free to use. If the entry is FF or a number that means this entry is in use. So for example if we want to know if cluster 10 is taken we look at the index 10 in the FAT.
+So each entry in the FAT respresents one cluster. If the entry for a specific cluster is 0 that means this cluster is free to use. If the entry is FF or a number that means this entry is in use. So for example if we want to know if cluster 10 is taken we look at the index 10 in the FAT.
 
 Some files are larger than one cluster. So one file can spread over multiple clusters. But the root directory only tells us the starting cluster and the size of a file. So for this the numbers in the FAT are important. 
 
-For example if we look at cluster 3 and it is taken, but it is larget than one cluster then in the FAT at index there would stand a number. This number tells us the next cluster of the file. and if we look ate the new cluster index in the FAT it would tell us the next cluster etc. If on entry in the FAT returns FF this means we have reached the final cluster of the file.
+For example if we look at cluster 3 and it is taken, but it is larget than one cluster then in the FAT at index 3 would stand a number. This number tells us the next cluster of the file. If we look at the new cluster index in the FAT it would tell us the next cluster etc. If on entry in the FAT returns FF this means we have reached the final cluster of the file.
 
 On Fat12 one entry is 12 bits
 On Fat16 one entry is 16 bits
