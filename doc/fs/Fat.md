@@ -14,6 +14,7 @@ It starts from 0 for the first sector and goes up how many sectors a disk has.
 ## Fat Disk 
 A typically FAT disk is orderd into 4 regions:
 - Boot Sector / Reserved
+- More Reserved (optional. Value in Boot Sector 0x0E)
 - File Allocation Tables
 - Root Directory
 - Data
@@ -75,7 +76,13 @@ The Boot sector is normaly 1 sector long (0x0E: number of reserved sectors) and 
 | 0x1FE| 2| Bootable partition signature 0xAA55 or empty |
 
 ### File Allocation Tables
-Here are stored the File Allocation Table structs. This section is always placed right after the Boot Sector section. It stores the cluster chain of the next cluster. More to that later...
+Here are stored the File Allocation Table structs. This section is always placed right after the Boot Sector section and reserved sectors. It stores all the clusters and the status, if they are taken or if they are the end.
+
+So each entry in the FAT respresents one cluster. IF the entry for a specific cluster is 0 that means this cluster is free to use. If the entry is FF or a number that means this entry is in use. So for example if we want to know if cluster 10 is taken we look at the index 10 in the FAT.
+
+Some files are larger than one cluster. So one file can spread over multiple clusters. But the root directory only tells us the starting cluster and the size of a file. So for this the numbers in the FAT are important. 
+
+For example if we look at cluster 3 and it is taken, but it is larget than one cluster then in the FAT at index there would stand a number. This number tells us the next cluster of the file. and if we look ate the new cluster index in the FAT it would tell us the next cluster etc. If on entry in the FAT returns FF this means we have reached the final cluster of the file.
 
 On Fat12 one entry is 12 bits
 On Fat16 one entry is 16 bits
@@ -137,7 +144,8 @@ Calculate the size of the root directory: Number of Root Directory entrys (0x11)
 Struct of a root directory entry
 | Offset | Size (in bytes) |Descritpion |
 | ------ | ------ | ------ |
-| 0x00 | 11 | Filename with extension |
+| 0x0 | 8 | Filename |
+| 0x8 | 3 | Extension |
 | 0xB | 1 | Attributes of File: READ_ONLY=0x01;HIDDEN=0x02;SYSTEM=0x04;VOLUME_ID=0x08;DIRECTORY=0x10;ARCHIVE=0x20 |
 | 0xC | 1 | Reserved. Used by Windows NT |
 | 0xD | 1 | Creation time in tens of a second |
