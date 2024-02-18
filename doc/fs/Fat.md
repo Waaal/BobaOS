@@ -11,6 +11,9 @@ A Fat Volume is seperated into sector. Each sector is 512 bytes long on a standa
 Lba stands for logical block address. It is a way to index all the sectors on a disk. 
 It starts from 0 for the first sector and goes up how many sectors a disk has.
 
+### Cluster
+One sector is normaly 512 bytes (0x0B in boot sector). One cluster can have multiple sectors (0x0D in boot sector).
+
 ## Fat Disk 
 A typically FAT disk is orderd into 4 regions:
 - Boot Sector / Reserved
@@ -144,9 +147,9 @@ Calculate the size of the root directory: Number of Root Directory entrys (0x11)
 Struct of a root directory entry
 | Offset | Size (in bytes) |Descritpion |
 | ------ | ------ | ------ |
-| 0x0 | 8 | Filename |
-| 0x8 | 3 | Extension |
-| 0xB | 1 | Attributes of File: READ_ONLY=0x01;HIDDEN=0x02;SYSTEM=0x04;VOLUME_ID=0x08;DIRECTORY=0x10;ARCHIVE=0x20 |
+| 0x0 | 8 | Filename (unused bytes must be padded with spaces) |
+| 0x8 | 3 | Extension (unused bytes must be padded with spaces) |
+| 0xB | 1 | Attributes of File (bitmask): READ_ONLY=0x01;HIDDEN=0x02;SYSTEM_FILE=0x04;VOLUME_ID=0x08;DIRECTORY=0x10;ARCHIVE=0x20;DEVICE=0x40;RESERVED=0x80 |
 | 0xC | 1 | Reserved. Used by Windows NT |
 | 0xD | 1 | Creation time in tens of a second |
 | 0xE | 2 | Creating Time HOUR=5bits; MINUTES=6bits; SECONDS=5bits |
