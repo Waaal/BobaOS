@@ -16,7 +16,7 @@ One sector is normaly 512 bytes (0x0B in boot sector). One cluster can have mult
 
 ## Fat Disk 
 A typically FAT disk is orderd into 4 regions:
-- Boot Sector / Reserved
+- Boot Sector
 - More Reserved (optional. Value in Boot Sector 0x0E)
 - File Allocation Tables
 - Root Directory
@@ -34,7 +34,7 @@ The Boot sector is normaly 1 sector long (0x0E: number of reserved sectors) and 
 | 0x03 | 8 | OEM identifier. Used by microsoft example: MSWIN4.1. Can now be any string with the length of 8 |
 | 0x0B | 2 | Numbers of bytes per sector. Normaly 512 |
 | 0x0D | 1 | Numbers of sectors per cluster |
-| 0x0E | 2 | Numbers of reserved secors |
+| 0x0E | 2 | Numbers of reserved secors (at least 1 for boot sector) |
 | 0x10 | 1 | Number of File allocation tables |
 | 0x11 | 2 | Number of Root Directory entrys |
 | 0x13 | 2 | Number of Total sectors. If 0 then number is greater than 65535 and is stored in Large sector count (0x20) |
