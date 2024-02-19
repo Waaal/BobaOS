@@ -138,11 +138,11 @@ Tada. Thats how we read the 12 bit FAT table.
 The 16 and 32 bit are self explenatory.
 
 ### Root Directory
-On Fat12,16 the Root Directory is placed right after the FAT directory. On Fat32 its possition is given by the Extendet boot Record (0x2C).
+On Fat12,16 the Root Directory is placed right after the FAT directory. On Fat32 its position is given by the Extendet boot Record (0x2C).
 In the Root Directory are stored all the files. To be more exact it stores more than that. It stores file names, Attributes, Creation date, starting cluster etc. 
 On entry is 32 bits long.
 
-Calculate the size of the root directory: Number of Root Directory entrys (0x11) * 32bytes + Bytes per sector (0x0B)
+Calculate the size of the root directory: Number of Root Directory entrys (0x11) * 32bytes
 
 Struct of a root directory entry
 | Offset | Size (in bytes) |Descritpion |
