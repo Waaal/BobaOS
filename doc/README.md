@@ -23,6 +23,7 @@
     - [MMU (Paging)](memoryManagement/paging.md)
     - [Heap](memoryManagement/heap.md)
 - FileSystem
+    - [VFS (Virtual File System)](fs/vfs.md)
     - [Fat](fs/Fat.md)
 - Driver
     - Disk
