@@ -144,6 +144,10 @@ On entry is 32 bits long.
 
 Calculate the size of the root directory: Number of Root Directory entrys (0x11) * 32bytes
 
+In at the end of the root directory is always a 0 entry (Basically a entry that has all 0). This entry is here for us to know if we have reached the end of the Directory.
+
+If the Filename at position 0 has 0xE5 as first character, this means this entry is free.
+
 Struct of a root directory entry
 | Offset | Size (in bytes) |Descritpion |
 | ------ | ------ | ------ |
