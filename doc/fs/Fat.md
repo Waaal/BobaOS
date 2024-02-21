@@ -126,6 +126,10 @@ Struct of a directory entry
 | 0x1A | 2 | Low 16 bit of Start cluster number |
 | 0x1C | 4 | The size of the file in bytes |
 
+**Important note:** The start cluster number in a dir entry is in Data cluster format. Data cluster format starts from 0. The 0 is the cluster after root dir. It is important to take this into account. If we want to calculate the absolute sector of a data cluster we need to add all the sectors bevore the data cluster (reserved, FAT and root dir) to the end result.
+
+Number 0 and 1 of the starting cluster entry are reserved. We need to add -2 for a absolute value.
+For example, if the Start cluster number of a entry says 4. It its actually the 2 in the data cluster.
 
 ## How to get a File?
 We first need the file name and the search for it in the Root Directory of the file.
@@ -145,7 +149,7 @@ For example if the start cluster of a directory is 3 we then look at the File Al
 
 We know if we reacht the end of a cluster if the entry of the FAT is 0xFF. 0xFF marks the end of a chain.
 
-If we have a directory path like this: 0:/dir1/dir2/dir3 ant want dir3, we first need to load the dir1 entries, then from there the dir2 entries and here we find the dir3 entries.
+If we have a directory path like this: 0:/dir1/dir2/dir3 and want dir3, we first need to load the dir1 entries, then from there the dir2 entries and here we find the dir3 entries.
 
 #### How are data structured in a FAT12?
 FAT is little endian.
