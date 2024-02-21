@@ -141,7 +141,7 @@ In the Root Directory we got the starting cluster.
 Other than in a file where we read the raw binary data of the file in a directory we read another directory entry array from the disk.
 
 We read the content of the starting cluster and the go to the File Allocation Table.
-For example if the start cluster of a file is 3 we then look at the File Allocation Table at entry 3. This entry holds the next cluster and the next entry of the FAT. For example 4. We then read all the bytes from the 4th cluster and look at the FAT at entry 4. This 4th enty points us to the next cluster etc.
+For example if the start cluster of a directory is 3 we then look at the File Allocation Table at entry 3. This entry holds the next cluster and the next entry of the FAT. For example 4. We then read all the bytes from the 4th cluster and look at the FAT at entry 4. This 4th enty points us to the next cluster etc.
 
 We know if we reacht the end of a cluster if the entry of the FAT is 0xFF. 0xFF marks the end of a chain.
 
