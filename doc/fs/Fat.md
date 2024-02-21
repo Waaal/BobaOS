@@ -87,7 +87,7 @@ So each entry in the FAT respresents one cluster. If the entry for a specific cl
 
 Some files/directories are larger than one cluster. So one data chunk can spread over multiple clusters. But the root directory only tells us the starting cluster and the size of a file. So for this the numbers in the FAT are important. 
 
-For example if we look at cluster 3 and it is taken, but it is larget than one cluster then in the FAT at index 3 would stand a number. This number tells us the next cluster of the data chunk. If we look at the new cluster index in the FAT it would tell us the next cluster etc. If on entry in the FAT returns FF this means we have reached the final cluster of the data chunk.
+For example if we look at cluster 3 and it is taken, but it is larget than one cluster then in the FAT at index 3 would stand a number. This number tells us the next cluster of the data chunk. If we look at the new cluster index in the FAT it would tell us the next cluster etc. If on entry in the FAT returns 0xFF8 or 0xFFF this means we have reached the final cluster of the data chunk.
 
 On Fat12 one entry is 12 bits
 On Fat16 one entry is 16 bits
@@ -136,7 +136,7 @@ We first need the file name and the search for it in the Root Directory of the f
 In the Directory entry we got the starting cluster. We read the content of the starting cluster and the go to the File Allocation Table.
 For example if the start cluster of a file is 3 we then look at the File Allocation Table at entry 3. This entry holds the next cluster and the next entry of the FAT. For example 4. We then read all the bytes from the 4th cluster and look at the FAT at entry 4. This 4th enty points us to the next cluster etc.
 
-We know if we reacht the end of a cluster if the entry of the FAT is 0xFF. 0xFF marks the end of a chain.
+We know if we reacht the end of a cluster if the entry of the FAT is 0xFFF or 0xFF8. This marks the end of a chain.
 
 ## How to get a Directory?
 We first need the directory name and search for it in the Root Directory of the directory.
