@@ -96,11 +96,11 @@ On Fat32 one entry is 32 bits
 The size of this region in sectors can be calculated by multiplying the Numbers of File Allocation Tales (0x10) with the Numers of sectors per FAT (0x16).
 
 An entry is set to:
-	- FF8 or FFF: if used and if of chain
-	- FF0 or FF6: if reserved
-	- FF7: if it is a bad sector
-	- Number: if used and not end of chain
-	- 0x00: if free
+- FF8 or FFF: if used and if of chain
+- FF0 or FF6: if reserved
+- FF7: if it is a bad sector
+- Number: if used and not end of chain
+- 0x00: if free
 
 ### Root Directory
 On Fat12,16 the Root Directory is placed right after the FAT directory. On Fat32 its position is given by the Extendet boot Record (0x2C).
