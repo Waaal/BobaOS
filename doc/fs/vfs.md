@@ -47,7 +47,7 @@ typedef int (*FS_RESOVLE_FUNCTION)(struct disk* disk);
 //struct which each filesystem can use
 struct filesystem
 {
-    // Filesystem should return 0 from resolv if the provided disk is using its file system
+    // Filesystem should return 0 from resolve if the provided disk is using its file system
     FS_RESOVLE_FUNCTION resolve;
     FS_OPEN_FUNCTION open;
     //write, read, close
@@ -60,7 +60,7 @@ struct filesystem
 //Now if a disk gets insertet into the system the kernel can go trough all filesystems it has, call the resolve function 
 //and if this filesystem can resolve the disk, the filesystem is bound to the disk
 
-//now if we call the open function on a disk, the VHS can do the following:
+//now if we call the open function on a disk, the VFS can do the following:
 
 //disk->filesystem->open();
 ```
