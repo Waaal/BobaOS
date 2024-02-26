@@ -1,8 +1,8 @@
 # ATA PIO
 Advanced Technology Attachment (ATA) is a interface to connect hard drives and CD-ROM drives. 
-PIO stands for Programmed input-output and is the simplest form of a disk driver. PIO mode is always supportet by all ATA-compliant drives (so every normal consumer hard drive ever build).
+PIO stands for Programmed input-output and is the simplest form of a disk driver. PIO mode is always supportet by all (S)ATA-compliant drives (so every normal consumer hard drive ever build).
 
-ATA PIO is extremly slow, because every byte must be send trough the CPU'S IO port bus. So it is not recommend to use ATA PIO as the driver for all disk operation on the system, but in the boot and setup process where there is no multitasking, other processes etc... a ATA PIO driver is extremly usefull and simple. The kernel can load all of its important stuff with this and later switch to a SATA driver.
+ATA PIO is extremly slow, because every byte must be send trough the CPU'S IO port bus. So it is not recommend to use ATA PIO as the driver for all disk operation on the system, but in the boot and setup process where there is no multitasking, other processes etc... a ATA PIO driver is extremly usefull and simple. The kernel can load all of its important stuff with this and later switch to a AHCI driver.
 
 **ATA PIO bits**
 - Total 8 bit

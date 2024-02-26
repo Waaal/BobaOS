@@ -27,8 +27,9 @@
     - [Fat](fs/Fat.md)
 - Driver
     - Disk
-        - [ATA PIO](driver/disk_ata_pio.md)
         - SATA
+            - [ATA PIO](driver/disk_ata_pio.md)
+            - AHCI
 
 # BobaOS Documentation (OLD - Dont use)
 - Boot
