@@ -1,4 +1,4 @@
 # BobaOS
 Boba
 
-See [Docs](docs/README.md)
+See [Docs](https://github.com/Waaal/BobaOS/tree/main/docs/)
