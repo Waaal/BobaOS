@@ -32,7 +32,9 @@ We have access to the following registers:
 
 ## Memory Access (Segmentation)
 Because our registers are only 16 bit we could only access memory in a 16 bit range.
-To access memory larger than 16bit we use the segment registers.
+To access memory larger than 16 bit we use the segment registers.
+
+Because in Real mode in a segment register the number is shiftet 4 bits to the left.
 ```assembly
 	; I want to access address 0xC8000. 0xC8000 is too large for 16 bit
 	mov ax, 0xC800
