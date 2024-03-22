@@ -103,6 +103,23 @@ The Access bytes in a system segment are stored differently, than the normal acc
 
 **L:** Long mode code flag. 1 = defines a 64 bit code segment. If DB is 1 then L should always be 0.
 
+### Paging and GDT
+If we want to use paging to protect our memory we should set the Limit to the full address space (0xFFFFFF) and in the flags set the Granularity bit to 1 (4kiB blocks).
+
+**Explenation of the math in 32 bit mode:**
+```
+In 32 bit mode the limit is 20bits.
+If we set the Granularity bit to 1 than each byte of the limit is a 4kb page.
+
+0xFFFFF * 4096 = 4294963200
+
+4294963200 / 1024 / 1024 / 1024 = 4GB
+
+So now we know that the Limit spans the entrire address space of 4GB
+```
+If the limit spans the entire address space than from the point of the base and Limit a request is always valid and we can protect our memory with the paging model.
+
+
 ### Load a GDT
 To load a Global Descriptor Table we need a pointer to this table.
 The pointer needs to have the following structure:
