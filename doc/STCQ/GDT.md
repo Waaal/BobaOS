@@ -97,7 +97,7 @@ The Access bytes in a system segment are stored differently, than the normal acc
  3  2   1   0
 |G |DB| L|  Reserved
  ```
-**G:** Granularity flag. The size the Limit value is scaled by. 0 = The Limit is 1 byte blocks. 1 = The Limit is 4 kiB blocks.
+**G:** Granularity flag. The size the Limit value is scaled by. 0 = The Limit is 1 byte blocks. 1 = The Limit is 4 kiB blocks (So each byte in the Limit is a 4KB block. If we have a limit of 3 thet are 12288 bytes).
 
 **DB:** Size flag. 0 = describtor defines a 16 bit protected mode segment. 1 = descriptor defines a 32 bit portected mode.
 
