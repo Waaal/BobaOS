@@ -22,14 +22,14 @@ The other registers (SS, DS, FS, ES, GS) points to the Data segment in the GDT.
 ### Data structure in a segment register
 The Data in a segment register is 16 bit long both in protected and long mode and looks like following:
 ```
-15                      3  2  1  0
+15                     3   2     1  0
 |     Selected Index    |  TI | RPL |
 ```
-**Selected Index:** Points to the Entry in the GDT.
+**Selected Index (13 byte):** Points to the Entry in the GDT.
 
-**TL:** Can be 0 or 1. 0 Means check in GDT. 1 Means check in LDT.
+**TL (1 byte):** Can be 0 or 1. 0 Means check in GDT. 1 Means check in LDT.
 
-**RPL:** Requested priviledge level. So if we are on ring3 then the RPL would be 3. If we are on ring 0 the RPL is 0.
+**RPL (2 byte):** Requested priviledge level. So if we are on ring3 then the RPL would be 3. If we are on ring 0 the RPL is 0.
 
 This Data struct is alled a **Segment Selector**.
 

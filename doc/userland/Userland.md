@@ -8,8 +8,8 @@ Userland is when the processor is in ring3. Userland is safer because if somethi
 - Setup a TSS
 - Get to user land with iret
 
-### Setupt user cand and data segments
-To be able to swithc to userland we need to have a user data and code segment in the GDT. We alos need a TSS entry in the GDT.
+### Setupt userland and data segments
+To be able to switch to userland we need to have a user data and code segment in the GDT. We alos need a TSS entry in the GDT.
 
 ### Setupt TSS
 Explenation of the TSS is [here](../STCQ/TSS.md)
@@ -39,7 +39,7 @@ The iret instruction expects the following structure on the stack:
 ```
 
 ## Switching between userland and kernelland
-When we call a function from the userland or a interrupt happens, the CPU automatically pushes all registers to the stack. So if we are in kernelland and want bakc to userland with the iret instruction we need to restore all of these general purpose registers and the returen back to userland with iret.
+When we call a function from the userland or a interrupt happens, the CPU automatically pushes all registers to the stack. So if we are in kernelland and want to go back to userland with the iret instruction we need to restore all of these general purpose registers and then return back to userland with iret.
 
 ## Switching between processes
 With the help of the PIC Timer interrupt we can switch a process every time the timer interrupt is fired.

@@ -9,6 +9,10 @@ It also holds the General purpose registers, Segment Selectors, Instruction poin
 
 So if there is a interrupt in the user land the TSS will be populatet with information. With this the CPU can repopulate its registers after we returned from the interrupt and it can execute the userland programm where it left of.
 
+The processor is populating this structur automatically in a interrupt event.
+
+Important for us are the Kernel stack pointer (ESP0) and the kernel stack segment (SS0). 
+
 | 4 Bytes | Offset |
 | ------ | ------ | 
 | SSP | 0x68 |
@@ -56,10 +60,19 @@ In long mode does not store a tasks execution state. It stores the kernel stack 
 The TSS is also needed for software multitasking. Because each CPU core has its own TSS in a multitasking scenario.
 
 ### TSS in a GDT
-The TSS also has a entry in the GDT. This entry is 128bit long and looks like this:
-```
-127    96 95        64 63     56 55   52 51   48 47           40 39       32 31           16 15           0
- | ///// |    Base    |   Base  | Flags | Limit | Access Bytes  |    Base   |      Base     |     Limit   |
+The TSS needs to have a entry in the gdt. The TSS entry is special, because the base and limit needs to be set to the start and size of the TSS.
+
+Base = TSS start address.
+Limit = TSS Length.
+
+The Access Bytes look like this: **1110 1001** 
+Special about this is that the bit 4 (Descriptor Type) is set to 0 which means this is a system segment and not a code or data segment.
+
+## Load the TSS
+The tss needs to be loaded with the ltr instruction. The ltr instruction taks as argument the TSS GDT entry.
+``` assembly
+    mov ax, 0x28 	;0x28 = 00000000 00101000 = RPL = 0; TL = 0; Selected Index = 5 (At which index is the TSS entry in the GDT);
+    ltr ax
 ```
 
 ## Implementation  
