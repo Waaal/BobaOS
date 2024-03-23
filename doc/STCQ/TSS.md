@@ -59,10 +59,11 @@ In long mode does not store a tasks execution state. It stores the kernel stack 
 ## TSS more info
 The TSS is also needed for software multitasking. Because each CPU core has its own TSS in a multitasking scenario.
 
-### TSS in a GDT
+## TSS in a GDT
 The TSS needs to have a entry in the gdt. The TSS entry is special, because the base and limit needs to be set to the start and size of the TSS.
 
 Base = TSS start address.
+
 Limit = TSS Length.
 
 The Access Bytes look like this: **1110 1001** 
