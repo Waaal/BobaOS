@@ -13,6 +13,9 @@ The processor is populating this structur automatically in a interrupt event.
 
 Important for us are the Kernel stack pointer (ESP0) and the kernel stack segment (SS0). 
 
+**Important: The TSS is only needed in interrupts where a priviledge level change occure. So If we are in ring 0 and a interrupt occurs the TSS is not used and is not filled by the CPU.**
+
+### TSS structure protected mode
 | 4 Bytes | Offset |
 | ------ | ------ | 
 | SSP | 0x68 |

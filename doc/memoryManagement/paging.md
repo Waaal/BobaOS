@@ -126,7 +126,7 @@ Eeach the entry in the PD and PT has the same structure and bits.
  - P = Present: 0 = Page is not present (page fault will occure and we need to load that memory from disk or where it is). 
 1 = Page is present in memory
  - RW = Read/Write: 0 = Read only. 1 = Read/Write allowed
- - US = User/Supervisor: 0 = Only Supervisor can access (ring 0). 1 = Page can be accessed by all
+ - US = User/Supervisor: 0 = Only Supervisor can access (ring 0). 1 = Page can be accessed by all (ring 0,1,2 and 3)
  - WT = Write-Through:  0 = Is not enabled. 1 = Write-Trough caching is enabled
  - D = Cache Disabled: 0 = It will be cached. 1 = Page will not be cached.
  - A = Accessed: Set to 1 by CPU if page is accessed
