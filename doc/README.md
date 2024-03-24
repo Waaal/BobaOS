@@ -31,14 +31,4 @@
             - [ATA PIO](driver/disk_ata_pio.md)
             - AHCI
 - [Userland](userland/Userland.md)
-
-# BobaOS Documentation (OLD - Dont use)
-- Boot
-    - [Bootloader](boot/Boot.md)
-    - [Loader](boot/Loader.md)
-    - [HandleHardwareInterrupts](STCQ/HardwareInterrupts.md)
-    - [Paging](memoryManagement/paging.md)
-- FileSystem
-    - [Fat](fs/Fat.md)
-- Kernel
-    - [Kernel(assembly)](kernel/kernel.asm.md)
+- [Processes and Tasks](Processes_and_Tasks/processesTasks.md)
