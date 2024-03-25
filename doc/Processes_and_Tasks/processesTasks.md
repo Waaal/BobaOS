@@ -31,6 +31,7 @@ struct process
     uint32_t size;
 };
 ```
+This simple process structure can have only one task.
 
 ## Taks
 
