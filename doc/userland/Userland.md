@@ -14,8 +14,8 @@ To be able to switch to userland we need to have a user data and code segment in
 ### Setupt TSS
 Explenation of the TSS is [here](../STCQ/TSS.md)
 
-### Get to userland with iret
-To get to userland we need to pretend we returned from a interrupt and want to get back to ring3. Because the CPU dont have a direct command to change priviledge level.
+### Get manually to userland with iret
+To manually get to userland we need to pretend we returned from a interrupt and want to get back to ring3. Because the CPU dont have a direct command to change priviledge level. 
 
 - We need to change the data segments (ds,fs,es,gs) to User Data segment (dont need to change the ss because the iret instruction does this on its own)
 - Push user data segment to stack
