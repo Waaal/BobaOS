@@ -17,8 +17,7 @@ Explenation of the TSS is [here](../STCQ/TSS.md)
 ### Get to userland with iret
 To get to userland we need to pretend we returned from a interrupt and want to get back to ring3. Because the CPU dont have a direct command to change priviledge level.
 
-- We need to populate our data segment register with the code and data segment for the user entry in the GDT
-- Save stack pointer into eax
+- We need to change the data segments (ds,fs,es,gs) to User Data segment (dont need to change the ss because the iret instruction does this on its own)
 - Push user data segment to stack
 - Push stack pointer in eax to stack
 - Push current flags to stack and bitwise OR the bit that re-enables interrupts
@@ -37,6 +36,7 @@ The iret instruction expects the following structure on the stack:
 		...
 0x0
 ```
+This is a basic explenation on how to get to ring3. If this is not the fist time we jump back to this task in ring3 then we also need to restore all of the registers of this programm before doing the iret instruction
 
 ## Switching between userland and kernelland
 When we call a function from the userland or a interrupt happens, the CPU automatically pushes all registers to the stack. So if we are in kernelland and want to go back to userland with the iret instruction we need to restore all of these general purpose registers and then return back to userland with iret.
