@@ -4,12 +4,12 @@ Userland is a term used to describe when the processor is in a limited, privileg
 Userland is when the processor is in ring3. Userland is safer because if something goes wrong the kernel is able to intervene. When the processor is in user land it is unable to execute privileges instructions such as chaning the GDT, IDT, paging or direct hardware access with in and out.
 
 ## Getting to user land for the first time
-- Setup user code and data segments
+- Setup user code and data segments in GDT
 - Setup a TSS
 - Get to user land with iret
 
 ### Setupt userland and data segments
-To be able to switch to userland we need to have a user data and code segment in the GDT. We alos need a TSS entry in the GDT.
+To be able to switch to userland we need to have a user data and code segment in the GDT.
 
 ### Setupt TSS
 Explenation of the TSS is [here](../STCQ/TSS.md)
@@ -23,7 +23,7 @@ To get to userland we need to pretend we returned from a interrupt and want to g
 - Push stack pointer in eax to stack
 - Push current flags to stack and bitwise OR the bit that re-enables interrupts
 - Push user code segment to stack
-- Push address of the function we want to run in userland
+- Push the program counter (PC) also called instruction pointer (IP) (the address of the next line of code or entry point) 
 - Call iret
 
 The iret instruction expects the following structure on the stack:
@@ -33,7 +33,7 @@ The iret instruction expects the following structure on the stack:
 		| stack pointer |
 		| current flags |
 		| user code segment |
-		| address of function | <-- [Stack pointer]
+		| IP register |
 		...
 0x0
 ```
