@@ -31,7 +31,7 @@ CrossCompilerName-gcc $(FLAGS) -T ./src/linker.ld ./build/kernelfull.o -o ./bin/
 
 This compiles the final kernel binary.
 
-**Note:** The output format bin/elf is specified in the linker script.
+**Note: The output format bin/elf is specified in the linker script.**
 
 ### Linker script
 
