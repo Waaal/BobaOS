@@ -2,6 +2,7 @@
 - x86 Assembly
     - Registers
     - Instruction set
+    - [Sections](x86Assembly/sections.md)
     - Modes
         - [Real Mode](assembly_modes/real_mode.md)
         - Protected Mode
