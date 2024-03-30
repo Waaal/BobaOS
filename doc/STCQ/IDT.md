@@ -1,6 +1,6 @@
 # Interrupt Descriptor Table
 IDT is a struct which lives in memory and is used by the CPU to find interrupt and exception handlers.
-A interrupt can be a signal send from a device, or a Exception generatet by the CPU to alert the Kernel. If the CPU accepts a interrupt, it will stop the current task and process the interrupt. A IDT can have up to 256 entries.
+A interrupt can be a signal send from a device, a Exception generatet by the CPU to alert the Kernel or send from a Userspace programm to communicate with the kernel. If the CPU accepts a interrupt, it will stop the current task and process the interrupt. A IDT can have up to 256 entries.
 
 ## Explenation
 
