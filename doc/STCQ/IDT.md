@@ -15,7 +15,7 @@ Different interrupts and exceptions have Numbers which are called interrupt vect
 
 The vector number is define by the order in the IDT. So Entry 0 has the vector number 0. Entry 5 has the vector number 5 and so on.
 
-Vectore 0 - 31 are pre defined by the CPU. 
+Vectore 0 - 31 are pre defined by the CPU for CPU exceptions. 
 Numbers from 32 - 255 can be used by the operating system.
 
 ### IDT Entry:
@@ -48,18 +48,17 @@ On entry is 128 bits in long mode and 64 bits in protected mode and is structure
 - 0xE (0b1110) = 64/32 bit Interrupt Gate
 - 0xb (0b1111) = 64/32 bit Trap Gate
 
-#### Task gate
+#### Task gate (obsolete)
 Task gate references the TSS descriptor and can assist in multi-tasking when exceptions occure
 
 #### Interrupt Gate
-Used for interrupts that can be invoked with the INT instruction.
-(Can also be used for exceptions, because they are easier to work with lel)
-
-#### Trap Gate
-Used for exceptions raised by the CPU.
+Used for interrupts that can be invoked with the INT instruction or hardware events from a IRQ.
 (They also automatically disable interrupts on entry and re-enable them on iret instruction)
 
-*Note: Almost every gate (Inerrupt and Trap) needs a iret instruction on the end*
+#### Trap Gate
+Used for exceptions raised by the CPU. (The CPU places error codes on the stack for some exceptions)
+
+*Note: Interrupt and Trap gate are basically the same the only differnece is that a Interrupt Gate automatically disables interrupts and re-enable them*
 
 ### Load a IDT
 To load a Interrupt Descriptor Table we need a pointer to this table.
@@ -85,6 +84,21 @@ Load the IDT with the lidt instruction. The argument of the lidt is
 ``` assembly
 lidt [AddressOfPointer]
 ```
+
+## CPU Exceptions Error codes
+The Vectors 0-31 are predefined by the CPU for exceptions. For some of these Exceptions the CPU places a error code onthe the stack that need to be popped from the stack before the iret instruction.
+
+Vectors that place a error code are:
+- Vector 8 (Double fault)
+- Vector 10 (Invalid TSS)
+- Vector 11 (Segment Not Present)
+- Vector 12 (Stack segment fault)
+- Vector 13 (General protection fault)
+- Vector 14 (Page Fault)
+- Vector 17 (Alignment Check)
+- Vector 21 (Control Protection Exception)
+- Vector 29 (VMM Communication Exception)
+- Vector 30 (Security Exception)
 
 ## Implementation
 
