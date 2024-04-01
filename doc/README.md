@@ -1,7 +1,7 @@
 # Documentation
 - x86 Assembly
     - Registers
-    - Instruction set
+    - [Instruction set](x86Assembly/instruction_set.md)
     - [Sections](x86Assembly/sections.md)
     - Modes
         - [Real Mode](assembly_modes/real_mode.md)

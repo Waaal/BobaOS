@@ -86,7 +86,7 @@ lidt [AddressOfPointer]
 ```
 
 ## CPU Exceptions Error codes
-The Vectors 0-31 are predefined by the CPU for exceptions. For some of these Exceptions the CPU places a error code onthe the stack that need to be popped from the stack before the iret instruction.
+The Vectors 0-31 are predefined by the CPU for exceptions. For some of these Exceptions the CPU places a error code on the stack that need to be popped from the stack before the iret instruction.
 
 Vectors that place a error code are:
 - Vector 8 (Double fault)
