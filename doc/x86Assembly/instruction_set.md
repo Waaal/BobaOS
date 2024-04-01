@@ -11,4 +11,4 @@ It pops the IP, CS, EFLAGS if the interrupt routine was in the same priviledge l
 It pops the IP, CS, EFLAGS, DS, ESP if the interrrupt routine is in kernel space and it needs to return back to user land.
 
 
-Because interrupts occure while other code was executet the iret needs to pop all this information off the stack so it can continue executing where it left off bevore the interrupt. It also changes all the Segment selectors and stack pointer back to ring3 stack and segments if it needs to return back to ring3 
+Because interrupts occure while other code was executet the iret needs to pop all this information off the stack so it can continue executing where it left off before the interrupt. It also changes all the Segment selectors and stack pointer back to ring3 stack and segments if it needs to return back to ring3. 
