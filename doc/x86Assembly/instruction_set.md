@@ -6,7 +6,11 @@
 ## int
 
 ## Iret
-iret returns from a interrupt. Special about this versus the normal return address is that the iret instruction pops at least 3 elements from the stack. It pops the return address (IP register), CS and the EFLAGS. If the  RPL bits in the popped CS register are different from the current CS then it also pops the data segment and the esp. It uses this registers and changes code segment, all data segments (SS,ES,DS,FS,GS), stack pointer and the IP register
+iret returns from a interrupt. Special about this versus the normal return address is that the iret instruction pops at least 3 elements from the stack. It pops the return address (IP register), CS and the EFLAGS. If the  RPL bits in the popped CS register are different from the current CS then it also pops the data segment and the esp. It uses this registers and changes code segment, the stack pointer and the IP register.
+
+
+**Important: We need to change the data segments manually if we return back to ring3**
+
 
 **In short:**
 It pops the IP, CS, EFLAGS if the interrupt routine was in the same priviledge level as it returns to.
