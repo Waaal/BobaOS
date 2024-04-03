@@ -1,17 +1,17 @@
 # Task State Segment
-*Note: This is still a early article. The information may be wrong and/or incomplete.*
-
-A TSS is a struct that lives in memory. It holds information about a Task.
+A TSS is a struct that lives in memory. It holds information about the kernel stack.
 
 ## TSS in protected mode (32bit)
 In protected mode TSS is responsible for holding information such as the kernel stack pointer and segment.
-It also holds the General purpose registers, Segment Selectors, Instruction pointer, EFLAGS register and the Cr3. It holds a programs state
-
-So if there is a interrupt in the user land the TSS will be populatet with information. With this the CPU can repopulate its registers after we returned from the interrupt and it can execute the userland programm where it left of.
-
-The processor is populating this structur automatically in a interrupt event.
-
+It also holds the General purpose registers, Segment Selectors, Instruction pointer, EFLAGS register and the Cr3.
 Important for us are the Kernel stack pointer (ESP0) and the kernel stack segment (SS0). 
+
+
+Whenever a system call in ring3 occurs, the CPU takes the ESP0 and SS0 values from the TSS and populates its stack registers with it. So basically it holds the kernel stack and when we are in ring3 and perform a interrupt and we change our ring level to 0 we know where the kernel stack is.
+
+
+But important if, if we are currently working on a interrupt for a process and the process time ends and we change to a different process and this process also performs a interrupt we land in the same stack. To solve this problem each process has its own kernel stack. The TSS ESP0 values just needs to be swapped when we change process.
+
 
 **Important: The TSS is only needed in interrupts where a priviledge level change occure. So If we are in ring 0 and a interrupt occurs the TSS is not used and is not filled by the CPU.**
 
@@ -57,10 +57,10 @@ Important for us are the Kernel stack pointer (ESP0) and the kernel stack segmen
 **SSP:** Shadow stack pointer
 
 ## TSS in long mode (64bit)
-In long mode does not store a tasks execution state. It stores the kernel stack pointer and if used the Interrupt stack table.
+
 
 ## TSS more info
-The TSS is also needed for software multitasking. Because each CPU core has its own TSS in a multitasking scenario.
+The TSS is also needed for multitasking. Because each CPU core has its own TSS in a multitasking scenario.
 
 ## TSS in a GDT
 The TSS needs to have a entry in the gdt. The TSS entry is special, because the base and limit needs to be set to the start and size of the TSS.

@@ -18,7 +18,7 @@
     - [A20 Line](STCQ/A20_Line.md)
     - [IDT](STCQ/IDT.md)
     - [GDT](STCQ/GDT.md)
-    - [TSS (INCOMPLETE)](STCQ/TSS.md)
+    - [TSS](STCQ/TSS.md)
     - [PIC (HardwareInterrupts)](STCQ/HardwareInterrupts.md)
 - Memory management
     - [MMU (Paging)](memoryManagement/paging.md)
