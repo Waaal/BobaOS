@@ -17,8 +17,8 @@ Explenation of the TSS is [here](../STCQ/TSS.md)
 ### Get manually to userland with iret
 To manually get to userland we need to pretend we returned from a interrupt and want to get back to ring3. Because the CPU dont have a direct command to change priviledge level. 
 
-- Change data segments to user data
-- Push user data segment to stack
+- Change data segments (es,ds,fs and gs. NOT ss) to user data
+- Push user data segment to stack (so iret can change SS register)
 - Push userprogram stack pointer to stack
 - Push current flags to stack and bitwise OR the bit that re-enables interrupts (0x200)
 - Push user code segment to stack
@@ -28,7 +28,7 @@ To manually get to userland we need to pretend we returned from a interrupt and 
 So the iret instruction expects the following structure on the stack:
 ```
 0x100
-		| user data segment |
+		| user data segment (SS) |
 		| stack pointer |
 		| current flags |
 		| user code segment |

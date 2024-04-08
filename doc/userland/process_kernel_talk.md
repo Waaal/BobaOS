@@ -9,13 +9,15 @@ We can have 256 entries in a IDT. And we know that some are reserved for CPU Exc
 
 ## Calling kernel overview
 Here is fast overview what needs to happen if we call the kernel:
-- Pushes info to return to userland to stack (done by the int instruction)
+- We call int instruction
+- Stack is changed with the TSS register to kernel stack and the info to return back to userland is pushed by the CPU
+- All registers from Task that executed the interrupt needs to be saved
 - Kernel routins begins execution command number is passed by the EAX register
 - Interrupt handler in C is called in kernel space
-- All registers from Task that executed the interrupt needs to be saved, so we can resume our work after the interrupt
 - Kernel does the action that is suppost to do
 - kernel command handler returns a value
 - The EAX register is populated with the return value
+- All registers from the task are restored
 - Execution in the user process resumes after the int instruction
 
 ## How to hand a interrupt
