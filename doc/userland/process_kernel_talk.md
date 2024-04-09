@@ -30,7 +30,7 @@ Example handeler in C
 ``` c
 /*
  command: The command that was in the eax register
- frame: All fo the Task registers
+ frame: All of the Task registers
 */
 void* isr80h_handler(int command, struct interrupt_frame* frame)
 {

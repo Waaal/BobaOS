@@ -34,5 +34,6 @@ struct process
 This simple process structure can have only one task.
 
 ## Taks
+A task is the actual "code" that gets run by the CPU.
 
 ### Exaple strucure of a simple task

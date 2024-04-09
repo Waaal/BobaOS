@@ -28,7 +28,7 @@ On entry is 128 bits in long mode and 64 bits in protected mode and is structure
 
 **Offset:** 64 bit value (protected mode 32 bit). Is the address of the entry point of the Interrupt service routine.
 
-**Selector:** A Segment Selector (Points to a valid entry in the GDT). Selector this interrupt is bound to. For example, if the selector is the Kernel data entry in the GDT, than this interrupt will be with the kernel data rights. Ideally this will always be the kernel code selector.
+**Selector:** A Segment Selector (Points to a valid code entry in the GDT). Selector this interrupt is bound to. For example, if the selector is the Kernel code then when the IDT jumps to the interrupt routine it populates the CS segment with this selector
 
 **IST:** Offset in the interrupt stack table. If bits are all zero IST is not beeing used.
 
