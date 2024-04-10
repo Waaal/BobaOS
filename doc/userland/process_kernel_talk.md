@@ -44,7 +44,50 @@ void* isr80h_handler(int command, struct interrupt_frame* frame)
 }
 
 ```
+## Accessing a Task variables
+We want to access a tasks variable that the process provided. For example the task provided a argument which is a pointer to a string that we should print. Sound easy we copy the prointers value and work with it. Sadly it is not that easy. Because each process is mapped to virtual address 0x400000. So the pointer the process gives us is a virtual address of this processes virtual memory space. For example the pointer points to address 0x400100. But the kernel is mapped 1:1 and works with physical addresses. So virtual address 0x400100 is not physical address 0x400100.
 
+
+So we first need to translate the virtual address 0x400100 of the process virtual memory to a physical address so that the kernel can access it. There are of course multiple ways to do this. One way is to allocate some temporary memory in the kernel space and then map thet memory 1:1 in the process space (If we allocate physical memory 0x500000 we map it to virtual address 0x500000). Then switch paging to the process page table and copy the value of pointer 0x400100 to the newly mapped temporary memory. 
+Switch back to kernel page and we can access the value of the pointer. Then remove the temporary mapped pointer from the process space and restore the old value.
+
+
+Simple implementation:
+``` c
+//task: task structure
+//virtual: Pointer to string in virtual memory space
+//physical: Kernel memory where the content of the string in virtual should end up in
+void copy_string_from_task(struct task* task, void* virtual, void* physical, int max)
+{
+    //Allocate some memory in the kernel land
+    char* tmp = kzalloc(max);
+    
+    //Save old page table entry so we can restore it later
+    uint32_t old_entrie = paging_get(task->page_directory->directory_entry, tmp);
+    
+    //Map physical address of tmp to virtual address of tmp (1:1 mapping)
+    paging_map_range(task->page_directory, tmp, tmp, 1, PAGING_IS_WRITABLE | PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL);
+
+    //Switch to process page table
+    paging_switch(task->page_directory);
+    
+    //Copy string from virtual address to tmp, which is now accessible by the process
+    strncpy(tmp, virtual, max);
+
+    //Switch back to kernel page
+    kernel_page();
+
+    //restole old entry we overwrote with tmp
+    paging_set(task_page_directory->directory_entry, tmp, old_entrie);
+
+    //Finally copy value of tmp to physical address for kernel
+    strncpy(physical, tmp, max);
+
+    //Free temporary variable
+    kfree(tmp);
+
+}
+``` 
 
 ## Example system commands
 Some example system commands are:
