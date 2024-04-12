@@ -25,8 +25,33 @@ Here is fast overview what needs to happen if we call the kernel:
 ## How to hand a interrupt
 To handle a interrupt we need to make a entry in the IDT with the vector we want the userland to use for kernel interrupts.
 
+Example handeler in asm (in protected mode):
+``` assembly
+isr80h_wrapper:
+                                ; Already pushed by the processor
+                                ; SS (User Data)
+                                ; SP
+                                ; flags
+                                ; CS
+                                ; IP <-- Stack pointer points here
 
-Example handeler in C
+    pushad                      ; Pushes all general purpose registers
+
+    ; FRAME END
+
+    push esp                    ; Push stack pointer so it is second argument of isr80h_handler
+    push eax                    ; Push command that are in eax on stack so isr80h_handler can have it as first argument
+    call isr80h_handler
+    mov dword[tmp_res], eax     ; Move response from isr80h_handler in temp save spot
+
+    add esp, 8                  ; Move stack back to FRAME END
+    popad                       ; Restore general purpose registers for user land
+    mov eax, [tmp_res]          ; Move result back in eax registers
+
+    iretd
+```
+
+Example isr 80h handeler in C
 ``` c
 /*
  command: The command that was in the eax register
@@ -45,7 +70,7 @@ void* isr80h_handler(int command, struct interrupt_frame* frame)
 
 ```
 ## Accessing a Task variables
-We want to access a tasks variable that the process provided. For example the task provided a argument which is a pointer to a string that we should print. Sound easy we copy the prointers value and work with it. Sadly it is not that easy. Because each process is mapped to virtual address 0x400000. So the pointer the process gives us is a virtual address of this processes virtual memory space. For example the pointer points to address 0x400100. But the kernel is mapped 1:1 and works with physical addresses. So virtual address 0x400100 is not physical address 0x400100.
+We want to access a tasks variable that the process provided. For example the task provided a argument which is a pointer to a string that we should print. Sound easy we copy the pointers value and work with it. Sadly it is not that easy. Because each process is mapped to virtual address 0x400000. So the pointer the process gives us is a virtual address of this processes virtual memory space. For example the pointer points to address 0x400100. But the kernel is mapped 1:1 and works with physical addresses. So virtual address 0x400100 is not physical address 0x400100.
 
 
 So we first need to translate the virtual address 0x400100 of the process virtual memory to a physical address so that the kernel can access it. There are of course multiple ways to do this. One way is to allocate some temporary memory in the kernel space and then map thet memory 1:1 in the process space (If we allocate physical memory 0x500000 we map it to virtual address 0x500000). Then switch paging to the process page table and copy the value of pointer 0x400100 to the newly mapped temporary memory. 
@@ -77,7 +102,7 @@ void copy_string_from_task(struct task* task, void* virtual, void* physical, int
     //Switch back to kernel page
     kernel_page();
 
-    //restole old entry we overwrote with tmp
+    //restore old entry we overwrote with tmp
     paging_set(task_page_directory->directory_entry, tmp, old_entrie);
 
     //Finally copy value of tmp to physical address for kernel
