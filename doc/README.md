@@ -31,6 +31,9 @@
         - SATA
             - [ATA PIO](driver/disk_ata_pio.md)
             - AHCI
+    - Keyboard (ps2)
+- [Keyboard](keyboard/keyboard_access.md)
+    - [Virtual Keyboard Layer](keyboard/virtualKeyboardLayer.md)
 - [Userland](userland/Userland.md)
     - [Kernel and process communication](userland/process_kernel_talk.md)
 - [Processes and Tasks](Processes_and_Tasks/processesTasks.md)

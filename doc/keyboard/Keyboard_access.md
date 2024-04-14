@@ -4,6 +4,8 @@
 - Keyboard buffers can be pushed and popped from
 - Keyboard parses scancodes which we must parse to ascii or utf
 
+TODO: Move PS2 specific text to keyboard drvier ps2
+
 *We rember the ps2 keyboard sends interrupts at [IRQ1 vector](STCQ/HardwareInterrupts.md#default-isa-irqs)*
 
 ## Keyboard access is interrupt driven
