@@ -101,8 +101,19 @@ Vectors that place a error code are:
 - Vector 30 (Security Exception)
 
 ## Implementation
+The IDT needs to be implemented in assembly and C code. We need to save all the registers before enetering the interrupt service routine.
 
-The IDT can be implemented in Assemlby and C code.
+### Assembly wrapper (32 bit)
+``` assembly
+int21h:
+    pushad                      ; Pushad pushes all general purpos registers onto stack
+    call int21h_handler_c       ; Call c handler
+    popad                       ; restores all generap purpose registers onto stack
+    iret                        ; iret return back
+
+```
+
+But with this method we needed to create a wrapper for each interrupt we want to do. So it is useful to us NASM macros to create a single assembly wrapper for each interrupt service routine.
 
 ### C Code (32 bit)
 ``` c
