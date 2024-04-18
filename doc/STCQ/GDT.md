@@ -136,9 +136,9 @@ The pointer needs to have the following structure:
 |   Offset    |  Size   |
 ```
 
-**Size:** Size of the IDT - 1;
+**Size:** Size of the GDT;
 
-**Offset:** Staring address of the IDT.
+**Offset:** Staring address of the GDT.
 
 Load the GDT with the lgdt instruction. The argument of the lgdt is 
 ``` assembly

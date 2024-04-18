@@ -4,39 +4,39 @@ Userland is a term used to describe when the processor is in a limited, privileg
 Userland is when the processor is in ring3. Userland is safer because if something goes wrong the kernel is able to intervene. When the processor is in user land it is unable to execute privileges instructions such as chaning the GDT, IDT, paging or direct hardware access with in and out.
 
 ## Getting to user land for the first time
-- Setup user code and data segments
+- Setup user code and data segments in GDT
 - Setup a TSS
 - Get to user land with iret
 
 ### Setupt userland and data segments
-To be able to switch to userland we need to have a user data and code segment in the GDT. We alos need a TSS entry in the GDT.
+To be able to switch to userland we need to have a user data and code segment in the GDT.
 
 ### Setupt TSS
 Explenation of the TSS is [here](../STCQ/TSS.md)
 
-### Get to userland with iret
-To get to userland we need to pretend we returned from a interrupt and want to get back to ring3. Because the CPU dont have a direct command to change priviledge level.
+### Get manually to userland with iret
+To manually get to userland we need to pretend we returned from a interrupt and want to get back to ring3. Because the CPU dont have a direct command to change priviledge level. 
 
-- We need to populate our data segment register with the code and data segment for the user entry in the GDT
-- Save stack pointer into eax
-- Push user data segment to stack
-- Push stack pointer in eax to stack
-- Push current flags to stack and bitwise OR the bit that re-enables interrupts
+- Change data segments (es,ds,fs and gs. NOT ss) to user data
+- Push user data segment to stack (so iret can change SS register)
+- Push userprogram stack pointer to stack
+- Push current flags to stack and bitwise OR the bit that re-enables interrupts (0x200)
 - Push user code segment to stack
-- Push address of the function we want to run in userland
-- Call iret
+- Push the program counter (PC) also called instruction pointer (IP) (the address of the next line of code or entry point) 
+- Call iret (iretd for 32 bit | iretq for 64 bit) iret changes cs register for us (we need to change the data segments manually)
 
-The iret instruction expects the following structure on the stack:
+So the iret instruction expects the following structure on the stack:
 ```
 0x100
-		| user data segment |
+		| user data segment (SS) |
 		| stack pointer |
 		| current flags |
 		| user code segment |
-		| address of function | <-- [Stack pointer]
+		| IP register |
 		...
 0x0
 ```
+This is a basic explenation on how to get to ring3. If this is not the fist time we jump back to this task in ring3 then we also need to restore all of the registers of this programm before doing the iret instruction
 
 ## Switching between userland and kernelland
 When we call a function from the userland or a interrupt happens, the CPU automatically pushes all registers to the stack. So if we are in kernelland and want to go back to userland with the iret instruction we need to restore all of these general purpose registers and then return back to userland with iret.

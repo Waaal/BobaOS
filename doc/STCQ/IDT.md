@@ -1,6 +1,6 @@
 # Interrupt Descriptor Table
 IDT is a struct which lives in memory and is used by the CPU to find interrupt and exception handlers.
-A interrupt can be a signal send from a device, or a Exception generatet by the CPU to alert the Kernel. If the CPU accepts a interrupt, it will stop the current task and process the interrupt. A IDT can have up to 256 entries.
+A interrupt can be a signal send from a device, a Exception generatet by the CPU to alert the Kernel or send from a Userspace programm to communicate with the kernel. If the CPU accepts a interrupt, it will stop the current task and process the interrupt. A IDT can have up to 256 entries.
 
 ## Explenation
 
@@ -15,7 +15,7 @@ Different interrupts and exceptions have Numbers which are called interrupt vect
 
 The vector number is define by the order in the IDT. So Entry 0 has the vector number 0. Entry 5 has the vector number 5 and so on.
 
-Vectore 0 - 31 are pre defined by the CPU. 
+Vectore 0 - 31 are pre defined by the CPU for CPU exceptions. 
 Numbers from 32 - 255 can be used by the operating system.
 
 ### IDT Entry:
@@ -28,7 +28,7 @@ On entry is 128 bits in long mode and 64 bits in protected mode and is structure
 
 **Offset:** 64 bit value (protected mode 32 bit). Is the address of the entry point of the Interrupt service routine.
 
-**Selector:** A Segment Selector (Points to a valid entry in the GDT). Selector this interrupt is bound to. For example, if the selector is the Kernel data entry in the GDT, than this interrupt will be with the kernel data rights. Ideally this will always be the kernel code selector.
+**Selector:** A Segment Selector (Points to a valid code entry in the GDT). Selector this interrupt is bound to. For example, if the selector is the Kernel code then when the IDT jumps to the interrupt routine it populates the CS segment with this selector
 
 **IST:** Offset in the interrupt stack table. If bits are all zero IST is not beeing used.
 
@@ -48,18 +48,17 @@ On entry is 128 bits in long mode and 64 bits in protected mode and is structure
 - 0xE (0b1110) = 64/32 bit Interrupt Gate
 - 0xb (0b1111) = 64/32 bit Trap Gate
 
-#### Task gate
+#### Task gate (obsolete)
 Task gate references the TSS descriptor and can assist in multi-tasking when exceptions occure
 
 #### Interrupt Gate
-Used for interrupts that can be invoked with the INT instruction.
-(Can also be used for exceptions, because they are easier to work with lel)
-
-#### Trap Gate
-Used for exceptions raised by the CPU.
+Used for interrupts that can be invoked with the INT instruction or hardware events from a IRQ.
 (They also automatically disable interrupts on entry and re-enable them on iret instruction)
 
-*Note: Almost every gate (Inerrupt and Trap) needs a iret instruction on the end*
+#### Trap Gate
+Used for exceptions raised by the CPU. (The CPU places error codes on the stack for some exceptions)
+
+*Note: Interrupt and Trap gate are basically the same the only differnece is that a Interrupt Gate automatically disables interrupts and re-enable them*
 
 ### Load a IDT
 To load a Interrupt Descriptor Table we need a pointer to this table.
@@ -86,9 +85,35 @@ Load the IDT with the lidt instruction. The argument of the lidt is
 lidt [AddressOfPointer]
 ```
 
-## Implementation
+## CPU Exceptions Error codes
+The Vectors 0-31 are predefined by the CPU for exceptions. For some of these Exceptions the CPU places a error code on the stack that need to be popped from the stack before the iret instruction.
 
-The IDT can be implemented in Assemlby and C code.
+Vectors that place a error code are:
+- Vector 8 (Double fault)
+- Vector 10 (Invalid TSS)
+- Vector 11 (Segment Not Present)
+- Vector 12 (Stack segment fault)
+- Vector 13 (General protection fault)
+- Vector 14 (Page Fault)
+- Vector 17 (Alignment Check)
+- Vector 21 (Control Protection Exception)
+- Vector 29 (VMM Communication Exception)
+- Vector 30 (Security Exception)
+
+## Implementation
+The IDT needs to be implemented in assembly and C code. We need to save all the registers before enetering the interrupt service routine.
+
+### Assembly wrapper (32 bit)
+``` assembly
+int21h:
+    pushad                      ; Pushad pushes all general purpos registers onto stack
+    call int21h_handler_c       ; Call c handler
+    popad                       ; restores all generap purpose registers onto stack
+    iret                        ; iret return back
+
+```
+
+But with this method we needed to create a wrapper for each interrupt we want to do. So it is useful to us NASM macros to create a single assembly wrapper for each interrupt service routine.
 
 ### C Code (32 bit)
 ``` c

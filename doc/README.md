@@ -1,7 +1,8 @@
 # Documentation
 - x86 Assembly
     - Registers
-    - Instruction set
+    - [Instruction set](x86Assembly/instruction_set.md)
+    - [Sections](x86Assembly/sections.md)
     - Modes
         - [Real Mode](assembly_modes/real_mode.md)
         - Protected Mode
@@ -17,7 +18,7 @@
     - [A20 Line](STCQ/A20_Line.md)
     - [IDT](STCQ/IDT.md)
     - [GDT](STCQ/GDT.md)
-    - [TSS (INCOMPLETE)](STCQ/TSS.md)
+    - [TSS](STCQ/TSS.md)
     - [PIC (HardwareInterrupts)](STCQ/HardwareInterrupts.md)
 - Memory management
     - [MMU (Paging)](memoryManagement/paging.md)
@@ -30,5 +31,8 @@
         - SATA
             - [ATA PIO](driver/disk_ata_pio.md)
             - AHCI
+    - [Keyboard (ps2)](driver/keyboard_ps2.md)
+- [Virtual Keyboard Layer](keyboard/virtualKeyboardLayer.md)
 - [Userland](userland/Userland.md)
+    - [Kernel and process communication](userland/process_kernel_talk.md)
 - [Processes and Tasks](Processes_and_Tasks/processesTasks.md)
