@@ -26,11 +26,12 @@ For the ps2 keyboard to work we need to send 0xAE to the command register which 
 ## Get keypresses
 The PS2 is a extremly simple protocoll by sending scancodes to the keyboard data port. So when we receive a interrupt on IRQ1 we just need to read the scancode from the data port (1byte). The scancode is 1 byte large and represents a key press on the keyboard. 
 
-> [!NOTE]
-> After we read from the Data port we should read another byte from the data port because somethimes the PS2 keyboard sends some additional info.
+After we read from the Data port we should read another byte from the data port because somethimes the PS2 keyboard sends some additional info.
 
 
-*Note: We should only poll from the data port if the bit 0 of the FLAGS is 0, so we can be sure that the key is there*
+>[!NOTE]
+>We should only poll from the data port if the bit 0 of the FLAGS is 0, so we can be sure that the key is there
+
 
 ## Differenciate between key reased and key down
 Sometimes it is imporant to know if we pressed a key down or if we released a key. To know this the ps2 keyboard has a simple trick.

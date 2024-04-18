@@ -65,9 +65,9 @@ char keyboard_pop()
 }
 ```
 
-
-<br>
+<hr>
 With this push and pop functions each keyboad (or even a virtual keyboard) can just call the push function of the VKL if the receive a key. The VKL handles the rest.
+
 
 >[!NOTE]
 >Abstraction works with function pointer
