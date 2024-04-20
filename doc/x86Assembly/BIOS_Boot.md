@@ -33,7 +33,7 @@ The only important info in the BIOS parameter block are the firs 3 bytes. This w
 
 >[!NOTE]
 > When the BIOS starts executing our bootloader it places the diskID from which the BIOS loaded our program into the dl register.
-> Normally if the this id 0x80+ then we booted from a hard disk, if the disk id is 0x0+ then we booted from a floppy disk.
+> Normally if the id 0x80+ then we booted from a hard disk, if the disk id is 0x0+ then we booted from a floppy disk.
 
 ## Barebon bootloader setup
 Our bootloader:

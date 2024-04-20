@@ -15,6 +15,7 @@ With ELF files DLLs (shared libraries) are also possbile because ELF files can c
 ## Inside a ELF file
 A ELF file is structured like this
 
+| |
 | ------ |
 | ELF header |
 | Program header table |
@@ -24,13 +25,6 @@ A ELF file is structured like this
 | ... |
 | Section header table |
 
-
-**ELF header:**
-
-
-**Program header table:**
-
-
 **.text:** contains code
 
 
@@ -39,5 +33,8 @@ A ELF file is structured like this
 
 **.rodata:** contains read only data
 
+### ELF header
 
-**Section header table:**
+### Program header
+
+### Section header
