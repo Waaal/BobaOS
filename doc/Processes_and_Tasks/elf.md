@@ -43,7 +43,7 @@ A ELF file is structured like this
 
 **.rodata:** contains read only data
 
-### ELF header
+### ELF header (elf32/64_Ehdr)
 The ELF header contains all of the important info and positions of this file and a magic number at the start to identify that this is a ELF file. 
 
 | Index (32 bit) | Index (64 bit) | Size (32 bit) | Size (64 bit) | Description |
@@ -64,7 +64,7 @@ The ELF header contains all of the important info and positions of this file and
 | 50 | 62 | 2 | 2 | e_shstrndx |
 
 
-**e_ident**
+**e_ident:**
 | Index | Size | Description |
 | ------ | ------ | ------ |
 | 0 | 4 | Magic number (0x7F, 'E', 'L', 'F') |
@@ -109,7 +109,7 @@ The ELF header contains all of the important info and positions of this file and
 **e_phoff:** Offset of program header table into ELF file in bytes. If there is no Program header table than 0.
 
 
-**e_shoff:** Offset of section table into ELF file in bytes. If there is no Section table than 0.
+**e_shoff:** Offset of section table into ELF file in bytes.
 
 
 **e_flags:** Processor specific flags associated with the file.
