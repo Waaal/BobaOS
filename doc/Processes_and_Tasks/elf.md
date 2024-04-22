@@ -48,23 +48,23 @@ The ELF header contains all of the important info and positions of this file and
 
 | Index (32 bit) | Index (64 bit) | Size (32 bit) | Size (64 bit) | Description |
 | ------ | ------ | ------ | ------ | ------ |
-| 0 | 0 | 16 | 16 | ELF file identifier (own struct) |
-| 16 | 16 | 2 | 2 | Type |
-| 18 | 18 | 2 | 2 | Machine |
-| 20 | 20 | 4 | 4 | ELF Version |
-| 24 | 24 | 4 | 8 | Program entry address |
-| 28 | 32 | 4 | 8 | Program header table offset |
-| 32 | 40 | 4 | 8 | Section table offset |
-| 36 | 48 | 4 | 4 | Flags |
-| 40 | 52 | 2 | 2 | ELF Header size |
-| 42 | 54 | 2 | 2 | Program header table  entry size |
-| 44 | 56 | 2 | 2 | Number of entries in program header table |
-| 46 | 58 | 2 | 2 | Section table  entry size |
-| 48 | 60 | 2 | 2 | Number of entries in section table |
-| 50 | 62 | 2 | 2 | ??? Something to do with the string table |
+| 0 | 0 | 16 | 16 | e_ident |
+| 16 | 16 | 2 | 2 | e_type |
+| 18 | 18 | 2 | 2 | e_machine |
+| 20 | 20 | 4 | 4 | e_version |
+| 24 | 24 | 4 | 8 | e_entry |
+| 28 | 32 | 4 | 8 | e_phoff |
+| 32 | 40 | 4 | 8 | e_shoff |
+| 36 | 48 | 4 | 4 | e_flags |
+| 40 | 52 | 2 | 2 | e_ehsize |
+| 42 | 54 | 2 | 2 | e_phentsize |
+| 44 | 56 | 2 | 2 | e_phnum |
+| 46 | 58 | 2 | 2 | e_shentsize |
+| 48 | 60 | 2 | 2 | e_shnum |
+| 50 | 62 | 2 | 2 | e_shstrndx |
 
 
-**ELF file identifier:**
+**e_ident**
 | Index | Size | Description |
 | ------ | ------ | ------ |
 | 0 | 4 | Magic number (0x7F, 'E', 'L', 'F') |
@@ -75,8 +75,7 @@ The ELF header contains all of the important info and positions of this file and
 | 8 | 8 | Unused/Padding |
 
 
-
-**Type:** Identifies the type of current ELF file
+**e_type:** Identifies the type of current ELF file
 - ET_NONE = 0: No file type
 - ET_REL = 1: Relocatable file
 - ET_EXEC = 2: Executable file
@@ -86,16 +85,52 @@ The ELF header contains all of the important info and positions of this file and
 - ET_HIPROC = 0xffff: Processor-specific
 
 
-**Flags:** Processor specific flags associated with the file
+**e_machine:** Required architecture for current file
+- EM_NONE = 0: No machine
+- EM_M32 = 1: AT&T WE 32100
+- EM_SPARC = 2: SPARC
+- EM_386 = 3: Intel
+- EM_68K = 4: Motorola 68000
+- EM_88K = 5: Motorola 88000
+- EM_860 = 7: Intel 80860
+- EM_MIPS = 8: MIPS RS3000 Big-Endian
+- EM_MIPS_RS4_BE = 10: MIPS RS4000 Big-Endian
+- RESERVED = 11-16: Reserved for future
 
 
-**Program entry address:** Virtual address of entry point of program
+**e_version:** Version of the object file. 1 = original file. Extension will create new versions with higher numbers. Value EV_CURRENT is given as 1 or above.
+- EV_NONE = 0: Invalid version
+- EV_NONE = 1: Current version
 
 
-**Program header table offset:** Offset into ELF file in bytes
+**e_entry:** Virtual address of entry point of program.
 
 
-**Section header table offset:** Offset into ELF file in bytes
+**e_phoff:** Offset of program header table into ELF file in bytes. If there is no Program header table than 0.
+
+
+**e_shoff:** Offset of section table into ELF file in bytes. If there is no Section table than 0.
+
+
+**e_flags:** Processor specific flags associated with the file.
+
+
+**e_ehsize:** Size of the ELF header in bytes.
+
+
+**e_phentsize:** Size of a entry in the program header table in bytes.
+
+
+**e_phnum:** Number of entries in program header table.
+
+
+**e_shentsize:** Size of a entry in the section table in bytes.
+
+
+**e_shnum:** Number of entries in section table.
+
+
+**e_shstrndx:** ????? Has something to do with the string table 
 
 
 ### Program header
