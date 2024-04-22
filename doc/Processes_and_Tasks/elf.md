@@ -47,7 +47,7 @@ A ELF file is structured like this
 The ELF header contains all of the important info and positions of this file and a magic number at the start to identify that this is a ELF file. 
 
 | Index (32 bit) | Index (64 bit) | Size (32 bit) | Size (64 bit) | Description |
-| ------ | ------ | ------ | ------ | ------ | ------ |
+| ------ | ------ | ------ | ------ | ------ |
 | 0 | 0 | 16 | 16 | ELF file identifier (own struct) |
 | 16 | 16 | 2 | 2 | Type |
 | 18 | 18 | 2 | 2 | Machine |
