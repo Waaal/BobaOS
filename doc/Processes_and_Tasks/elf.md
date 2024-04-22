@@ -76,7 +76,7 @@ The ELF header contains all of the important info and positions of this file and
 
 
 
-**Type:** Identifies the taype of current ELF file
+**Type:** Identifies the type of current ELF file
 - ET_NONE = 0: No file type
 - ET_REL = 1: Relocatable file
 - ET_EXEC = 2: Executable file
@@ -84,6 +84,9 @@ The ELF header contains all of the important info and positions of this file and
 - ET_CORE = 4: Core file (A snapshot of the process right before it crashed or dumped)
 - ET_LOPROC = 0xff00: Processor-specific
 - ET_HIPROC = 0xffff: Processor-specific
+
+
+**Flags:** Processor specific flags associated with the file
 
 
 **Program entry address:** Virtual address of entry point of program
