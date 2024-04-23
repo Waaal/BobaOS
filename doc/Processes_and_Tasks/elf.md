@@ -177,7 +177,14 @@ A program header is a struct that normally describes one segment or other inform
 **p_memsz:** Size in bytes of the segment in memory.
 
 
-**p_flags:** Flags relevant to this segment.
+**p_flags:** Flags we should set on our paging.
+- PF_X = 1: Segment is only executable.
+- PF_W = 2: Segment is only writable.
+- PF_W + PF_X = 3: Segment is executable and writable.
+- PF_R = 4: Segment is only readable.
+- PF_R + PF_X = 5: Segment is executable and readable.
+- PF_R + PF_W = 6: Segment is readable and writable.
+- PF_R + PF_W + PF_X = 7: Segment is readable, writable and executable
 
 
 **p_align:** Loadable process: The required alignment for this section. (Because in paging everything has to be paging aligned). Values of 0 and 1 means no alignment is required.
