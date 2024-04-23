@@ -136,7 +136,52 @@ The ELF header contains all of the important info and positions of this file and
 
 
 ### Program header
-A program header is a struct that describes a segment or other information the system needs to load the ELF file. Program headers a needed for *executable (ET_EXEC)* and *shared object (ET_DYN)* files. 
+A program header is a struct that normally describes one segment or other information the system needs to load the ELF file. Program headers a needed for *executable (ET_EXEC)* and *shared object (ET_DYN)* files. 
+
+
+| Index (32 bit) | *Index (64 bit)* | Size (32 bit) | *Size (64 bit)* | Description |
+| ------ | ------ | ------ | ------ | ------ |
+| 0 | *0* | 4 | *4* | p_type |
+| - | *4* | - | *4* | p_flags |
+| 4 | *8* | 4 | *8* | p_offset |
+| 8 | *16* | 4 | *8* | p_vaddr |
+| 12 | *24* | 4 | *8* | p_paddr |
+| 16 | *32* | 4 | *8* | p_filesz |
+| 20 | *40* | 4 | *8* | p_memsz |
+| 24 | - | 4 | - | p_flags |
+| 28 | *48* | 4 | *8* | p_align |
+
+
+**p_type:** What kind of segment this program header describes.
+- PT_NULL = 0: This segment is unused.
+- PT_LOAD = 1: Loadable segment. Described by p_filesz and p_memsz.
+- PT_DYNAMIC = 2: This segment is dynamic linking information.
+- PT_INTERP = 3: This is the location and size of a null-terminated path name to invoke as interpreter.
+- PT_NOTE = 4: This specifies the location and size of a auxiliary information.
+- PT_SHLIB = 5: Reserved but has unspecified semantics.
+- PT_PHDR = 6: Specifies the location nad size of the program header table itself. 
+
+
+**p_offset:** Offset from the begining of the ELF file to this segment.
+
+
+**p_vaddr:** Virtual address of the segment.
+
+
+**p_paddr:** On systems if the physical address is relevant. Physical address of the segment.
+
+
+**p_filesz:** Size in bytes of this segment in the file.
+
+
+**p_memsz:** Size in bytes of the segment in memory.
+
+
+**p_flags:** Flags relevant to this segment.
+
+
+**p_align:** Loadable process: The required alignment for this section. (Because in paging everything has to be paging aligned). Values of 0 and 1 means no alignment is required.
+
 
 ### Section header
 
