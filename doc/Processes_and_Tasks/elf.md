@@ -29,7 +29,7 @@ A ELF file is structured like this
 **ELF header:** Contains the elf header, there is only one efl header at the beginning of a file
 
 
-**Program header table:** Contains a array of different program headers
+**Program header table:** Contains a array of different program headers. The Program header table is optional.
 
 
 **Section header table:** Contains a array of different section headers
@@ -42,6 +42,8 @@ A ELF file is structured like this
 
 
 **.rodata:** contains read only data
+
+A normal executable file contains sections (data, text) and a ELF file consits out of segments. One segment can hold one or multiple sections.
 
 ### ELF header (elf32/64_Ehdr)
 The ELF header contains all of the important info and positions of this file and a magic number at the start to identify that this is a ELF file. 
@@ -134,6 +136,7 @@ The ELF header contains all of the important info and positions of this file and
 
 
 ### Program header
+A program header is a struct that describes a segment or other information the system needs to load the ELF file. Program headers a needed for *executable (ET_EXEC)* and *shared object (ET_DYN)* files. 
 
 ### Section header
 
