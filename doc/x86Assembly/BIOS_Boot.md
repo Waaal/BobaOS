@@ -89,7 +89,7 @@ _start:
 						; Placeholder for BIOS parameter block, because some BIOSes want this and write in this block
 
 start:
-	jmp 0x0:next			; Set code segment to 0x0, because it cannot be set with mov cs. So set it with a jump.
+	jmp 0x0:next				; Set code segment to 0x0, because it cannot be set with mov cs. So set it with a jump.
 .next:
 
 	cli					; Clear Interrupts and disable
@@ -100,13 +100,13 @@ start:
 	mov di, ax
 	mov fs, ax
 	mov ss, ax
-	mov sp, 0x7c00		; We changed all segment registers to 0, because some BIOSes might set them to 0x7C00, some to 0 and some 
+	mov sp, 0x7c00				; We changed all segment registers to 0, because some BIOSes might set them to 0x7C00, some to 0 and some 
 						; dont set them at all. So it is good practice to set them to 0, or to 0x7c00 if we dont want to
 						; use org 0x7c00
 
 	sti					; Enables Interrupts	
 
-times 446- ($-$$) db 0 	; Fill up the bootloader to the start of the partition table
+times 446- ($-$$) db 0 			; Fill up the bootloader to the start of the partition table
 
 partition_table:
 	db 0x80				; Bootable FLAG 0x80 = bootable
