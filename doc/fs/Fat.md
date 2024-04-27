@@ -80,6 +80,10 @@ They need to contain the following:
 | 0x5A |420| Boot code/or empty |
 | 0x1FE| 2| Bootable partition signature 0xAA55 or empty |
 
+
+>[!NOTE]
+> The Size of the end disk is oriented by the **Number of Total sectors** or the **Large sector count**. So if we have 65535 sectors with 512 bytes then the size of the disk is: 31.9 MB
+
 ### File Allocation Tables
 Here are stored the File Allocation Table structs. This section is always placed right after the Boot Sector section and reserved sectors. It stores all the clusters and the status, if they are taken or if they are the end of a chain.
 

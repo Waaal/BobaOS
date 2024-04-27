@@ -106,7 +106,7 @@ start:
 
 	sti					; Enables Interrupts	
 
-times 446- ($-$$) db 0 			; Fill up the bootloader to the start of the partition table
+times 446- ($-$$) db 0 				; Fill up the bootloader to the start of the partition table
 
 partition_table:
 	db 0x80				; Bootable FLAG 0x80 = bootable
@@ -120,6 +120,6 @@ partition_table:
 	dd 0x00				; Relative sector 32 bit (4 byte)
 	dw 0xFFFF			; Total sectors 32 bit (4 bytes)
 	dw 0x0
-times 48 db 0
+times 48 db 0 			; Fill up 3 rest partition tables
 dw 0xAA55				; Intel = little endian, dw gets flipped. So dw AA55 = 0x55 0xAA
 ```
