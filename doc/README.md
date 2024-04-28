@@ -35,5 +35,7 @@
 - [Virtual Keyboard Layer](keyboard/virtualKeyboardLayer.md)
 - [Userland](userland/Userland.md)
     - [Kernel and process communication](userland/process_kernel_talk.md)
+    - [Linking stdlib](userland/linking_stdlib.md)
+    - Stdlib
 - [Processes and Tasks](Processes_and_Tasks/processesTasks.md)
 - [ELF Files](Processes_and_Tasks/elf.md)
