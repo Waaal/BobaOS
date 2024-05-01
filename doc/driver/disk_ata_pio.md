@@ -46,10 +46,42 @@ W = write mode. R = read mode
 
 Normaly the disk we boot from is set default as the Primary disk (0x1F0) by the BIOS.
 
-## Reading from ATA PIO
-We can put the disk controller in read mode by sending 0x20 to the command register (0x1F7). When we send 0x20 to the command register, we need to make sure that all the other values, LBA and Total number of sectors are in there appropriate register.
 
-After we send the command, the command register turns into the Status register. Now we need to read from the Status register port. If we get back a number where bit 4 is set, we know the disk is ready and we can start reading.
+### Status Bits
+The state bits of the status register.
+| Bit  | Name | Descritpion |
+| ------ | ------ | ------ |
+| 0 | ERR| Inidcates a error.|
+| 1 | IDX | -|
+| 2 | CORR | - |
+| 3 | DRQ | Is set if the driver is ready for receiving/sending data. |
+| 4 | SRV | - |
+| 5| DF | - |
+| 6 | RDY | Bit is clear if driv is spun down.  |
+| 7 | BSY | If the drive is bussy sending/receiving data. Wait for it to clear | 
+
+## Reading from ATA PIO
+To read from a ATA PIO device we should fist initialice it. 
+So we should make sure:
+- That a drive is connected to a port
+- Reset all driver (for first time user after boot)
+- Send IDENTIFY Command
+
+
+### Find driver connected to port
+
+
+### Reset driver
+
+
+### Identifiy command
+
+
+### Read 
+We can put the disk controller in read mode by sending 0x20 to the command register (0x1F7). When we send 0x20 to the command register, we need to make sure that all the other values, LBA and Total number of sectors are in there appropriate register.
+But bevore we do this we should make sure that the BSY bit is clear.
+
+After we send the command, the command register turns into the Status register. Now we need to read from the Status register port. If the DRQ bit is set we can read the data.
 
 We read from the Data register (0x1F0) 2 bytes at a time.
 
