@@ -62,9 +62,10 @@ The state bits of the status register.
 
 ## Reading from ATA PIO
 To read from a ATA PIO device we should fist initialice it. 
-So we should make sure:
-- That a drive is connected to a port
+So we should make sure that:
+- A drive is connected to a port
 - Reset all driver (for first time user after boot)
+- Select drive
 - Send IDENTIFY Command
 
 
@@ -72,6 +73,9 @@ So we should make sure:
 
 
 ### Reset driver
+
+
+## Select drive
 
 
 ### Identifiy command
