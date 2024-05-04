@@ -4,9 +4,6 @@ PIO stands for Programmed input-output and is the simplest form of a disk driver
 
 ATA PIO is extremly slow, because every byte must be send trough the CPU'S IO port bus. So it is not recommend to use ATA PIO as the driver for all disk operation on the system, but in the boot and setup process where there is no multitasking, other processes etc... a ATA PIO driver is extremly usefull and simple. The kernel can load all of its important stuff with this and later switch to a AHCI driver.
 
-**ATA PIO bits**
-- Total 8 bit
-- LBA 28 bit
 
 ## Primary/Secondary
 Disk controller chips support 2 ATA buses per chip. These two are called primary and secondary. 
@@ -27,6 +24,7 @@ W = write mode. R = read mode
 | 0x1F6 | R/W | 24 - 27 of starting LBA and bits 28-31 needs to be 1110 | 
 | 0x1F7 | R | Status register | 
 | 0x1F7 | W | Command register | 
+| 0x3F6 | R/W | Device control register | 
 
 **Secondary**
 | Port  | Mode | Descritpion |
@@ -41,6 +39,7 @@ W = write mode. R = read mode
 | 0x176 | R/W | 24 - 27 LBA and bits 28-31 needs to be 1110 | 
 | 0x177 | R | Status register | 
 | 0x177 | W | Command register | 
+| 0x376 | R/W | Device control register | 
 
 *Note: If there are more drives/buses their ports are 0x1E0-0x1E7 for primary and  0x160-0x167 for secondary*
 
@@ -60,19 +59,34 @@ The state bits of the status register.
 | 6 | RDY | Bit is clear if driv is spun down.  |
 | 7 | BSY | If the drive is bussy sending/receiving data. Wait for it to clear | 
 
+
+### Device control reigter bytes
+The state bits of the status register.
+| Bit  | Name | Descritpion |
+| ------ | ------ | ------ |
+| 0 | n/a | Always 0 |
+| 1 | nIEN | Set this to stop the current device to send IRQs. |
+| 2 | SRST | Set (and clear after 5us) to do a software reset on the master and slave |
+| 3 | n/a | - |
+| 4 | n/a | - |
+| 5| n/a | - |
+| 6 | n/a | - |
+| 7 | HOB | - | 
+
+
 ## Reading from ATA PIO
 To read from a ATA PIO device we should fist initialice it. 
 So we should make sure that:
-- A drive is connected to a port
 - Reset all driver (for first time user after boot)
+- A drive is connected to a port
 - Select drive
 - Send IDENTIFY Command
 
 
-### Find driver connected to port
-
-
 ### Reset driver
+
+
+### Find driver connected to port
 
 
 ## Select drive
