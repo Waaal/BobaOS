@@ -89,7 +89,7 @@ So we should make sure that:
 ### Find driver connected to port
 
 
-## Select drive
+### Select drive
 
 
 ### Identifiy command
