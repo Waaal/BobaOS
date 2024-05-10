@@ -20,5 +20,30 @@ _start:
 ```
 
 ## Static
+To statically link the stdlib we create a relocatbale elf file out of the stdlib files. This relocatable ELF file can then be used by a different linker (the linker of the user programm) and link the stdlib.elf file in.
+``` makefile
+FILES=./build/start.o ./build/bobaos.o
+
+all: ${FILES}
+	i686-elf-ld -m elf_i386 -relocatable ${FILES} -o ./bin/stdlib.elf
+
+./build/start.o: ./src/start.asm
+	nasm -f elf ./src/start.asm -o ./build/start.o
+
+./build/bobaos.o: ./src/bobaos.asm
+	nasm -f elf ./src/bobaos.asm -o ./build/bobaos.o
+clean:
+	rm -rf ${FILES}
+	rm ./bin/stdlib.elf
+```
+
+
+**start.o:** Is the start routine with the entry label.
+
+
+**bobaos.o:** The actuall stdlib commands
+
+
+So we compile it with the -relocatable flag as a stdlib.elf file. Later the userpograms need to link this elf file in their executable. The linkerscript of the userpgoram needs to specify the start lable of the start.o as the entry point. 
 
 ## Dynamic
