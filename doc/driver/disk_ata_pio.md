@@ -135,7 +135,7 @@ We read from the Data register (0x1F0) 2 bytes at a time.
 
 
 ## Stuff to know
-- If we allow the disk to send IRQs (nIEN = 0 in Device control register) and our intterrupts are enabled then it is possible that the data is send to the IRQ interrupt handler and if we try to read the data per IO bus we get garbage.
+- If we want to read and we allow the disk to send IRQs (nIEN = 0 in Device control register) and our intterrupts are enabled then it is possible that the data is send to the IRQ interrupt handler and if we try to read the data per IO bus we get garbage. So the IRQ then steals or data.
 
 ## Simple Implementation
 
