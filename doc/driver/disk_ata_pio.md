@@ -21,7 +21,7 @@ W = write mode. R = read mode
 | 0x1F3 | R/W | 0 - 7 of starting LBA |
 | 0x1F4| R/W | 8 - 15 of starting LBA  |
 | 0x1F5 | R/W | 16 - 23 of starting LBA  |
-| 0x1F6 | R/W | 24 - 27 of starting LBA and bits 28-31 needs to be 1110 | 
+| 0x1F6 | R/W | Drive / Head Register | 
 | 0x1F7 | R | Status register | 
 | 0x1F7 | W | Command register | 
 | 0x3F6 | R/W | Device control register | 
@@ -36,7 +36,7 @@ W = write mode. R = read mode
 | 0x173 | R/W | 0 - 7 of starting LBA |
 | 0x174| R/W | 8 - 15 of starting LBA  |
 | 0x175 | R/W | 16 - 23 of starting LBA  |
-| 0x176 | R/W | 24 - 27 LBA and bits 28-31 needs to be 1110 | 
+| 0x176 | R/W | Drive Head register  | 
 | 0x177 | R | Status register | 
 | 0x177 | W | Command register | 
 | 0x376 | R/W | Device control register | 
@@ -58,6 +58,18 @@ The state bits of the status register.
 | 5| DF | - |
 | 6 | RDY | Bit is clear if driv is spun down.  |
 | 7 | BSY | If the drive is bussy sending/receiving data. Wait for it to clear | 
+
+
+### Drive/Head register bits
+The state bits of the status register.
+| Bit  | Name | Descritpion |
+| ------ | ------ | ------ |
+| 0 - 3 | | In LBA addressing bits 24 to 27 of LBA |
+| 4 | DRV | Selects drive number |
+| 5 | 1 | Always set |
+| 6 | LBA | IF clear CHS addressing is used. Else LBA. |
+| 7 | 1 | Always set |
+
 
 
 ### Device control reigter bytes
@@ -84,19 +96,30 @@ So we should make sure that:
 
 
 ### Reset driver
-To do a software reset we set the SRST bit in the Device control register (0x3F6). Then we wait should wait for 5us and the clear it again.
+To do a software reset we set the SRST bit in the Device control register (0x3F6). Then we wait for 5us and clear it again.
 
 
 This will reset the Master and Slave.
 
-### Find driver connected to port
-
+### Find drive connected to port
+If a port is not connected to a drive, the drive will always return 0xFF. So we can read the status register of a drive and if the return value is 0xFF we know that no drive is connected to this port.
 
 ### Select drive
-
+To select a drive we send 0xA0 for Primary or 0xB0 for secondary to the Drive / Head register (0x1F6).
 
 ### Identifiy command
+With the Identify command we get some info about the disk currently connected to the port. To send a identify command we first need to set 0 the following registers: (0x1F2 - 0x1F5). 
 
+
+Then we write 0xEC (IDENTIFY command) to the command register (0x1F7). Then we wait till the BSY bit clears and then wait till the DRQ bit is set. 
+
+Now we need to read 256 * 2 bytes. These 512 contains info about the disc.
+
+
+Interesting bits of the 256 uint16_t bytes indetify struct:
+- (uint16_t) 27 - 46: Contains model string of current disk (40 bytes).
+- (uint16_t) 60 - 61: Used as 32 bit number contains total number of sectors in LBA format (in LBA28). (4 bytes)
+- (uint16_t) 100 - 103: Used as 64 bit number contains total number of sectors in LBA format (in LBA48). (8 bytes)
 
 ### Read 
 First check if the BSY bit is clear.
@@ -125,23 +148,26 @@ We read from the Data register (0x1F0) 2 bytes at a time.
 //buf = buffer to save read content
 int disk_read_sector(int lba, int total, void* buf)
 {
-    outb(0x1F2, total);
-    outb(0x1F3, (unsigned char)lba);        //Bits 0 - 7 of lba
-    outb(0x1F4, (unsigned char)lba >> 8);   //Bits 8 - 15 of lba
-    outb(0x1F5, (unsigned char)lba >> 16);  //Bits 16 - 23 of lba
-    outb(0x1F6, (unsigned char)(lba >> 24) | 0xE0);  //Bits 24 - 27 of lba, bits 28 - 31 = 1110
-    outb(0x1F7, 0x20); //Put in read mode
+    // ATAPIO_PRIMARY_IO = 0x1F0; 
+    uint8_t base = ATAPIO_PRIMARY_IO;
+
+    //Wait till bsy bit is clear
+    atapio_wait_bsy(base);
+
+    outb(base + ATAPIO_REG_ERROR, 0x00);
+    outb(base + ATAPIO_REG_SECTOR, total);
+    outb(base + ATAPIO_REG_LBA0, (unsigned char)(lba & 0xFF)); //Bits 0 - 7 from address
+    outb(base + ATAPIO_REG_LBA1, (unsigned char)(lba >> 8) & 0xFF); //Bits 8 - 15 from address
+    outb(base + ATAPIO_REG_LBA2, (unsigned char)(lba >> 16) & 0xFF); //Bits 16- 23 from address
+    outb(base + ATAPIO_REG_DRIVESELECT, 0xE0 | ((lba >> 24) & 0x0F)); //Bits 24- 27 from address, bits 28 - 31 are set to 1110
+    outb(base + ATAPIO_REG_COMMAND, 0x20);
+
+    //Wait till drq bit is set
+    atapio_wait_drq(base);
 
     unsigned short* ptr = (unsigned short*)buf;
     for(int i = 0; i < total; i++)
     {
-        //Wait for buffer to be ready
-        char c = 0x0;
-        while(!(c & 0x8))
-        {
-            c = insb(0x1F7);
-        }
-
         // Copy from hard disk to memory
         //256 because we read 2 bytes at a time. One sector is 512 bytes so (256*2 = 512)
         for(int i = 0; i < 256; i++)
