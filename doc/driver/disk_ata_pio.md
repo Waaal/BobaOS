@@ -72,7 +72,7 @@ The state bits of the status register.
 
 
 
-### Device control reigter bytes
+### Device control register bytes
 The state bits of the status register.
 | Bit  | Name | Descritpion |
 | ------ | ------ | ------ |
@@ -133,6 +133,10 @@ After we send the command, the command register turns into the Status register. 
 
 We read from the Data register (0x1F0) 2 bytes at a time.
 
+
+## Stuff to know
+- If we allow the disk to send IRQs (nIEN = 0 in Device control register) and our intterrupts are enabled then it is possible that the data is send to the IRQ interrupt handler and if we try to read the data per IO bus we get garbage.
+
 ## Simple Implementation
 
 ### C - Read
@@ -168,7 +172,7 @@ int disk_read_sector(int lba, int total, void* buf)
     unsigned short* ptr = (unsigned short*)buf;
     for(int i = 0; i < total; i++)
     {
-        // Copy from hard disk to memory
+        //Copy from hard disk to memory
         //256 because we read 2 bytes at a time. One sector is 512 bytes so (256*2 = 512)
         for(int i = 0; i < 256; i++)
         {
