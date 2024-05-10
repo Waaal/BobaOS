@@ -75,7 +75,7 @@ The state bits of the status register.
 
 
 ## Reading from ATA PIO
-To read from a ATA PIO device we should fist initialice it. 
+To read from a ATA PIO device we should fist initialize the ATA PIO it. 
 So we should make sure that:
 - Reset all driver (for first time user after boot)
 - A drive is connected to a port
@@ -84,7 +84,10 @@ So we should make sure that:
 
 
 ### Reset driver
+To do a software reset we set the SRST bit in the Device control register (0x3F6). Then we wait should wait for 5us and the clear it again.
 
+
+This will reset the Master and Slave.
 
 ### Find driver connected to port
 
@@ -96,10 +99,14 @@ So we should make sure that:
 
 
 ### Read 
+First check if the BSY bit is clear.
+
+
 We can put the disk controller in read mode by sending 0x20 to the command register (0x1F7). When we send 0x20 to the command register, we need to make sure that all the other values, LBA and Total number of sectors are in there appropriate register.
-But bevore we do this we should make sure that the BSY bit is clear.
+
 
 After we send the command, the command register turns into the Status register. Now we need to read from the Status register port. If the DRQ bit is set we can read the data.
+
 
 We read from the Data register (0x1F0) 2 bytes at a time.
 
