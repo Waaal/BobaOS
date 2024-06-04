@@ -124,3 +124,9 @@ Some example system commands are:
 - sleep
 - video_draw
 - get_kernel_info
+
+## Newer Method
+The int instructions is old and should be avoided. All modern operating system use the syscall and the sysret instructions. As far as I understand this instcutions uses the Model Specific Register (MSR) to get the important info as to where to go and where to return.
+
+>[!NOTE]
+> I need to do some more reserach here
