@@ -139,7 +139,9 @@ It calculates the SS as CS+8. The other segments remain the same.
 
 When kernel is done and calls sysret then the following happens:
 
+
 CS = SYSENTER_CS_MSR + 16 + 3
+
 SS = SYSENTER_CS_MSR + 24 + 3
 
 
