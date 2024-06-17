@@ -155,5 +155,18 @@ Table 2 is at 0x2000    00000000000000000010 000000000000
 
 ## 64 Bit 1GB
 
+## Enable paging
+Assembly example on how to enable paging
+### 32 bit
+To enable paging in 32 bit mode we need to enable bit 31 in the cr0 control register
+``` assembly
+    mov eax, cr0
+    or eax, 0x80000000  ; Enable bit 31 in cr0 = paging
+    mov cr0, eax
+```
+
+## Set paging directory
+To set a paging directory we need to write the address of the first PD entry in the cr3 register
+
 Super cool video explaining this
 https://www.youtube.com/watch?v=Z4kSOv49GNc
