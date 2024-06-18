@@ -273,6 +273,16 @@ To enable paging in 32 bit mode we need to enable bit 31 in the cr0 control regi
     mov cr0, eax
 ```
 ### 64 bit
+To enable paging in 64 bit mode we need to enable PAE (Physical address extension) bit 5 in cr4. And then enable paging by setting bit 31 in cr0.
+``` assembly
+    mov eax,cr4         ; Need to set Physical address extension bit (5) in cr4 to 1, before enabeling long mode
+    or eax,(1<<5)
+    mov cr4,eax
+
+    mov eax,cr0         ; Enable Paging
+    or eax,(1<<31)
+    mov cr0,eax
+```
 
 ## Set paging directory
 To set a paging directory we need to write the address of the first PD entry in the cr3 register
