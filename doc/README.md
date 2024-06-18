@@ -5,7 +5,7 @@
     - [Sections](x86Assembly/sections.md)
     - Modes
         - [Real Mode](assembly_modes/real_mode.md)
-        - Protected Mode
+        - [Protected Mode](assembly_modes/protected_mode.md)
         - Long Mode
     - [BIOS - Boot](x86Assembly/BIOS_Boot.md)
 - x86 Assembly and C
@@ -35,5 +35,7 @@
 - [Virtual Keyboard Layer](keyboard/virtualKeyboardLayer.md)
 - [Userland](userland/Userland.md)
     - [Kernel and process communication](userland/process_kernel_talk.md)
+    - [Linking stdlib](userland/linking_stdlib.md)
+    - Stdlib
 - [Processes and Tasks](Processes_and_Tasks/processesTasks.md)
 - [ELF Files](Processes_and_Tasks/elf.md)

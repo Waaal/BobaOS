@@ -72,7 +72,7 @@ Our bootloader:
 | Offset | Bytes | Descritpion |
 | ------ | ------ | ------ |
 | 0 | 36 | BIOS parameter block |
-| 36 | 474 | Code |
+| 36 | 410 | Code |
 | 446 | 64 | 4 x Partition Table | 
 | 510 | 2 |  0x55 0xAA bootable signature |
 

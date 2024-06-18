@@ -7,6 +7,9 @@ We can use 1MB of RAM and have no memory protection (pagind, GDT).
 
 The use of the segment registers are to access memory larger than 16bit.
 
+
+A stack entry is 16 bit and pointer are 16 bit.
+
 ## Usable registers
 We have access to the following registers:
 

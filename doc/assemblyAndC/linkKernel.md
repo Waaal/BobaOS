@@ -89,6 +89,10 @@ SECTIONS
 
 **ALIGN(4096)** Tell the linker it should align every section to 4kb
 
+>[!IMPORTANT]
+> If we load and link the kernel, the address the kernel starts at must be aligned by 4096. Otherwise we get ugly errors.
+
+
 ### Important 
 
 We created a custom section for our assembly, because assembly is not aligned by the nasm compiler. Our gcc c compiler aligns all the code as we specified with in [CompileC Alignment Flags](compileC.md#Alignmentflags). But assembly is not aligned by the compiler, so we place it in a seperate section and place this section at the end. So our not aligned assembly cannot put all of our C stuff out of alignment.

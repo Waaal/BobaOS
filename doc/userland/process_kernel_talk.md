@@ -124,3 +124,37 @@ Some example system commands are:
 - sleep
 - video_draw
 - get_kernel_info
+
+## Newer Method
+The int instructions is old and should be avoided. All modern operating system use the syscall and the sysret instructions. As far as I understand this instruction uses the Model Specific Register (MSR) to get the important info as to where to go and where to return.
+
+
+When syscall is called the instruction load the CS, EIP and ESP from following MSRs:
+- SYSENTER_CS_MSR
+- SYSENTER_EIP_MSR
+- SYSENTER_ESP_MSR
+
+It calculates the SS as CS+8. The other segments remain the same.
+
+
+When kernel is done and calls sysret then the following happens:
+
+
+CS = SYSENTER_CS_MSR + 16 + 3
+
+SS = SYSENTER_CS_MSR + 24 + 3
+
+
+To make sure that nothing breaks the GDT needs to be orderd like this:
+- NULL
+- KERNEL CODE
+- KERNEL DATA
+- USER CODE
+- USER DATA
+- OTHER
+
+
+>[!NOTE]
+> I need to do some more reserach here
+> Sysenter/sysexit is well documented in the Intel docs (Volume 2)
+> For Syscall get the ADM manual (Volume 3)
