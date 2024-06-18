@@ -79,12 +79,12 @@ So we have 1 Page directory and 1024 page tables on a 4kb page translation on a 
 
 So a 4kb page translation would look something like this
 ```
-Virual Address: 0x04002204 = 00000000010000000010000000000000
+Virual Address: 0x402204 = 00000000001000000001001000000100
 
- 31        22 21        12 11           0
-|     PD     |     PT     |    Offset    |
-| 0000000001 | 0000000010 | 100000000010 |
-|    0x1     |    0x2     |    0x204     |
+ 31        22 21        12 11          0
+|     PD     |     PT     |    Offset   |
+| 0000000001 | 0000000010 | 01000000100 |
+|    0x1     |    0x2     |    0x204    |
 
 
 PD: 0000000001 = 0x1                                    ->   PT: 0000000010 = 0x2
@@ -97,7 +97,7 @@ PD: 0000000001 = 0x1                                    ->   PT: 0000000010 = 0x
 
 
 
-So Virtual address 0x04002204 gets translated to physical address: 0x24204 
+So Virtual address 0x402204 gets translated to physical address: 0x24204 
 ```
 So we devide our address in 3 parts. Bits 31 - 22 are the index in the **PD** table. Bits 21 - 12 are the index in the **PT** table. And bits 11 - 0 are the offset in the final 4kb page.
 
@@ -112,6 +112,15 @@ PD[1] = virtual address space       0x400000    -   0x800000
 PD[1023] = virtual address space    0xFFC00000  -   0x100000000
 ```
 Now each Table (PD, PT) has entrys. And each entry is 32 bit.
+
+
+>[!NOTE]
+> Dont forget to shift the index from a full address.
+>
+> If we have the address 0x402204 and we select bits 31 - 22 with address & FFC00000 we get 0x4000000.
+>
+> We need to shift 0x400000 by 22 to get the index 1.
+
 
 #### PD & PT Entry
 ```
@@ -191,6 +200,14 @@ PLM4: 000000000 = 0x0                                   ->   PDP: 00000000 = 0x0
 So Virtual address 0x04002204 gets translated to physical address: 0x44002204
 ```
 So we devide our address in 3 parts. Bits 47 - 39 are the index in the **PLM4** table. Bits 38 - 31 are the index in the **PDP** table. And bits 30 - 0 are the offset in the final 1GB page.
+
+
+>[!NOTE]
+> Dont forget to shift the index from a full address.
+>
+> If we have the address 0x04002204 and we select bits 47 - 39 with address & FF8000000000 we get 0x0000000.
+>
+> We need to shift 0x000000 by 39 to get the index 0.
 
 
 Now each Table (PLM4, PDP) has entrys. And each entry is 64 bit (8 byte).
