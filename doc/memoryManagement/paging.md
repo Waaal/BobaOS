@@ -97,7 +97,7 @@ PD: 0000000001 = 0x1                                    ->   PT: 0000000010 = 0x
 
 
 
-So Virtual address 0x04002204 gets translated to physical address: 0x44204
+So Virtual address 0x04002204 gets translated to physical address: 0x24204 
 ```
 So we devide our address in 3 parts. Bits 31 - 22 are the index in the **PD** table. Bits 21 - 12 are the index in the **PT** table. And bits 11 - 0 are the offset in the final 4kb page.
 
@@ -149,6 +149,13 @@ Table 2 is at 0x2000    00000000000000000010 000000000000
 ## 64 Bit 2MB
 
 ## 64 Bit 1GB
+
+| Level | Number | Entries | Name |
+| ------ | ------ | ------ | ------ |
+| 0 | - | - | RAM |
+| 1 | 512 | 512 | Page directory pointer |
+| 2 | 1 | 512 | PLM4 |
+
 On a 64 bit system our address is 64 bit long. So if we want to seperate our system in 1Gb pages, we need 2 Tables. 
 
 
