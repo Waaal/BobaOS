@@ -87,8 +87,8 @@ Virual Address: 0x04002204 = 00000000010000000010000000000000
 |    0x1     |    0x2     |    0x204     |
 
 
-PD: 0000000001 = 0x1                                   ->   PT: 0000000010 = 0x2
-| Entry     | Physical|                                |    | Entry     | Physical| 
+PD: 0000000001 = 0x1                                    ->   PT: 0000000010 = 0x2
+| Entry     | Physical|                                 |    | Entry     | Physical| 
 | 0x0       |  0x1000  |                                |    | 0x0001    | 0x20000 |
 |[0x1]      |  0x2000  |  --> PT at memory addr 0x2000 --    |[0x0002]   | 0x24000 |
 | 0x2       |  0x3000  |                                     | 0x0003    | 0x44000 |
