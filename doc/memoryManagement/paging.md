@@ -51,7 +51,7 @@ The level and numbers of page tabels differs on page size and os size (32/64 bit
 **On a 64 bit operating system we have**
 - 4KB pages (4 page tables)
 - 2MB pages (3 page table)
-- 1GB pages (2 page tables)
+- [1GB pages](paging.md#64-Bit-GB) (2 page tables)
 
 Each page table holds some permissions and the entry in the next level of page table or the actuall place in RAM.
 
@@ -184,7 +184,7 @@ PLM4: 000000000 = 0x0                                   ->   PDP: 00000000 = 0x0
 
 So Virtual address 0x04002204 gets translated to physical address: 0x4002227
 ```
-So we devide our address in 3 parts. Bits 47 - 39 are the index in the **PLM4** table. Bits 38 - 31 are the index in the **PDP** table. And bits 30 - 0 are the offset in the final 1kb page.
+So we devide our address in 3 parts. Bits 47 - 39 are the index in the **PLM4** table. Bits 38 - 31 are the index in the **PDP** table. And bits 30 - 0 are the offset in the final 1GB page.
 
 
 Now each Table (PLM4, PDP) has entrys. And each entry is 64 bit (8 byte).
