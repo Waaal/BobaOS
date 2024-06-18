@@ -46,12 +46,12 @@ The level and numbers of page tabels differs on page size and os size (32/64 bit
 
 **On a 32 bit operating system we have**
 - [4KB pages](paging.md#32-Bit-4KB) (2 page tables)
-- [2MB pages](paging.md#32-Bit-2MB) (1 page table)
+- [2MB pages](paging.md#32-Bit-4MB) (1 page table)
 
 **On a 64 bit operating system we have**
 - 4KB pages (4 page tables)
 - 2MB pages (3 page table)
-- [1GB pages](paging.md#64-Bit-GB) (2 page tables)
+- [1GB pages](paging.md#64-Bit-1GB) (2 page tables)
 
 Each page table holds some permissions and the entry in the next level of page table or the actuall place in RAM.
 
