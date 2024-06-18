@@ -89,15 +89,15 @@ Virual Address: 0x04002204 = 00000000010000000010000000000000
 
 PD: 0000000001 = 0x1                                   ->   PT: 0000000010 = 0x2
 | Entry     | Physical|                                |    | Entry     | Physical| 
-| 0x0       |  0x002  |                                |    | 0x0001    | 0x00023 |
-|[0x1]      |  0x003  |   --> PT at memory addr 0x003 --    |[0x0002]   | 0x00045 |
-| 0x2       |  0x004  |                                     | 0x0003    | 0x00067 |
-| ...       |  ...    |                                     | ...       |  ...    |
+| 0x0       |  0x1000  |                                |    | 0x0001    | 0x20000 |
+|[0x1]      |  0x2000  |  --> PT at memory addr 0x2000 --    |[0x0002]   | 0x24000 |
+| 0x2       |  0x3000  |                                     | 0x0003    | 0x44000 |
+| ...       |  ...     |                                     | ...       |  ...    |
 
 
 
 
-So Virtual address 0x04002204 gets translated to physical address: 0x00045204
+So Virtual address 0x04002204 gets translated to physical address: 0x44204
 ```
 So we devide our address in 3 parts. Bits 31 - 22 are the index in the **PD** table. Bits 21 - 12 are the index in the **PT** table. And bits 11 - 0 are the offset in the final 4kb page.
 
@@ -161,7 +161,6 @@ Each entry in a PLM4 represents 512 GB.
 Each entry in a PDP represents 1GB.
 
 
-
 So a 1gb page translation would look something like this
 ```
 Virual Address: 0x04002204 = 0000000000000000000000000000000000000000010000000010000000000000
@@ -174,15 +173,15 @@ Virual Address: 0x04002204 = 000000000000000000000000000000000000000001000000001
 
 PLM4: 000000000 = 0x0                                   ->   PDP: 00000000 = 0x0
 | Entry     | Physical|                                |    | Entry     | Physical| 
-| [0x0]     |  0x002  |   --> PT at memory addr 0x002 --    | [0x0]     | 0x00023 |
-| 0x1       |  0x003  |                                     | 0x1       | 0x00045 |
-| 0x2       |  0x004  |                                     | 0x2       | 0x00067 |
-| ...       |  ...    |                                     | ...       |  ...    |
+| [0x0]     |  0x1000  | --> PT at memory addr 0x1000 --    | [0x0]     | 0x40000000 |
+| 0x1       |  0x2000  |                                    | 0x1       | 0x80000000 |
+| 0x2       |  0x3000  |                                    | 0x2       | 0xC0000000 |
+| ...       |  ...     |                                    | ...       |  ...       |
 
 
 
 
-So Virtual address 0x04002204 gets translated to physical address: 0x4002227
+So Virtual address 0x04002204 gets translated to physical address: 0x44002204
 ```
 So we devide our address in 3 parts. Bits 47 - 39 are the index in the **PLM4** table. Bits 38 - 31 are the index in the **PDP** table. And bits 30 - 0 are the offset in the final 1GB page.
 
