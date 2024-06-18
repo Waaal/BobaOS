@@ -34,10 +34,10 @@ The Data in a segment register is 16 bit long both in protected and long mode an
 This Data struct is alled a **Segment Selector**.
 
 ### Data structure of a GDT entry.
-A GDT entry is 64 bit long in protected mode and 128 bit long in long mode.
+A GDT entry is 64 bit in long and protected mode. (A System segment descriptor is 128 bit long (TSS))
 (The data structure for a TSS entry looks different.[See here for a TSS entry](Tss.md))
 ```
-<---------LONG MODE---------> 
+<-----LONG MODE SYSTEM------> 
 127            96 95      64 63     56 55   52 51   48 47           40 39       32 31           16 15           0
 |    Reserved    |   Base   |   Base  | Flags | Limit | Access Bytes  |    Base   |      Base     |     Limit   |
 ```
