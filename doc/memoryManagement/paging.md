@@ -181,7 +181,7 @@ So a 1gb page translation would look something like this
 ```
 Virual Address: 0x04002204 = 0000000000000000000000000000000000000000010000000010000000000000
 
- 63              48 47       39 38      31 30           Offset            0
+ 63              48 47       39 38      30 29           Offset            0
 | Sign extension   |    PLM4   |    PDP   |                                |
 | 0000000000000000 | 000000000 | 00000000 | 000000010000000010000000000000 |
 |       0x0        |    0x0    |    0x0   |          0x04002204            |
@@ -199,15 +199,11 @@ PLM4: 000000000 = 0x0                                   ->   PDP: 00000000 = 0x0
 
 So Virtual address 0x04002204 gets translated to physical address: 0x44002204
 ```
-So we devide our address in 3 parts. Bits 47 - 39 are the index in the **PLM4** table. Bits 38 - 31 are the index in the **PDP** table. And bits 30 - 0 are the offset in the final 1GB page.
+So we devide our address in 3 parts. Bits 47 - 39 are the index in the **PLM4** table. Bits 38 - 30 are the index in the **PDP** table. And bits 30 - 0 are the offset in the final 1GB page.
 
 
 >[!NOTE]
-> Dont forget to shift the index from a full address.
->
-> If we have the address 0x04002204 and we select bits 47 - 39 with address & FF8000000000 we get 0x0000000.
->
-> We need to shift 0x000000 by 39 to get the index 0.
+> If we want the index of a PLM4 table we need to shift a address by 39 bit and then and it with 9 bit (0x1FF)
 
 
 Now each Table (PLM4, PDP) has entrys. And each entry is 64 bit (8 byte).
