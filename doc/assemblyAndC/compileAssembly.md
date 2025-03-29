@@ -46,3 +46,29 @@ example:
 	mov eax, 1
 	call functionName
 ```
+
+### Function calls from C 
+If we want to call a assembly function from our C code, we need to find out, where the arugments are.
+
+## 32 bit 
+In 32 bit the argumetns are pushed onto the stack, AFTER the return address for our ret instruction.
+
+So the stack looks like this:
+```
+0x1b 	arg2
+0x08	arg1
+0x04	retAddress
+```
+
+## 64 bit
+In 64-bit it is handled differently. The arguments arent on the stack anymore (at least the first 6) they are in registers.
+
+The fist 6 argument are in registers and after that, they are pushed onto the stack.
+```
+rdi	arg1
+rsi	arg2
+rdx	arg3
+rcx	arg4
+r8	arg5
+r9	arg6
+```
