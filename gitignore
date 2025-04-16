@@ -1,7 +1,5 @@
 bin/
 build/
 .vscode/
-compile_commands
-create_compileJson
 .clangd
 .cache
