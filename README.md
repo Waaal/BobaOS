@@ -8,11 +8,7 @@ Welcome to **BobaOS** – Boba
 
 BobaOS is a minimal x86-based 64 bit operating system focused on:
 
-- A stable kernel
-- Memory management
-- Basic multitasking
-- Simple filesystem structures
-- Eventually a userland with a custom shell
+- Add a description as soon as it has features...
 
 ---
 
