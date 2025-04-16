@@ -1,7 +1,6 @@
 # 🧋 BobaOS
 
-Welcome to **BobaOS** – a small hobby operating system built from scratch, brewed with passion and low-level wizardry.  
-Currently in early development, aiming to become a stable, simple OS with a clean kernel, minimal userland, and eventually a shell and beyond.
+Welcome to **BobaOS** – Boba
 
 ---
 
