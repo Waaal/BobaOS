@@ -14,8 +14,6 @@ BobaOS is a minimal x86-based 64 bit operating system focused on:
 - Simple filesystem structures
 - Eventually a userland with a custom shell
 
-Think of it as a learning journey into the depths of OS development – with some flavor.  
-
 ---
 
 ## 🗺️ Development Roadmap
@@ -46,6 +44,7 @@ BobaOS is being developed in versioned stages:
 
 ### Building
 There is a building script provided - just call **build.sh**.
+
 *This script requires that you have the cross compiler under the path /home/USERNAME/opt/cross64*
 
 ```bash
