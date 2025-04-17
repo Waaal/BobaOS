@@ -32,6 +32,7 @@ BobaOS is being developed in versioned stages:
 
 ### Requirements
 
+- Linux as development environment
 - NASM
 - x86_64-elf cross-compiler
 - make

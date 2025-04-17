@@ -1,8 +1,9 @@
 #ifndef H_KHEAP
 #define H_KHEAP
 
+#include <stdint.h>
+
 #include "config.h"
-#include "stdint-gcc.h"
 
 #define KHEAP_FLAG_FREE		0x0
 #define KHEAP_FLAG_LOCKED	0x1

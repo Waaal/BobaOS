@@ -1,7 +1,7 @@
 #ifndef PAGING_H
 #define PAGING_H
 
-#include "stdint-gcc.h"
+#include <stdint.h>
 
 #define PAGING_FLAG_P 	0b0000000000000001
 #define PAGING_FLAG_RW	0b0000000000000010	
