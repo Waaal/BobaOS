@@ -38,35 +38,21 @@ BobaOS is being developed in versioned stages:
 - QEMU
 - GDB
 
-### Building
-There is a building script provided - just call **build.sh**.
+### Building, Booring & Debugging
+There is a script provided for building, running and deugging
 
-*This script requires that you have the cross compiler under the path /home/USERNAME/opt/cross64*
-
-```bash
-export PREFIX="$HOME/opt/cross64"
-export TARGET=x86_64-elf
-export PATH="$PREFIX/bin:$PATH"
-
-make clean
-make
-```
-
-### Running (with QEMU)
-There is a boot script provided - just call **boot.sh**.
-```bash
-qemu-system-x86_64  -hda ./bin/os.bin
-```
-
-### Debugging (with QEMU and GDB)
-There is a debug script and a gdb script provided - just call **debug.sh**.
-
-The debug script will load the objectfiles and will break at the kernel entry.
 
 ```bash
-qemu-system-x86_64 -s -S -hda ./bin/os.bin &
-gdb -x script/debug.gdb
+    build.sh    # Build the project with makefile and x86_64 elf cross-compiler
+    boot.sh     # Boot the project with qemu
+    debug.sh    # Debug the project with qemu and gdb
 ```
+
+
+The buildscript requires that you have the cross compiler at /home/USERNAME/opt/cross64
+
+
+The debugging script will launch gdb and qemu for you and break at the kernel entry
 
 ---
 
