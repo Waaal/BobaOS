@@ -1,7 +1,3 @@
-bin/*
-!bin/.gitkeep
-build/*
-!build/.gitkeep
 .vscode/
 .clangd
 .cache

@@ -43,6 +43,7 @@ kernel: $(FILES)
 ./build/paging.asm.o: ./src/kernel/memory/paging/paging.asm
 	nasm -f elf64 -g ./src/kernel/memory/paging/paging.asm -o ./build/paging.asm.o
 clean:
-	rm -r ./bin/*
-	rm -r ./build/*
+	rm -r ./bin/*.bin
+	rm -r ./build/*.o
+	rm -r ./build/*.elf
 
