@@ -38,14 +38,14 @@ BobaOS is being developed in versioned stages:
 - QEMU
 - GDB
 
-### Building, Booring & Debugging
-There is a script provided for building, running and deugging
+### Building, Booting & Debugging
+There is a script provided for building, running and debugging
 
 
 ```bash
-    build.sh    # Build the project with makefile and x86_64 elf cross-compiler
-    boot.sh     # Boot the project with qemu
-    debug.sh    # Debug the project with qemu and gdb
+build.sh    # Build the project with makefile and x86_64 elf cross-compiler
+boot.sh     # Boot the project with qemu
+debug.sh    # Debug the project with qemu and gdb
 ```
 
 
