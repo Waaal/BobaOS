@@ -105,7 +105,6 @@ static char* strToUInt(uint64_t num)
 	return ret;
 }
 
-
 static char* strToHex(uint64_t num)
 {
 	char* numberMap = "0123456789ABCDEF";
@@ -132,7 +131,6 @@ static char* strToHex(uint64_t num)
 	
 	return ret;
 }
-
 
 void kprintf(const char* string, ...)
 {
@@ -163,6 +161,9 @@ void kprintf(const char* string, ...)
 					kzfree(uIntChar);
 					break;
 				}
+				case 's':
+					terminalPrint(va_arg(args, char*));
+					break;
 				default:
 					break;
 			}

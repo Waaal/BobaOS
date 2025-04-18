@@ -20,8 +20,9 @@ void kmain()
 	terminalInit();
 	terminalPrint("Hello World/n");
 	
-	kprintf("Hello number: %u/n", 123456789);
-	kprintf("Hello hex: %x/n", 123456789);
+	kprintf("Hello number:  %u/n", 123456789);
+	kprintf("Hello hex:     %x/n", 123456789);
+	kprintf("Hello string   %s/n", "Im a string!");
 
 	kheap_init();	
 
