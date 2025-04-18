@@ -2,6 +2,7 @@
 #define TERMINAL_H
 
 #include <stdint.h>
+#include <stdarg.h>
 
 #define VGA_WIDTH 80
 #define VGA_HEIGHT 25
@@ -12,6 +13,6 @@
 void terminalPrint(const char* c);
 void terminalInit();
 
-//void kprintf(const char* string, ...);
+void kprintf(const char* string, ...);
 
 #endif

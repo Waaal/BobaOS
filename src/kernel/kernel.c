@@ -7,8 +7,6 @@
 #include "memory/paging/paging.h"
 #include "gdt/gdt.h"
 
-#include "string/string.h"
-
 struct gdt gdt[] = {
 	{ .limit = 0x0, .base = 0x0, .access = 0x0,  .flags = 0x0 }, // NULL
 	{ .limit = 0x0, .base = 0x0, .access = 0x98, .flags = 0x2 }, //	K CODE
@@ -21,6 +19,9 @@ void kmain()
 	
 	terminalInit();
 	terminalPrint("Hello World/n");
+	
+	kprintf("Hello number: %u/n", 123456789);
+	kprintf("Hello hex: %x/n", 123456789);
 
 	kheap_init();	
 
