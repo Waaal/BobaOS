@@ -2,6 +2,11 @@
 
 #include "memory/memory.h"
 
+uint8_t curRow = 0;
+uint8_t curCol = 0;
+
+uint16_t* videoMemory = (uint16_t*)0xb8000;
+
 uint8_t terminalNextCharSpecial = 0;
 
 void terminalInit()
@@ -72,3 +77,10 @@ void terminalPrint(const char* str)
 		terminalPutchar(*str++);
 	}
 }
+/*
+void kprintf(const char* string, ...)
+{
+	va_list args;
+	va_start(args, string);
+}
+*/

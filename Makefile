@@ -1,4 +1,4 @@
-FILES= ./build/kernel.asm.o ./build/kernel.o ./build/memory.o ./build/kheap.o ./build/gdt.o ./build/gdt.asm.o ./build/paging.o ./build/paging.asm.o
+FILES= ./build/kernel.asm.o ./build/kernel.o ./build/memory.o ./build/kheap.o ./build/gdt.o ./build/gdt.asm.o ./build/paging.o ./build/paging.asm.o ./build/terminal.o ./build/string.o
 INCLUDE= -I ./src/kernel/
 FLAGS= -g -ffreestanding -mcmodel=kernel -fno-pic -fno-pie -mno-red-zone -falign-jumps -falign-functions -falign-labels -falign-loops -fstrength-reduce -fomit-frame-pointer -Wno-unused-parameter -finline-functions -fno-builtin -Wno-cpp -nostdlib -nostartfiles -nodefaultlibs -Wall -O0 -Wall -Werror -Iinc
 
@@ -27,7 +27,6 @@ kernel: $(FILES)
 ./build/memory.o: ./src/kernel/memory/memory.c
 	x86_64-elf-gcc $(FLAGS) -m64 -c -std=gnu99 $(INCLUDE) ./src/kernel/memory/memory.c -o ./build/memory.o
 
-
 ./build/kheap.o: ./src/kernel/memory/kheap/kheap.c
 	x86_64-elf-gcc $(FLAGS) -m64 -c -std=gnu99 $(INCLUDE) ./src/kernel/memory/kheap/kheap.c -o ./build/kheap.o
 
@@ -42,6 +41,13 @@ kernel: $(FILES)
 
 ./build/paging.asm.o: ./src/kernel/memory/paging/paging.asm
 	nasm -f elf64 -g ./src/kernel/memory/paging/paging.asm -o ./build/paging.asm.o
+
+./build/terminal.o: ./src/kernel/terminal.c
+	x86_64-elf-gcc $(FLAGS) -m64 -c -std=gnu99 $(INCLUDE) ./src/kernel/terminal.c -o ./build/terminal.o
+
+./build/string.o: ./src/kernel/string/string.c
+	x86_64-elf-gcc $(FLAGS) -m64 -c -std=gnu99 $(INCLUDE) ./src/kernel/string/string.c -o ./build/string.o
+
 clean:
 	rm -r ./bin/*.bin
 	rm -r ./build/*.o

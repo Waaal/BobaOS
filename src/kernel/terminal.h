@@ -9,12 +9,9 @@
 #define TERMINAL_BACKCOLOR 0x5
 #define TERMINAL_FORECOLOR 0xF
 
-uint8_t curRow = 0;
-uint8_t curCol = 0;
-
-uint16_t* videoMemory = (uint16_t*)0xb8000;
-
 void terminalPrint(const char* c);
 void terminalInit();
+
+//void kprintf(const char* string, ...);
 
 #endif
