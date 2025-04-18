@@ -6,3 +6,7 @@ build/*
 .vscode/
 .clangd
 .cache
+
+# Specific stuff
+create_compileJson.sh
+compile_commands.json
