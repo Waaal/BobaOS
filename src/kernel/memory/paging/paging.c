@@ -48,7 +48,7 @@ static PTTable getPTTable(void* virt, PLM4Table table)
 	uint16_t pdpIndex = ((uint64_t)virt >> 0x1E) & 0x1FF;
 	uint16_t pdIndex = ((uint64_t)virt >> 0x15) & 0x1FF;
 	
-	PDPTable pdpTable = (PDPTable)returnTableEntryNoFlags(table, 0);
+	PDPTable pdpTable = (PDPTable)returnTableEntryNoFlags(table, getPlm4IndexFromVirtual(virt));
 	PDTable pdTable = (PDTable)returnTableEntryNoFlags(pdpTable, pdpIndex);
 	PTTable ptTable = (PTTable)returnTableEntryNoFlags(pdTable, pdIndex);
 	
