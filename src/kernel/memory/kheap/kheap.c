@@ -106,7 +106,7 @@ void* kzalloc(uint64_t size)
 	size = size_up_to_page(size);
 
 	get_page_count(size, &pagesCount);
-	if(findFreePages(pagesCount, &mem))
+	if(findFreePages(pagesCount, &mem) < 0)
 	{
 		goto out;
 	}
