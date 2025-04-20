@@ -27,6 +27,8 @@ struct gdtPtr
 } __attribute__((packed));
 
 void loadGdt(struct gdt* gdt);
+
+//functions in gdt.asm
 void loadGdtPtr(struct gdtPtr* gdtPtrAddress);
 
 #endif

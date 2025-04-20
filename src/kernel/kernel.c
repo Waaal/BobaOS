@@ -6,6 +6,7 @@
 #include "memory/kheap/kheap.h"
 #include "memory/paging/paging.h"
 #include "gdt/gdt.h"
+#include "idt/idt.h"
 
 struct gdt gdt[] = {
 	{ .limit = 0x0, .base = 0x0, .access = 0x0,  .flags = 0x0 }, // NULL
@@ -16,26 +17,19 @@ struct gdt gdt[] = {
 void kmain()
 {
 	loadGdt(gdt);
-	
+
 	terminalInit();
 	terminalPrint("Hello World/n");
 	
 	kprintf("Hello number:  %u/n", 123456789);
 	kprintf("Hello hex:     %x/n", 123456789);
-	kprintf("Hello string   %s/n", "Im a string!");
+	kprintf("Hello string   %s/n/n", "Im a string!");
 
 	kheap_init();	
-
-	PLM4Table kernelPageTable = createKernelTable(0x0, 0x0, 0x100000000);
 	
-	uint8_t* test1 = kzalloc(1);
-	uint8_t* test2 = kzalloc(1);
-
-	*test1 = 100;
-	*test2 = 200;
-
-	remapPage(test1, test2, kernelPageTable);
-	*test1 = 5;
+	PLM4Table kernelPageTable = createKernelTable(0x0, 0x0, 0x100000000);
+	if(kernelPageTable){}	
+	idtInit();
 
 	while(1){}
 }
