@@ -8,8 +8,8 @@
 
 enum idtGateType
 {
-	TYPE_INTERRUPT = 0xE,
-	TYPE_TRAP = 0xB
+	IDT_GATE_TYPE_INTERRUPT = 0xE,
+	IDT_GATE_TYPE_TRAP = 0xB
 };
 
 struct idtEntry

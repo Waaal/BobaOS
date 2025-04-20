@@ -8,7 +8,7 @@ global loadIdtPtr
 
 global DEBUG_STRAP_REMOVE_LATER
 
-section .asm
+section .text.asm
 
 ; just for testing a single interrupt (32 - timer) purpose
 DEBUG_STRAP_REMOVE_LATER:

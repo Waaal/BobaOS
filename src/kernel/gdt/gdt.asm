@@ -1,7 +1,7 @@
 global loadGdtPtr 
 extern gdtPtr
 
-section .asm
+section .text.asm
 
 ;void loadGdtPtr(struct gdtPtr* ptr)
 loadGdtPtr:

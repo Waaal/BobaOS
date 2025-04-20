@@ -4,7 +4,7 @@ global outd
 
 global inb
 
-section .asm
+section .text.asm
 
 ;void outb(uint16_t port, uint8_t out) 
 outb:

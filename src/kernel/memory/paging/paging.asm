@@ -1,6 +1,6 @@
 global loadNewPageTable
 
-section .asm
+section .text.asm
 
 ; void loadNewPageTable(PLM4 table)
 loadNewPageTable:

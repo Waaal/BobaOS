@@ -34,7 +34,7 @@ void idtInit()
 	DEBUG_STRAP_REMOVE_LATER();	
 	kprintf("IDT VECTOR 32 ADDRESS: %x", idtAddressList[32]);
 	
-	idtSet(32, idtAddressList[32], TYPE_INTERRUPT, 0x0, BOBAOS_KERNEL_SELECTOR_CODE);
+	idtSet(32, idtAddressList[32], IDT_GATE_TYPE_INTERRUPT, 0x0, BOBAOS_KERNEL_SELECTOR_CODE);
 	
 	idtPtr.offset = (uint64_t)idt;
 	idtPtr.size = (sizeof(struct idtEntry) * BOBAOS_TOTAL_INTERRUPTS) - 1;
