@@ -18,9 +18,10 @@ BobaOS is being developed in versioned stages:
 
 | Version | Name             | Focus                                           |
 |---------|------------------|--------------------------------------------------|
-| v0.1    | 🧋 **Milk Tea**     | Bootloader, kernel base, memory init, paging, basic interrupt handling |
+| v0.1    | 🧋  **Milk Tea**     | Bootloader, kernel base, memory init, paging, basic interrupt handling |
 | v0.2    | 🧱 **Tapioca Core** | early kernel infrastructure, Virtual file system layer, Fat32 Filesystem support |
-| v0.3    | ⚙️ **Boiling Point** | Tasks and Process base, syscall base, Userland  |
+| v0.3    | 🍒 **Lychee Drift** | Tasks and Process base, syscall base, Userland, CPU/Core info |
+| v0.4   | 🍬 **Brown Sugar Rush** | Multicore preparation, Virtual Keyboard Layer , Early Scheduler and dispatcher |
 
 📌 Check out the full dev plan on the [GitHub Project Board](https://github.com/users/Waaal/projects/1/views/1)
 
