@@ -56,6 +56,22 @@ The buildscript requires that you have the cross compiler at /home/USERNAME/opt/
 
 The debugging script will launch gdb and qemu for you and break at the kernel entry
 
+
+#### Debug Assembly
+Currently debugging assembly code in the kernel is a pain in the...
+
+
+We placed our assembly code from the kernel in its own sesction (.text.asm) and the linker will put it as last section, so that our not aligned assembly (NASM cant really align it) cannot put anything aligned out of alignment.
+
+
+But because it is a custom section, GDB wont let you set a breakpoint there.
+So in order to debug assembly you have to:
+```bash
+info address ASSEMLY_LABEL
+layout asm #Go into layout assembly before jumping to it, otherwise GDB will bug out
+break *ADDRESS_ASSEMBLY_LABEL
+```
+
 ---
 
 ## 📦 Releases
@@ -67,7 +83,7 @@ Stay tuned for `v0.1 – Milk Tea`.
 
 ## 🤝 Contributions
 
-Right now this is a solo learning project, but feel free to open issues, share ideas, or fork and build your own flavor.
+Right now this is a learning project, but feel free to open issues, share ideas, or fork and build your own flavor.
 
 ---
 
