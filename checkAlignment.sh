@@ -3,20 +3,14 @@
 ELF="$1"
 
 if [ -z "$ELF" ]; then
-    echo "Usage: $0 <path-to-elf-file>"
-    exit 1
+	echo "Usage: $0 <path-to-elf-file>"
+	exit 1
 fi
 
-echo "🔍 Checking alignment of sections in $ELF"
-echo
+echo "Checking alignment of .text and .text.asm section in $ELF"
+echo ""
 
-readelf -S "$ELF" | awk '
-BEGIN { print "Section Name         Addr        Align" }
-/^\s*\[[0-9]+\]/ {
-    name = $2
-    addr = $5
-    align = $NF
-    printf "%-20s 0x%-8s %s\n", name, addr, align
-}
-'
+readelf -S "$ELF" | grep text | grep -v readelf
 
+echo ""
+echo "Please verify that these sections are aligned to 4096 (0x1000)"
