@@ -17,7 +17,7 @@ struct gdt gdt[] = {
 void kmain()
 {
 	loadGdt(gdt);
-
+	
 	terminalInit();
 	terminalPrint("Hello World/n");
 	
@@ -29,7 +29,7 @@ void kmain()
 	
 	PLM4Table kernelPageTable = createKernelTable(0x0, 0x0, 0x100000000);
 	if(kernelPageTable){}	
-	idtInit();
-
+	idtInit(); //<---------FUCK STUPID SHIT
+	
 	while(1){}
 }

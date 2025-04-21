@@ -56,7 +56,7 @@ struct trapFrame
 
 void idtInit();
 void idtSet(uint16_t vector, void* address, enum idtGateType gateType, uint8_t dpl, uint16_t selector);
-void trapHandler(struct trapFrame* frame, uint64_t vector);
+void trapHandler(uint16_t vector, struct trapFrame* frame, uint8_t sendAck);
 
 // Functions in idt.asm
 void enableInterrupts();

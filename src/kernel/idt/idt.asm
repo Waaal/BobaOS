@@ -1,4 +1,4 @@
-[BITS 64]
+[bits 64]
 
 extern trapHandler
 
@@ -31,7 +31,7 @@ loadIdtPtr:
 	lidt [rdi]
 	ret
 
-pushRegisters:	
+saveRegisters:	
 	mov [tempSave], rax
 	pop rax	; pop the return address
 	mov [saveRetAddress], rax
@@ -56,6 +56,25 @@ pushRegisters:
 	mov rax, [saveRetAddress]
 	jmp rax
 
+loadRegisters:
+	pop r15
+	pop r14
+	pop r13
+	pop r12
+	pop r11
+	pop r10
+	pop r9
+	pop r8
+	pop rbp
+	pop rdi
+	pop rsi
+	pop rdx
+	pop rcx
+	pop rbx
+	pop rax
+	
+	jmp $ ; <-------- FUCK STUPID SHIT
+	iretq
 
 int32Test:
 	; ----------------------	<----- Start if we come from ring3
@@ -65,15 +84,16 @@ int32Test:
 	; EFLAGS
 	; CODE SEGMENT
 	; IP 						<----- CURRENT STACK POINTER
+	
+	call saveRegisters
 
-	call pushRegisters
+	mov rdi, 32
+	mov rsi, rsp
+	mov rdx, 0
 
-	mov rdi, rsp
-	mov rsi, 32
 	call trapHandler
-
-	jmp $
-	iretq
+	
+	jmp loadRegisters
 
 section .data
 
@@ -82,6 +102,8 @@ saveRetAddress:
 tempSave:
 	resq 1
 
+sat:
+	resq 5
 
 idtAddressList:
 	resq 32

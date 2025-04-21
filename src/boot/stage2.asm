@@ -48,7 +48,7 @@ enablePaging:
 [bits 64]
 longEntry:
 	mov rsp, 0x200000
-	
+
 	xor rax, rax
 
 PICSetup:

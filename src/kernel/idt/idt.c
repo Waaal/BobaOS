@@ -3,6 +3,7 @@
 #include "config.h"
 #include "memory/memory.h"
 #include "terminal.h"
+#include "io/io.h"
 
 extern uint64_t* idtAddressList[BOBAOS_TOTAL_INTERRUPTS]; //from idt.asm
 
@@ -36,11 +37,15 @@ void idtSet(uint16_t vector, void* address, enum idtGateType gateType, uint8_t d
 	memcpy((void*)((uint64_t)idt + (vector*sizeof(struct idtEntry))), &entry, sizeof(struct idtEntry));
 }
 
-void trapHandler(struct trapFrame* frame, uint64_t vector)
+void trapHandler(uint16_t vector, struct trapFrame* frame, uint8_t sendAck)
 {
 	kprintf("Vector No. %u in C-Trapframe/n/n", vector);
 	printTrapFrame(frame);
-	while(1){}
+
+	if(sendAck)
+	{
+		//outb(0x20, 0x20);
+	}
 }
 
 //sets up a IDT and all of its entries, maps them to functions and enables interrupts
