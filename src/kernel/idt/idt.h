@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-#define IDT_DPL_KERNEL 0x0;
-#define IDT_DPL_USER 0x3;
+#define IDT_DPL_KERNEL 0x0
+#define IDT_DPL_USER 0x3
 
 enum idtGateType
 {
@@ -30,8 +30,33 @@ struct idtPtr
 	uint64_t offset;
 } __attribute__((packed));
 
+struct trapFrame
+{
+	uint64_t r15;
+	uint64_t r14;	
+	uint64_t r13;
+	uint64_t r12;
+	uint64_t r11;
+	uint64_t r10;
+	uint64_t r9;
+	uint64_t r8;
+	uint64_t rbp;
+	uint64_t rdi;
+	uint64_t rsi;
+	uint64_t rdx;
+	uint64_t rcx;
+	uint64_t rbx;
+	uint64_t rax;
+	uint64_t rip;
+	uint64_t cs;
+	uint64_t eflags;
+	uint64_t rsp; 	//If we come from userland
+	uint64_t ds;	//If we come from userland
+} __attribute__((packed));
+
 void idtInit();
 void idtSet(uint16_t vector, void* address, enum idtGateType gateType, uint8_t dpl, uint16_t selector);
+void trapHandler(struct trapFrame* frame, uint64_t vector);
 
 // Functions in idt.asm
 void enableInterrupts();
