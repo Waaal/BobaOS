@@ -18,7 +18,6 @@ static void printTrapFrame(struct trapFrame* frame)
 	kprintf("RSI: %x  RDI: %x  RBP: %x/n/n", frame->rsi, frame->rdi, frame->rbp);
 	kprintf("R15: %x  R14: %x  R13: %x  R12: %x/n", frame->r15, frame->r14, frame->r13, frame->r12);
 	kprintf("R11: %x  R10: %x  R09: %x  R08: %x/n/n", frame->r11, frame->r10, frame->r9, frame->r8);
-	kprintf("RIP: %x  CS: %x  EFLAGS: %x/n", frame->rip, frame->cs, frame->eflags);
 	kprintf("==================/n");
 }
 
@@ -44,11 +43,11 @@ void trapHandler(uint16_t vector, struct trapFrame* frame, uint8_t sendAck)
 
 	if(sendAck)
 	{
-		//outb(0x20, 0x20);
+		outb(0x20, 0x20);
 	}
 }
 
-//sets up a IDT and all of its entries, maps them to functions and enables interrupts
+//sets up a IDT and all of its entries, maps them to functions 
 void idtInit()
 {
 	memset(idt, 0x0, BOBAOS_TOTAL_INTERRUPTS * sizeof(struct idtEntry));
@@ -63,5 +62,4 @@ void idtInit()
 	idtPtr.size = (sizeof(struct idtEntry) * BOBAOS_TOTAL_INTERRUPTS) - 1;
 
 	loadIdtPtr(&idtPtr);
-	enableInterrupts();
 }

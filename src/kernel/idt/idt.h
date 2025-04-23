@@ -47,11 +47,6 @@ struct trapFrame
 	uint64_t rcx;
 	uint64_t rbx;
 	uint64_t rax;
-	uint64_t rip;
-	uint64_t cs;
-	uint64_t eflags;
-	uint64_t rsp; 	//If we come from userland
-	uint64_t ds;	//If we come from userland
 } __attribute__((packed));
 
 void idtInit();

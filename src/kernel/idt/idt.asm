@@ -73,7 +73,8 @@ loadRegisters:
 	pop rbx
 	pop rax
 	
-	jmp $ ; <-------- FUCK STUPID SHIT
+	add rsp, 8
+	jmp $	
 	iretq
 
 int32Test:
@@ -85,11 +86,13 @@ int32Test:
 	; CODE SEGMENT
 	; IP 						<----- CURRENT STACK POINTER
 	
+	sub rsp, 8 ;Bring back 16 bit alginment
+
 	call saveRegisters
 
 	mov rdi, 32
 	mov rsi, rsp
-	mov rdx, 0
+	mov rdx, 1
 
 	call trapHandler
 	

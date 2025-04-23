@@ -64,7 +64,11 @@ PICSetup:
 	mov al , 40
 	out 0xa1, al
 
-	;We ignore ICW_3... because my documentations THINK it can be ignored
+	; ICW_3
+	mov al, 4
+	out 0x21, al
+	mov al, 2
+	out 0xa1, al
 
 	; ICW_4
 	mov al, 1
@@ -87,8 +91,8 @@ moveKernel:
 
 gdt:
 gdtnull: dq 0					; GDT Null entry
-gdtcode: dq 0x20980000000000 	; GDT Code
-gdtdata: dq 0x20900000000000	; GDT Data
+gdtcode: dq 0x0020980000000000 	; GDT Code
+gdtdata: dq 0x0020900000000000	; GDT Data
 
 gdt_len: equ $ - gdt
 
