@@ -8,15 +8,7 @@ global enableInterrupts
 global disableInterrupts
 global loadIdtPtr
 
-global DEBUG_STRAP_REMOVE_LATER
-
 section .text.asm
-
-; just for testing a single interrupt (32 - timer) purpose
-DEBUG_STRAP_REMOVE_LATER:
-	mov rax, int32Test
-	mov [temp1], rax
-	ret
 
 enableInterrupts:
 	sti	
@@ -76,7 +68,9 @@ loadRegisters:
 	add rsp, 8
 	iretq
 
-int32Test:
+; Create a NASM macro so that we dont have to create a interrupt wrapper for each interrupt
+%macro intertupt 1
+int%1:
 	; ----------------------	<----- Start if we come from ring3
 	; DATA SEGMENT
 	; STACK POINTER
@@ -84,18 +78,25 @@ int32Test:
 	; EFLAGS
 	; CODE SEGMENT
 	; IP 						<----- CURRENT STACK POINTER
-	
+
 	sub rsp, 8 ;Bring back 16 bit alginment
 
 	call saveRegisters
 
-	mov rdi, 32
+	mov rdi, %1
 	mov rsi, rsp
-	mov rdx, 1
 
-	call trapHandler
-	
+	call trapHandler	
 	jmp loadRegisters
+%endmacro
+
+; Create for loop 256 times macro interrupt i
+; So we have 256 interrupt handelers
+%assign i 0
+%rep 256
+	intertupt i
+%assign i i+1
+%endrep
 
 section .data
 
@@ -103,10 +104,19 @@ saveRetAddress:
 	resq 1
 tempSave:
 	resq 1
-
 sat:
 	resq 5
 
+%macro idtListEntry 1
+	dq int%1
+%endmacro
+
 idtAddressList:
-	resq 32
-	temp1
+%assign i 0
+%rep 256
+	idtListEntry i
+%assign i i+1
+%endrep
+
+
+

@@ -32,6 +32,8 @@ void kmain()
 	
 	idtInit();
 	enableInterrupts();	
+	
+	divZeroTest();	
 
 	while(1){}
 }

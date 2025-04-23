@@ -1,4 +1,4 @@
-FILES= ./build/kernel.asm.o ./build/kernel.o ./build/memory.o ./build/kheap.o ./build/gdt.o ./build/gdt.asm.o ./build/paging.o ./build/paging.asm.o ./build/terminal.o ./build/string.o ./build/io.asm.o ./build/idt.o ./build/idt.asm.o
+FILES= ./build/kernel.asm.o ./build/kernel.o ./build/memory.o ./build/kheap.o ./build/gdt.o ./build/gdt.asm.o ./build/paging.o ./build/paging.asm.o ./build/terminal.o ./build/string.o ./build/io.asm.o ./build/idt.o ./build/idt.asm.o ./build/irqHandler.o ./build/exceptionHandler.o
 INCLUDE= -I ./src/kernel/
 FLAGS= -g -ffreestanding -mcmodel=kernel -fno-pic -fno-pie -mno-red-zone -falign-jumps -falign-functions -falign-labels -falign-loops -fstrength-reduce -fomit-frame-pointer -Wno-unused-parameter -finline-functions -fno-builtin -Wno-cpp -nostdlib -nostartfiles -nodefaultlibs -Wall -O0 -Wall -Werror -Iinc
 
@@ -56,6 +56,12 @@ kernel: $(FILES)
 
 ./build/idt.asm.o: ./src/kernel/idt/idt.asm
 	nasm -f elf64 -g ./src/kernel/idt/idt.asm -o ./build/idt.asm.o
+
+./build/irqHandler.o: ./src/kernel/idt/irqHandler.c
+	x86_64-elf-gcc $(FLAGS) -m64 -c -std=gnu99 $(INCLUDE) ./src/kernel/idt/irqHandler.c -o ./build/irqHandler.o
+
+./build/exceptionHandler.o: ./src/kernel/idt/exceptionHandler.c
+	x86_64-elf-gcc $(FLAGS) -m64 -c -std=gnu99 $(INCLUDE) ./src/kernel/idt/exceptionHandler.c -o ./build/exceptionHandler.o
 
 clean:
 	rm -r ./bin/*.bin

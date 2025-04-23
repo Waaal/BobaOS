@@ -49,15 +49,18 @@ struct trapFrame
 	uint64_t rax;
 } __attribute__((packed));
 
+typedef int8_t (*TRAPHANDLER)(struct trapFrame* frame);
+
 void idtInit();
 void idtSet(uint16_t vector, void* address, enum idtGateType gateType, uint8_t dpl, uint16_t selector);
-void trapHandler(uint16_t vector, struct trapFrame* frame, uint8_t sendAck);
+void trapHandler(uint16_t vector, struct trapFrame* frame);
+int8_t registerHandler(uint16_t vector, TRAPHANDLER handler);
+
+void printTrapFrame(struct trapFrame* frame);
 
 // Functions in idt.asm
 void enableInterrupts();
 void disableInterrupts();
 void loadIdtPtr(struct idtPtr* ptr);
-
-void DEBUG_STRAP_REMOVE_LATER();
 
 #endif

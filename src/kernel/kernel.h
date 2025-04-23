@@ -3,4 +3,7 @@
 
 void kmain();
 
+// Functions in kernel.asm
+extern void divZeroTest();
+
 #endif
