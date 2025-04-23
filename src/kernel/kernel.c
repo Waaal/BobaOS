@@ -10,13 +10,13 @@
 
 struct gdt gdt[] = {
 	{ .limit = 0x0, .base = 0x0, .access = 0x0,  .flags = 0x0 }, // NULL
-	{ .limit = 0x0, .base = 0x0, .access = 0x98, .flags = 0x2 }, //	K CODE
-	{ .limit = 0x0, .base = 0x0, .access = 0x90, .flags = 0x2 }  // K DATA
+	{ .limit = 0x0, .base = 0x0, .access = 0x9A, .flags = 0x2 }, //	K CODE
+	{ .limit = 0x0, .base = 0x0, .access = 0x92, .flags = 0x2 }  // K DATA
 };
 
 void kmain()
 {
-	//loadGdt(gdt);
+	loadGdt(gdt);
 	
 	terminalInit();
 	terminalPrint("Hello World/n");

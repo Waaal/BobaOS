@@ -91,8 +91,8 @@ moveKernel:
 
 gdt:
 gdtnull: dq 0					; GDT Null entry
-gdtcode: dq 0x0020980000000000 	; GDT Code
-gdtdata: dq 0x0020900000000000	; GDT Data
+gdtcode: dq 0x00209A0000000000 	; GDT Code
+gdtdata: dq 0x0020920000000000	; GDT Data
 
 gdt_len: equ $ - gdt
 

@@ -74,7 +74,6 @@ loadRegisters:
 	pop rax
 	
 	add rsp, 8
-	jmp $	
 	iretq
 
 int32Test:
