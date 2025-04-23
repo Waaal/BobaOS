@@ -28,7 +28,7 @@ void printTrapFrame(struct trapFrame* frame)
 
 static void fillIdt()
 {
-	for(uint16_t i = 0; i < 256; i++)
+	for(uint16_t i = 0; i < BOBAOS_TOTAL_INTERRUPTS; i++)
 	{
 		idtSet(i, idtAddressList[i], IDT_GATE_TYPE_INTERRUPT, 0, BOBAOS_KERNEL_SELECTOR_CODE);
 	}
@@ -44,7 +44,7 @@ void idtSet(uint16_t vector, void* address, enum idtGateType gateType, uint8_t d
 
 	entry.selector = selector;
 	entry.attributes = 0x80 | (dpl << 5) | gateType;
-	entry.resered_ist = 0x0;
+	entry.reserved_ist = 0x0;
 
 	memcpy((void*)((uint64_t)idt + (vector*sizeof(struct idtEntry))), &entry, sizeof(struct idtEntry));
 }

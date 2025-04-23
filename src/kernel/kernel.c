@@ -33,7 +33,7 @@ void kmain()
 	idtInit();
 	enableInterrupts();	
 	
-	divZeroTest();	
+	//divZeroTest();	
 
 	while(1){}
 }

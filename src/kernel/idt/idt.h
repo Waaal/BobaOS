@@ -16,7 +16,7 @@ struct idtEntry
 {
 	uint16_t offset1;
 	uint16_t selector;
-	uint8_t resered_ist;
+	uint8_t reserved_ist;
 	uint8_t attributes;
 	uint16_t offset2;
 	uint32_t offset3;
