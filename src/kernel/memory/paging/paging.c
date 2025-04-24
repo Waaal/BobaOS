@@ -48,7 +48,7 @@ static PTTable getPTTable(void* virt, PLM4Table table)
 	uint16_t pdpIndex = ((uint64_t)virt >> 0x1E) & 0x1FF;
 	uint16_t pdIndex = ((uint64_t)virt >> 0x15) & 0x1FF;
 	
-	PDPTable pdpTable = (PDPTable)returnTableEntryNoFlags(table, getPlm4IndexFromVirtual(virt));
+	PDPTable pdpTable = (PDPTable)returnTableEntryNoFlags(table, getPlm4IndexFromVirtual((void*)virt));
 	PDTable pdTable = (PDTable)returnTableEntryNoFlags(pdpTable, pdpIndex);
 	PTTable ptTable = (PTTable)returnTableEntryNoFlags(pdTable, pdIndex);
 	
@@ -94,8 +94,10 @@ PLM4Table createKernelTable(uint64_t physical, uint64_t virtual, uint64_t size)
 	
 	for(uint16_t i = 0; i < pdEntries; i++)
 	{
-		PDTable pdTable = createPdTable(physical + i*0x40000000, virtual + i*0x40000000);
-		uint16_t pdpIndex = getPdpIndexFromVirtual((void*)(virtual + i*0x40000000));
+		uint64_t virt = virtual + (i*(uint64_t)0x40000000);
+
+		PDTable pdTable = createPdTable(physical + i*(uint64_t)0x40000000, virt);
+		uint16_t pdpIndex = getPdpIndexFromVirtual((void*)virt);
 		writePointerTableEntry(pdpTable, pdTable, pdpIndex, PAGING_FLAG_P | PAGING_FLAG_RW);
 	}
 	

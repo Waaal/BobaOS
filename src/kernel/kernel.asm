@@ -9,7 +9,6 @@ extern kmain
 
 _start:
 
-mov rsp, 0x200000
 call kmain
 jmp $
 

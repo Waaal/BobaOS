@@ -61,6 +61,6 @@ void kmain()
 	
 	idtInit();
 	enableInterrupts();	
-	
+
 	while(1){}
 }
