@@ -68,13 +68,11 @@ loadRegisters:
 	add rsp, 8
 	iretq
 
-; Create a NASM macro so that we dont have to create a interrupt wrapper for each interrupt
-%macro intertupt 1
+; Create a NASM macro to create a interrupt wrapper for each interrupt
+%macro interrupt 1
 int%1:
-	; ----------------------	<----- Start if we come from ring3
 	; DATA SEGMENT
 	; STACK POINTER
-	; ----------------------    <----- Start if we come from ring0
 	; EFLAGS
 	; CODE SEGMENT
 	; IP 						<----- CURRENT STACK POINTER
@@ -84,17 +82,67 @@ int%1:
 	call saveRegisters
 
 	mov rdi, %1
-	mov rsi, rsp
+	xor rsi,rsi	; No error code by CPU 
+	mov rdx, rsp
 
 	call trapHandler	
 	jmp loadRegisters
 %endmacro
 
-; Create for loop 256 times macro interrupt i
-; So we have 256 interrupt handelers
+; Create a NASM macro for exceptions where CPU places error code on stack
+%macro interruptErrorCode 1
+int%1:
+	; DATA SEGMENT
+	; STACK POINTER
+	; EFLAGS
+	; CODE SEGMENT
+	; IP 						<----- CURRENT STACK POINTER
+	
+	pop rsi ; Error code placed by cpu as first argument
+	sub rsp, 8 ;Bring back 16 bit alginment
+
+	call saveRegisters
+
+	mov rdi, %1
+	mov rdx, rsp
+
+	call trapHandler	
+	jmp loadRegisters
+%endmacro
+
+; Create all 256 interrupt routines wrapper
 %assign i 0
-%rep 256
-	intertupt i
+%rep 8
+	interrupt i
+%assign i i+1
+%endrep
+interruptErrorCode 8
+interrupt 9
+interruptErrorCode 10
+interruptErrorCode 11
+interruptErrorCode 12
+interruptErrorCode 13
+interruptErrorCode 14
+interrupt 15
+interrupt 16
+interruptErrorCode 17
+interrupt 18
+interrupt 19
+interrupt 20
+interruptErrorCode 21 
+interrupt 22
+interrupt 23
+interrupt 24
+interrupt 25
+interrupt 26
+interrupt 27
+interrupt 28
+interruptErrorCode 29
+interruptErrorCode 30
+interrupt 31
+%assign i 32
+%rep 244
+	interrupt i
 %assign i i+1
 %endrep
 

@@ -17,13 +17,11 @@ TRAPHANDLER handlerList[BOBAOS_TOTAL_INTERRUPTS];
 
 void printTrapFrame(struct trapFrame* frame)
 {
-	kprintf("==================/n");
 	kprintf("Trap frame: %x/n/n", frame);
 	kprintf("RAX: %x  RBX: %x  RCX: %x  RDX: %x/n", frame->rax, frame->rbx, frame->rcx, frame->rdx);
 	kprintf("RSI: %x  RDI: %x  RBP: %x/n/n", frame->rsi, frame->rdi, frame->rbp);
 	kprintf("R15: %x  R14: %x  R13: %x  R12: %x/n", frame->r15, frame->r14, frame->r13, frame->r12);
 	kprintf("R11: %x  R10: %x  R09: %x  R08: %x/n/n", frame->r11, frame->r10, frame->r9, frame->r8);
-	kprintf("==================/n");
 }
 
 static void fillIdt()
@@ -60,7 +58,7 @@ int8_t registerHandler(uint16_t vector, TRAPHANDLER handler)
 	return 0;
 }
 
-void trapHandler(uint16_t vector, struct trapFrame* frame)
+void trapHandler(uint16_t vector, uint32_t errorCode, struct trapFrame* frame)
 {
 	if(vector >= BOBAOS_TOTAL_INTERRUPTS)
 	{
