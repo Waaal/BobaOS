@@ -31,6 +31,8 @@ void panic(enum panicType type, struct trapFrame* frame, const char* message)
 			terminalPrint("Panic Type: UNKNOWN/n");
 			break;
 	}
+	
+	kprintf("Panic message: %s", message);
 
 	while(1){}
 }
