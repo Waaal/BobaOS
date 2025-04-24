@@ -62,7 +62,5 @@ void kmain()
 	idtInit();
 	enableInterrupts();	
 	
-	panic(PANIC_TYPE_KERNEL, NULL, "test panic");
-
 	while(1){}
 }
