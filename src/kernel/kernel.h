@@ -1,9 +1,15 @@
 #ifndef KERNEL_H
 #define KERNEL_H
 
-void kmain();
+#include "idt/idt.h"
 
-// Functions in kernel.asm
-extern void divZeroTest();
+enum panicType
+{
+	PANIC_TYPE_KERNEL = 0,
+	PANIC_TYPE_EXCEPTION = 1
+}; 
+
+void kmain();
+void panic(enum panicType type, struct trapFrame* frame, const char* message);
 
 #endif

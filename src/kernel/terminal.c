@@ -11,6 +11,16 @@ uint16_t* videoMemory = (uint16_t*)0xb8000;
 
 uint8_t terminalNextCharSpecial = 0;
 
+void terminalClear(uint8_t color)
+{
+	for(uint16_t i = 0; i < VGA_WIDTH * VGA_HEIGHT; i++)
+	{
+		videoMemory[i] = (color << 12) + (TERMINAL_FORECOLOR << 8);
+	}
+	curRow = 0;
+	curCol = 0;
+}
+
 void terminalInit()
 {
 	for(uint16_t i = 0; i < VGA_WIDTH * VGA_HEIGHT; i++)

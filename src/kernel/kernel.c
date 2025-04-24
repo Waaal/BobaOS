@@ -1,12 +1,39 @@
 #include "kernel.h"
 
-#include <stdint.h>
+#include <stddef.h>
 
 #include "terminal.h"
 #include "memory/kheap/kheap.h"
 #include "memory/paging/paging.h"
 #include "gdt/gdt.h"
-#include "idt/idt.h"
+
+void panic(enum panicType type, struct trapFrame* frame, const char* message)
+{
+	disableInterrupts();
+
+	terminalClear(0x1);
+	terminalPrint("KERNEL PANIC/n/n");	
+
+	switch(type)
+	{
+		case PANIC_TYPE_KERNEL:
+			terminalPrint("Panic Type: KERNEL/n");
+			break;
+		case PANIC_TYPE_EXCEPTION:
+			terminalPrint("Panic Type: EXCEPTION/n");
+
+			if(frame != NULL)
+			{
+				printTrapFrame(frame);
+			}
+			break;
+		default:
+			terminalPrint("Panic Type: UNKNOWN/n");
+			break;
+	}
+
+	while(1){}
+}
 
 struct gdt gdt[] = {
 	{ .limit = 0x0, .base = 0x0, .access = 0x0,  .flags = 0x0 }, // NULL
@@ -33,7 +60,7 @@ void kmain()
 	idtInit();
 	enableInterrupts();	
 	
-	//divZeroTest();	
+	panic(PANIC_TYPE_KERNEL, NULL, "test panic");
 
 	while(1){}
 }
