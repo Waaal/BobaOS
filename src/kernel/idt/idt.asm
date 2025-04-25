@@ -49,6 +49,8 @@ saveRegisters:
 	jmp rax
 
 loadRegisters:
+	add rsp, 8
+
 	pop r15
 	pop r14
 	pop r13
@@ -65,7 +67,6 @@ loadRegisters:
 	pop rbx
 	pop rax
 	
-	add rsp, 8
 	iretq
 
 ; Create a NASM macro to create a interrupt wrapper for each interrupt
@@ -77,13 +78,14 @@ int%1:
 	; CODE SEGMENT
 	; IP 						<----- CURRENT STACK POINTER
 
-	sub rsp, 8 ;Bring back 16 bit alginment
-
 	call saveRegisters
+
+	sub rsp, 8 ;Bring back 16 bit alginment
 
 	mov rdi, %1
 	xor rsi,rsi	; No error code by CPU 
 	mov rdx, rsp
+	add rdx, 8
 
 	call trapHandler	
 	jmp loadRegisters
@@ -99,12 +101,13 @@ int%1:
 	; IP 						<----- CURRENT STACK POINTER
 	
 	pop rsi ; Error code placed by cpu as first argument
-	sub rsp, 8 ;Bring back 16 bit alginment
-
 	call saveRegisters
+	
+	sub rsp, 8 ;Bring back 16 bit alginment
 
 	mov rdi, %1
 	mov rdx, rsp
+	add rdx, 8
 
 	call trapHandler	
 	jmp loadRegisters

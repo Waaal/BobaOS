@@ -22,6 +22,7 @@ void printTrapFrame(struct trapFrame* frame)
 	kprintf("RSI: %x  RDI: %x  RBP: %x/n/n", frame->rsi, frame->rdi, frame->rbp);
 	kprintf("R15: %x  R14: %x  R13: %x  R12: %x/n", frame->r15, frame->r14, frame->r13, frame->r12);
 	kprintf("R11: %x  R10: %x  R09: %x  R08: %x/n/n", frame->r11, frame->r10, frame->r9, frame->r8);
+	kprintf("RIP: %x  CS: %x  FLAGS: %x  RSP: %x  DS: %x/n/n", frame->rip, frame->cs, frame->flags, frame->rsp, frame-> ds);
 }
 
 static void fillIdt()

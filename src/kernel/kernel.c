@@ -50,6 +50,9 @@ void kmain()
 	terminalInit();
 	terminalPrint("Hello World/n");
 	
+	idtInit();
+	enableInterrupts();	
+
 	kprintf("Hello number:  %u/n", 123456789);
 	kprintf("Hello hex:     %x/n", 123456789);
 	kprintf("Hello string   %s/n/n", "Im a string!");
@@ -58,9 +61,6 @@ void kmain()
 	
 	PML4Table kernelPageTable = createKernelTable(0x0, 0x0, 0x100000000);
 	if(kernelPageTable){}	
-	
-	idtInit();
-	enableInterrupts();	
-	
+
 	while(1){}
 }
