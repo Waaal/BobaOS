@@ -20,6 +20,13 @@
 #define FULL_512 0x1FF
 #define FULL_4KB 0xFFF
 
+struct memoryMap
+{
+	uint64_t address;
+	uint64_t length;
+	uint32_t type;
+};
+
 // PML4 -> PDP -> PD -> PT
 
 // 1 PT = 0x200000 (2048 KB) of memory
@@ -31,6 +38,7 @@ typedef uint64_t* PDPTable;
 typedef uint64_t* PDTable;
 typedef uint64_t* PTTable;
 
+void readMemoryMap();
 PML4Table createKernelTable(uint64_t physical, uint64_t virtual, uint64_t size);
 void* virtualToPhysical(void* virt, PML4Table table);
 void remapPage(void* to, void* from, PML4Table table);

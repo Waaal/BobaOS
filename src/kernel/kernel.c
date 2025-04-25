@@ -33,7 +33,6 @@ void panic(enum panicType type, struct trapFrame* frame, const char* message)
 	}
 	
 	kprintf("Panic message: %s", message);
-
 	while(1){}
 }
 
@@ -51,7 +50,9 @@ void kmain()
 	terminalPrint("Hello World/n");
 	
 	idtInit();
-	enableInterrupts();	
+	enableInterrupts();
+
+	readMemoryMap();
 
 	kprintf("Hello number:  %u/n", 123456789);
 	kprintf("Hello hex:     %x/n", 123456789);

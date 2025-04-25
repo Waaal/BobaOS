@@ -5,6 +5,7 @@
 #include "kernel.h"
 #include "status.h"
 #include "memory/kheap/kheap.h"
+#include "terminal.h"
 
 static void writePointerTableEntry(uint64_t* dest, uint64_t* src, uint64_t index, uint16_t flags)
 {
@@ -123,11 +124,27 @@ void* virtualToPhysical(void* virt, PML4Table table)
 	return (void*)(address + offset);
 }
 
-
 void remapPage(void* to, void* from, PML4Table table)
 {
 	PTTable oldPt = getPTTable(from, table);	
 	uint16_t oldPtIndex = ((uint64_t)from >> SHIFT_PT) & FULL_512;
 
 	writePointerTableEntry(oldPt, to, oldPtIndex, PAGING_FLAG_P | PAGING_FLAG_RW | PAGING_FLAG_PS);	
+}
+
+void readMemoryMap()
+{
+	uint8_t* mapAddress = (uint8_t*) 0x8000;
+	terminalPrint("Memory map:/n");
+	do
+	{
+		struct memoryMap* map = (struct memoryMap*)mapAddress;
+		if(!map->type)
+		{
+			break;
+		}
+
+		kprintf("Address: %x Length: %x Type: %x/n", map->address, map->length, map->type);
+		mapAddress += 20;
+	} while(1);
 }

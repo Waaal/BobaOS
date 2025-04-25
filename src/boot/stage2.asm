@@ -1,5 +1,25 @@
-[bits 32]
+[bits 16]
 [org 0x7E00]
+
+prepare32bit:
+	lgdt [cs:gdt_ptr32]
+
+	mov eax, cr0
+	or eax, 0x1
+	mov cr0, eax
+
+	jmp 0x8:pml
+
+[bits 32]
+pml:
+	;Set data segments to 0x10
+	mov eax, 0x10
+	mov es, eax
+	mov ds, eax
+	mov ss, eax
+	mov fs, eax
+
+	mov esp, 0x7c00
 
 	xor eax, eax
 	mov ax, 'T'
@@ -89,6 +109,31 @@ moveKernel:
 
 	jmp 0x100000
 
+
+; A GDT entry in protected mode is 8 byte
+gdt32:
+gdtnull32:	dq 0x0
+gdtcode32:	dw 0xFFFF		; 2 byte limit
+			dw 0x0
+			db 0x0			; 3 byte base
+			db 10011010b	; 1 byte access bytes P = 1, DPL = 00, S = 1 (Code/Data), E = 1 (code), DC = 0, RW = 1, A = 0 (leave it 0 because the CPU is going to use this)
+			db 11001111b	; 4 bit Flags 4 bit Limit | Flags G = 1, DB = 1 (protected mode)
+			db 0x0			; 1 byte base 
+
+gdtdata32:	dw 0xFFFF		; 2 byte limit
+			dw 0x0
+			db 0x0			; 3 byte base
+			db 10010010b	; 1 byte access bytes P = 1, DPL = 00, S = 1 (Code/Data), E = 0 (data), DC = 0, RW = 1, A = 0 (leave it 0 because the CPU is going to use this)
+			db 11001111b	; 4 bit Flags 4 bit Limit | Flags G = 1, DB = 1 (protected mode)
+			db 0x0			; 1 byte base
+gdt_len32: equ $ - gdt32
+
+; GDT pointer 6 bytes (2 bytes len, 2 bytes address)
+gdt_ptr32:
+	dw gdt_len32-1
+	dw gdt32
+
+; GDT Long mode
 gdt:
 gdtnull: dq 0					; GDT Null entry
 gdtcode: dq 0x00209A0000000000 	; GDT Code

@@ -1,9 +1,6 @@
 [bits 16]
 [org 0x7C00]
 
-	CODE_SEG equ gdtcode - gdt	;Selected Index = 1, TL = 0, RPL = 0
-	DATA_SEG equ gdtdata - gdt	;Selected Index = 2, TL = 0, RPL = 0
-	
 	jmp short start
 	nop
 	times 33 db 0			; BIOS parameter block placeholder
@@ -79,14 +76,39 @@ changeTextMode:
 	mov al, 0x03
 	int 0x10
 
-prepare32bit:
-	lgdt [cs:gdt_ptr]
+; Zero out 1000 bytes for the memory map
+zeroBytes:	
+	xor ax,ax
+	mov es, ax
+	mov di, 0x8000
+	mov cx, 1000
+	rep stosd
 
-	mov eax, cr0
-	or eax, 0x1
-	mov cr0, eax
+; for this BIOS int we need to use 32 bit registers lol
+getMemoryMap:
+	xor ebx, ebx
+	mov es, bx
+	mov edi, 0x8000
+	mov ecx, 20
 
-	jmp CODE_SEG:pme
+.loop:
+	mov eax, 0xE820
+	mov edx, 0x534D4150		;'SMAP' 
+
+	int 0x15
+	jc .error
+
+	cmp ebx, 0
+	jz .done
+
+	add edi, 20
+	jnc .loop
+.error:
+	mov si, memoryMapErrorMsg
+	call print
+	jmp $
+.done:
+	jmp 0x7E00
 
 ; Print function
 ; Expects:
@@ -126,21 +148,7 @@ extendedRead:
 	jmp $
 .end:
 	ret
-
-[bits 32]
-	pme:
 	
-	;Set data segments to 0x10
-	mov eax, DATA_SEG
-	mov es, eax
-	mov ds, eax
-	mov ss, eax
-	mov fs, eax
-
-	mov esp, 0x7c00
-	
-	jmp 0x7E00
-
 	; TODO
 	; 	Partition table
 
@@ -148,6 +156,7 @@ driveId: db 0
 extendedReadErrorMsg: db 'Extended read is not supported. Booting stopped',0
 readErrorMsg: db 'There was an error reading from disk',0
 a20LineErrorMsg: db 'A20 line is off. Please enable A20 Line in BIOS',0
+memoryMapErrorMsg: db 'There was an error reading the memory map',0
 
 extreadStage2Package:
 	dw 0x10					; Package size(0x10 or 0x16)
@@ -164,29 +173,6 @@ extreadKernelPackage:
 	dw 0x1000				; destination (segment [0x1000]:0x00)
 	dd 0x3					; starting LBA in our img file
 	dd 0x0					; more storage bytes for bigger lbas
-
-; A GDT entry in protected mode is 8 byte
-gdt:
-gdtnull:	dq 0x0
-gdtcode:	dw 0xFFFF		; 2 byte limit
-			dw 0x0
-			db 0x0			; 3 byte base
-			db 10011010b	; 1 byte access bytes P = 1, DPL = 00, S = 1 (Code/Data), E = 1 (code), DC = 0, RW = 1, A = 0 (leave it 0 because the CPU is going to use this)
-			db 11001111b	; 4 bit Flags 4 bit Limit | Flags G = 1, DB = 1 (protected mode)
-			db 0x0			; 1 byte base 
-
-gdtdata:	dw 0xFFFF		; 2 byte limit
-			dw 0x0
-			db 0x0			; 3 byte base
-			db 10010010b	; 1 byte access bytes P = 1, DPL = 00, S = 1 (Code/Data), E = 0 (data), DC = 0, RW = 1, A = 0 (leave it 0 because the CPU is going to use this)
-			db 11001111b	; 4 bit Flags 4 bit Limit | Flags G = 1, DB = 1 (protected mode)
-			db 0x0			; 1 byte base
-gdt_len: equ $ - gdt
-
-; GDT pointer 6 bytes (2 bytes len, 2 bytes address)
-gdt_ptr:
-	dw gdt_len-1
-	dw gdt
 
 	times 510-($-$$) db 0
 	dw 0xAA55
