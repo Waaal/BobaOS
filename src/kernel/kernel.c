@@ -56,11 +56,11 @@ void kmain()
 
 	kheap_init();	
 	
-	PLM4Table kernelPageTable = createKernelTable(0x0, 0x0, 0x100000000);
+	PML4Table kernelPageTable = createKernelTable(0x0, 0x0, 0x100000000);
 	if(kernelPageTable){}	
 	
 	idtInit();
 	enableInterrupts();	
-
+	
 	while(1){}
 }
