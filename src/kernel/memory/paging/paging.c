@@ -29,16 +29,16 @@ static uint64_t* returnTableEntryNoFlags(uint64_t* table, uint16_t index)
 	return (uint64_t*)(table[index] & 0xFFFFFFFFFFFFF000);
 }
 
-static uint64_t sizeToPdEntries(uint64_t size)
+static int sizeToPdEntries(uint64_t size)
 {
 	if(size > 0x8000000000)
 	{
-		return 0;	
+		return -EIARG;	
 	}
 
 	if(size < SIZE_1GB)
 	{
-		return 0;
+		return -ENMEM;
 	}	
 
 	return downToPage(size) / SIZE_1GB;
@@ -100,8 +100,8 @@ PML4Table createKernelTable(uint64_t physical, uint64_t virtual, uint64_t size)
 	
 	writePointerTableEntry(pml4Table, pdpTable, getPml4IndexFromVirtual((void*)virtual), PAGING_FLAG_P | PAGING_FLAG_RW);
 	
-	uint64_t pdEntries = sizeToPdEntries(usableSize);	
-	if(pdEntries == 0)
+	int pdEntries = sizeToPdEntries(usableSize);	
+	if(pdEntries <= 0)
 	{
 		return NULL;
 	}
