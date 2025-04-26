@@ -69,7 +69,9 @@ static PTTable getPTTable(void* virt, PML4Table table)
 static PTTable createPTTable(uint64_t phys)
 {
 	PTTable table = (PTTable)kzalloc(4096);
-	
+	if(table == NULL){return NULL;}
+
+
 	for(uint16_t i = 0; i < 512; i++)
 	{
 		writePointerTableEntry(table, (uint64_t*)(phys + (i*SIZE_4KB)), i, PAGING_FLAG_P | PAGING_FLAG_RW | PAGING_FLAG_PS);
@@ -81,10 +83,12 @@ static PTTable createPTTable(uint64_t phys)
 static PDTable createPdTable(uint64_t phys, uint64_t virt)
 {
 	PDTable table = (PDTable)kzalloc(4096);
-	
+	if(table == NULL){return NULL;}
+
 	for(uint16_t i = 0; i < 512; i++)
 	{
 		PTTable ptTable = createPTTable(phys + (i*(SIZE_1MB*2)));
+		if(ptTable == NULL){return NULL;}
 		writePointerTableEntry(table, ptTable, i, PAGING_FLAG_P | PAGING_FLAG_RW);
 	}	
 
@@ -98,6 +102,11 @@ PML4Table createKernelTable(uint64_t physical, uint64_t virtual, uint64_t size)
 	PML4Table pml4Table = (PML4Table)kzalloc(4096);
 	PDPTable pdpTable = (PDPTable)kzalloc(4096);
 	
+	if(pml4Table == NULL | pdpTable == NULL)
+	{
+		return NULL;
+	}
+
 	writePointerTableEntry(pml4Table, pdpTable, getPml4IndexFromVirtual((void*)virtual), PAGING_FLAG_P | PAGING_FLAG_RW);
 	
 	int pdEntries = sizeToPdEntries(usableSize);	
@@ -113,6 +122,7 @@ PML4Table createKernelTable(uint64_t physical, uint64_t virtual, uint64_t size)
 		uint64_t virt = virtual + (i*(uint64_t)SIZE_1GB);
 
 		PDTable pdTable = createPdTable(physical + i*(uint64_t)SIZE_1GB, virt);
+		if(pdTable == NULL){return NULL;}
 		uint16_t pdpIndex = getPdpIndexFromVirtual((void*)virt);
 		writePointerTableEntry(pdpTable, pdTable, pdpIndex, PAGING_FLAG_P | PAGING_FLAG_RW);
 	}

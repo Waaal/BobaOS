@@ -1,5 +1,7 @@
 #include "terminal.h"
 
+#include <stddef.h>
+
 #include "memory/kheap/kheap.h"
 #include "memory/memory.h"
 #include "string/string.h"
@@ -95,6 +97,8 @@ static char* strToUInt(uint64_t num)
 	char* numberMap = "0123456789";
 	char* ret = (char*)kzalloc(21);
 	
+	if(ret == NULL){return NULL;}
+
 	uint8_t i = 0;
 	for(i = 0; i < 20; i++)
 	{
@@ -119,6 +123,9 @@ static char* strToHex(uint64_t num)
 {
 	char* numberMap = "0123456789ABCDEF";
 	char* ret = (char*)kzalloc(23);
+	
+	if(ret == NULL){return NULL;}
+
 	ret[0] = '0';
 	ret[1] = 'x';
 
@@ -158,6 +165,7 @@ void kprintf(const char* string, ...)
 				case 'x':
 				{
 					char* hexChar = strToHex(va_arg(args, uint64_t));
+					if(hexChar == NULL){break;}
 					terminalPrint(hexChar);
 
 					kzfree(hexChar);
@@ -166,6 +174,7 @@ void kprintf(const char* string, ...)
 				case 'u':
 				{
 					char* uIntChar = strToUInt(va_arg(args, uint64_t));
+					if(uIntChar == NULL){break;}
 					terminalPrint(uIntChar);
 
 					kzfree(uIntChar);

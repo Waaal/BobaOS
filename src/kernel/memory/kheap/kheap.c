@@ -1,5 +1,7 @@
 #include "kheap.h"
 
+#include <stddef.h>
+
 #include "config.h"
 #include "memory/memory.h"
 #include "status.h"
@@ -105,7 +107,7 @@ static int findFreePages(uint64_t pagesCount, void** memOut)
 //Allocates memory on the kernel stack. If returned address == 0x0, then there is a -ENMEM error
 void* kzalloc(uint64_t size)
 {	
-	void* mem = (void*)0x0;
+	void* mem = NULL;
 	uint64_t pagesCount = 0;
 
 	size = size_up_to_page(size);
