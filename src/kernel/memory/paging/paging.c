@@ -102,7 +102,7 @@ PML4Table createKernelTable(uint64_t physical, uint64_t virtual, uint64_t size)
 	PML4Table pml4Table = (PML4Table)kzalloc(4096);
 	PDPTable pdpTable = (PDPTable)kzalloc(4096);
 	
-	if(pml4Table == NULL | pdpTable == NULL)
+	if(pml4Table == NULL || pdpTable == NULL)
 	{
 		return NULL;
 	}
