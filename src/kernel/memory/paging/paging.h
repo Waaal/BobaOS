@@ -14,18 +14,22 @@
 #define SHIFT_PT 0xC
 
 #define SIZE_4KB 0x1000
-#define SIZE_2MB 0x200000
+#define SIZE_1MB 0x100000
 #define SIZE_1GB 0x40000000
 
 #define FULL_512 0x1FF
 #define FULL_4KB 0xFFF
+#define FULL_1GB 0x3FFFFFFF
+
+#define MEMORY_TYPE_FREE 0x1
+#define MEMORY_TYPE_RESERVED 0x2
 
 struct memoryMap
 {
 	uint64_t address;
 	uint64_t length;
 	uint32_t type;
-};
+} __attribute__((packed));
 
 // PML4 -> PDP -> PD -> PT
 
@@ -39,6 +43,9 @@ typedef uint64_t* PDTable;
 typedef uint64_t* PTTable;
 
 void readMemoryMap();
+uint64_t getUpperMemorySize();
+uint64_t getMaxMemorySize();
+
 PML4Table createKernelTable(uint64_t physical, uint64_t virtual, uint64_t size);
 void* virtualToPhysical(void* virt, PML4Table table);
 void remapPage(void* to, void* from, PML4Table table);

@@ -1,11 +1,18 @@
-#include "memory/paging/paging.h"
+#include "paging.h"
 
 #include <stddef.h>
 
-#include "kernel.h"
+#include "config.h"
+#include "memory/memory.h"
 #include "status.h"
 #include "memory/kheap/kheap.h"
 #include "terminal.h"
+
+struct memoryMap memoryMap[BOBAOS_MEMORY_MAP_MAX_ENTRIES];
+uint8_t memoryMapLength = 0x0;
+
+uint64_t upperMemorySize = 0x0;
+uint64_t totalMemorySize = 0x0;
 
 static void writePointerTableEntry(uint64_t* dest, uint64_t* src, uint64_t index, uint16_t flags)
 {
@@ -77,7 +84,7 @@ static PDTable createPdTable(uint64_t phys, uint64_t virt)
 	
 	for(uint16_t i = 0; i < 512; i++)
 	{
-		PTTable ptTable = createPTTable(phys + (i*SIZE_2MB));
+		PTTable ptTable = createPTTable(phys + (i*(SIZE_1MB*2)));
 		writePointerTableEntry(table, ptTable, i, PAGING_FLAG_P | PAGING_FLAG_RW);
 	}	
 
@@ -96,9 +103,11 @@ PML4Table createKernelTable(uint64_t physical, uint64_t virtual, uint64_t size)
 	uint64_t pdEntries = sizeToPdEntries(usableSize);	
 	if(pdEntries < 0)
 	{
-		panic(PANIC_TYPE_KERNEL, NULL, "Not enough memory to setup kernel");
+		return NULL;
 	}
 	
+	kprintf("Paging/n  Using: %x Wasting: %x/n/n", pdEntries * SIZE_1GB, size - (pdEntries * SIZE_1GB));
+
 	for(uint16_t i = 0; i < pdEntries; i++)
 	{
 		uint64_t virt = virtual + (i*(uint64_t)SIZE_1GB);
@@ -132,19 +141,39 @@ void remapPage(void* to, void* from, PML4Table table)
 	writePointerTableEntry(oldPt, to, oldPtIndex, PAGING_FLAG_P | PAGING_FLAG_RW | PAGING_FLAG_PS);	
 }
 
+uint64_t getUpperMemorySize()
+{
+	return upperMemorySize;
+}
+uint64_t getMaxMemorySize()
+{
+	return totalMemorySize;
+}
+
 void readMemoryMap()
 {
 	uint8_t* mapAddress = (uint8_t*) 0x8000;
-	terminalPrint("Memory map:/n");
+	uint16_t offset = 0x0;
+	
+	uint8_t length = 0;
 	do
 	{
-		struct memoryMap* map = (struct memoryMap*)mapAddress;
-		if(!map->type)
-		{
-			break;
-		}
+		struct memoryMap* map = (struct memoryMap*)(mapAddress + offset);
+		if(!map->type){break;}	
+		
+		memcpy(((uint8_t*)memoryMap)+offset, (void*)(mapAddress+offset), sizeof(struct memoryMap));	
 
-		kprintf("Address: %x Length: %x Type: %x/n", map->address, map->length, map->type);
-		mapAddress += 20;
+		offset += sizeof(struct memoryMap);
+		length++;
+
+		if(map->type == MEMORY_TYPE_FREE)
+		{
+			totalMemorySize += map->length;
+			if(map->address >= SIZE_1MB)
+			{
+				upperMemorySize += map->length;
+			}
+		}
 	} while(1);
+	memoryMapLength = length;
 }

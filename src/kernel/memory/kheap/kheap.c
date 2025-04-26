@@ -3,17 +3,22 @@
 #include "config.h"
 #include "memory/memory.h"
 #include "status.h"
+#include "memory/paging/paging.h"
+#include "terminal.h"
 
 uint64_t table_size = -1;
+uint64_t tableMaxSize = -1;
 
 static int kheap_init_table()
 {
 	table_size = BOBAOS_KERNEL_HEAP_SIZE / KHEAP_BLOCK_SIZE;
-	
-	if(table_size > KHEAP_MAX_SIZE)
+	tableMaxSize = getMaxMemorySize() - getUpperMemorySize();
+
+	if((table_size + BOBAOS_KERNEL_HEAP_TABLE_ADDRESS) > tableMaxSize)
 	{
 		return -ENMEM;
 	}
+	kprintf("Kernel heap table/n  Max size: %x Actual size: %x Start: %x/n/n", tableMaxSize, table_size, BOBAOS_KERNEL_HEAP_TABLE_ADDRESS);	
 	
 	memset((void*)BOBAOS_KERNEL_HEAP_TABLE_ADDRESS, 0x0, table_size);
 	return 0;
@@ -118,7 +123,7 @@ out:
 
 int addressToTableIndex(void* address)
 {
-	if((uint64_t)address < BOBAOS_KERNEL_HEAP_ADDRESS && (uint64_t)address > KHEAP_MAX_SIZE)
+	if((uint64_t)address < BOBAOS_KERNEL_HEAP_ADDRESS && (uint64_t)address > tableMaxSize)
 	{
 		return -EIARG;
 	}

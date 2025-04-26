@@ -99,7 +99,7 @@ getMemoryMap:
 	jc .error
 
 	cmp ebx, 0
-	jz .done
+	jz 0x7E00
 
 	add edi, 20
 	jnc .loop
@@ -107,8 +107,6 @@ getMemoryMap:
 	mov si, memoryMapErrorMsg
 	call print
 	jmp $
-.done:
-	jmp 0x7E00
 
 ; Print function
 ; Expects:

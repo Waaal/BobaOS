@@ -47,21 +47,24 @@ void kmain()
 	loadGdt(gdt);
 	
 	terminalInit();
-	terminalPrint("Hello World/n");
+	terminalPrint("Hello World/n/n");
 	
 	idtInit();
 	enableInterrupts();
 
-	readMemoryMap();
+	readMemoryMap();	
+	kprintf("Memory/n  Available memory: %x/n  Available upper memory: %x/n/n", getMaxMemorySize(), getUpperMemorySize());
 
-	kprintf("Hello number:  %u/n", 123456789);
-	kprintf("Hello hex:     %x/n", 123456789);
-	kprintf("Hello string   %s/n/n", "Im a string!");
-
-	kheap_init();	
+	if(kheap_init() < 0)
+	{
+		panic(PANIC_TYPE_KERNEL, NULL, "Not enough memory to initialize Kernel Heap");
+	}	
 	
-	PML4Table kernelPageTable = createKernelTable(0x0, 0x0, 0x100000000);
-	if(kernelPageTable){}	
+	PML4Table kernelPageTable = createKernelTable(0x0, 0x0, getMaxMemorySize());
+	if(kernelPageTable == NULL)
+	{
+		panic(PANIC_TYPE_KERNEL, NULL, "Not enough memory for Kernel");
+	}	
 
 	while(1){}
 }
