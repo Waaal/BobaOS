@@ -2,7 +2,6 @@
 #define TERMINAL_H
 
 #include <stdint.h>
-#include <stdarg.h>
 
 #define VGA_WIDTH 80
 #define VGA_HEIGHT 25
@@ -11,9 +10,6 @@
 #define TERMINAL_FORECOLOR 0xF
 
 void terminalClear(uint8_t color);
-void terminalPrint(const char* c);
 void terminalInit();
-
-void kprintf(const char* string, ...);
 
 #endif

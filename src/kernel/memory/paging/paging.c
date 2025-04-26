@@ -6,7 +6,7 @@
 #include "memory/memory.h"
 #include "status.h"
 #include "memory/kheap/kheap.h"
-#include "terminal.h"
+#include "print.h"
 
 struct memoryMap memoryMap[BOBAOS_MEMORY_MAP_MAX_ENTRIES];
 uint8_t memoryMapLength = 0x0;
@@ -114,8 +114,7 @@ PML4Table createKernelTable(uint64_t physical, uint64_t virtual, uint64_t size)
 	{
 		return NULL;
 	}
-	
-	kprintf("Paging/n  Using: %x Wasting: %x/n/n", pdEntries * SIZE_1GB, size - (pdEntries * SIZE_1GB));
+	kprintf("Paging/n  Using: %x Wasting: %x/n/n", pdEntries * (uint64_t)SIZE_1GB, size - (pdEntries * (uint64_t)SIZE_1GB));
 
 	for(uint16_t i = 0; i < pdEntries; i++)
 	{

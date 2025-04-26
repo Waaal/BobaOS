@@ -13,7 +13,7 @@
 
 typedef unsigned char* KHEAP_TABLE_ENTRY;
 
-int kheap_init();
+int kheapInit();
 void* kzalloc(uint64_t size);
 int kzfree(void* pointer); 
 

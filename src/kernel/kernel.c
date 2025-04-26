@@ -3,24 +3,26 @@
 #include <stddef.h>
 
 #include "terminal.h"
+#include "print.h"
 #include "memory/kheap/kheap.h"
 #include "memory/paging/paging.h"
 #include "gdt/gdt.h"
+#include "koal/koal.h"
 
 void panic(enum panicType type, struct trapFrame* frame, const char* message)
 {
 	disableInterrupts();
 
 	terminalClear(0x1);
-	terminalPrint("KERNEL PANIC/n/n");	
+	print("KERNEL PANIC/n/n");	
 
 	switch(type)
 	{
 		case PANIC_TYPE_KERNEL:
-			terminalPrint("Panic Type: KERNEL/n");
+			print("Panic Type: KERNEL/n");
 			break;
 		case PANIC_TYPE_EXCEPTION:
-			terminalPrint("Panic Type: EXCEPTION/n");
+			print("Panic Type: EXCEPTION/n");
 
 			if(frame != NULL)
 			{
@@ -28,7 +30,7 @@ void panic(enum panicType type, struct trapFrame* frame, const char* message)
 			}
 			break;
 		default:
-			terminalPrint("Panic Type: UNKNOWN/n");
+			print("Panic Type: UNKNOWN/n");
 			break;
 	}
 	
@@ -46,8 +48,11 @@ void kmain()
 {
 	loadGdt(gdt);
 	
+	koalInit();
 	terminalInit();
-	terminalPrint("Hello World/n/n");
+	koalSelectCurrentOutputByName("TEXT_TERMINAL");
+
+	kprintf("Hello World/n/n");
 	
 	idtInit();
 	enableInterrupts();
@@ -55,7 +60,7 @@ void kmain()
 	readMemoryMap();	
 	kprintf("Memory/n  Available memory: %x/n  Available upper memory: %x/n/n", getMaxMemorySize(), getUpperMemorySize());
 
-	if(kheap_init() < 0)
+	if(kheapInit() < 0)
 	{
 		panic(PANIC_TYPE_KERNEL, NULL, "Not enough memory to initialize Kernel Heap");
 	}	

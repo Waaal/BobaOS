@@ -5,7 +5,7 @@
 #include "exceptionHandler.h"
 #include "memory/memory.h"
 #include "status.h"
-#include "terminal.h"
+#include "print.h"
 #include "io/io.h"
 
 extern uint64_t* idtAddressList[BOBAOS_TOTAL_INTERRUPTS]; //from idt.asm

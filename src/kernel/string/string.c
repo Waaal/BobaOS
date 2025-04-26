@@ -33,10 +33,21 @@ int8_t strcmp(const char* str1, const char* str2)
 	return ret;
 }
 
+void strncpy(char* dest, const char* src, uint64_t size)
+{
+	for(uint64_t i = 0; i < size; i++)
+	{
+		if(src[i] == 0x0)
+		{
+			break;
+		}
+		dest[i] = src[i];
+	}
+}
 
 void strcpy(char* dest, const char* src)
 {
-	while(*dest != 0x0 && *src != 0x0)
+	while(*src != 0x0)
 	{
 		*dest = *src;
 		dest++;

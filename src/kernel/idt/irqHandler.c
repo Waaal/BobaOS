@@ -3,11 +3,11 @@
 #include <stdint.h>
 
 #include "idt.h"
-#include "terminal.h"
+#include "print.h"
 
 static int8_t noInterruptHandler(struct trapFrame* frame)
 {
-	terminalPrint("[ERROR] No IRQ handler available/n");
+	print("[ERROR] No IRQ handler available/n");
 	return 0;
 }
 

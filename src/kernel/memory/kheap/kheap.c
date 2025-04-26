@@ -6,12 +6,12 @@
 #include "memory/memory.h"
 #include "status.h"
 #include "memory/paging/paging.h"
-#include "terminal.h"
+#include "print.h"
 
 uint64_t table_size = -1;
 uint64_t tableMaxSize = -1;
 
-static int kheap_init_table()
+static int kheapInitTable()
 {
 	table_size = BOBAOS_KERNEL_HEAP_SIZE / KHEAP_BLOCK_SIZE;
 	tableMaxSize = getMaxMemorySize() - getUpperMemorySize();
@@ -31,7 +31,7 @@ static int checkAlignment(uint64_t page)
 	return page % KHEAP_BLOCK_SIZE == 0 ? 0 : -1;
 }
 
-static uint64_t size_up_to_page(uint64_t size)
+static uint64_t sizeUpToPage(uint64_t size)
 {
 	if(checkAlignment(size) == 0)
 	{
@@ -40,7 +40,7 @@ static uint64_t size_up_to_page(uint64_t size)
 	return size + (KHEAP_BLOCK_SIZE - (size % KHEAP_BLOCK_SIZE));
 }
 
-static int get_page_count(uint64_t size, uint64_t* pagesOut)
+static int getPageCount(uint64_t size, uint64_t* pagesOut)
 {
 	int ret = 0;
 	if(size % KHEAP_BLOCK_SIZE != 0)
@@ -110,9 +110,9 @@ void* kzalloc(uint64_t size)
 	void* mem = NULL;
 	uint64_t pagesCount = 0;
 
-	size = size_up_to_page(size);
+	size = sizeUpToPage(size);
 
-	get_page_count(size, &pagesCount);
+	getPageCount(size, &pagesCount);
 	if(findFreePages(pagesCount, &mem) < 0)
 	{
 		goto out;
@@ -179,7 +179,7 @@ out:
 	return ret;
 }
 
-int kheap_init()
+int kheapInit()
 {
-	return kheap_init_table();	
+	return kheapInitTable();	
 }
