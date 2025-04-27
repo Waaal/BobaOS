@@ -14,15 +14,15 @@ void panic(enum panicType type, struct trapFrame* frame, const char* message)
 	disableInterrupts();
 
 	terminalClear(0x1);
-	print("KERNEL PANIC/n/n");	
+	print("KERNEL PANIC\n\n");	
 
 	switch(type)
 	{
 		case PANIC_TYPE_KERNEL:
-			print("Panic Type: KERNEL/n");
+			print("Panic Type: KERNEL\n");
 			break;
 		case PANIC_TYPE_EXCEPTION:
-			print("Panic Type: EXCEPTION/n");
+			print("Panic Type: EXCEPTION\n");
 
 			if(frame != NULL)
 			{
@@ -30,7 +30,7 @@ void panic(enum panicType type, struct trapFrame* frame, const char* message)
 			}
 			break;
 		default:
-			print("Panic Type: UNKNOWN/n");
+			print("Panic Type: UNKNOWN\n");
 			break;
 	}
 	
@@ -52,13 +52,13 @@ void kmain()
 	terminalInit();
 	koalSelectCurrentOutputByName("TEXT_TERMINAL");
 
-	kprintf("Hello World/n/n");
+	kprintf("Hello World\n\n");
 	
 	idtInit();
 	enableInterrupts();
-
+	
 	readMemoryMap();	
-	kprintf("Memory/n  Available memory: %x/n  Available upper memory: %x/n/n", getMaxMemorySize(), getUpperMemorySize());
+	kprintf("Memory\n  Available memory: %x\n  Available upper memory: %x\n\n", getMaxMemorySize(), getUpperMemorySize());
 
 	if(kheapInit() < 0)
 	{

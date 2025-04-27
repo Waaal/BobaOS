@@ -114,7 +114,7 @@ PML4Table createKernelTable(uint64_t physical, uint64_t virtual, uint64_t size)
 	{
 		return NULL;
 	}
-	kprintf("Paging/n  Using: %x Wasting: %x/n/n", pdEntries * (uint64_t)SIZE_1GB, size - (pdEntries * (uint64_t)SIZE_1GB));
+	kprintf("Paging\n  Using: %x Wasting: %x\n\n", pdEntries * (uint64_t)SIZE_1GB, size - (pdEntries * (uint64_t)SIZE_1GB));
 
 	for(uint16_t i = 0; i < pdEntries; i++)
 	{

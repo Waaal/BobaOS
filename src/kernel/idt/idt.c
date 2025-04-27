@@ -17,12 +17,12 @@ TRAPHANDLER handlerList[BOBAOS_TOTAL_INTERRUPTS];
 
 void printTrapFrame(struct trapFrame* frame)
 {
-	kprintf("Trap frame: %x/n/n", frame);
-	kprintf("RAX: %x  RBX: %x  RCX: %x  RDX: %x/n", frame->rax, frame->rbx, frame->rcx, frame->rdx);
-	kprintf("RSI: %x  RDI: %x  RBP: %x/n/n", frame->rsi, frame->rdi, frame->rbp);
-	kprintf("R15: %x  R14: %x  R13: %x  R12: %x/n", frame->r15, frame->r14, frame->r13, frame->r12);
-	kprintf("R11: %x  R10: %x  R09: %x  R08: %x/n/n", frame->r11, frame->r10, frame->r9, frame->r8);
-	kprintf("RIP: %x  CS: %x  FLAGS: %x  RSP: %x  DS: %x/n/n", frame->rip, frame->cs, frame->flags, frame->rsp, frame-> ds);
+	kprintf("Trap frame: %x\n\n", frame);
+	kprintf("RAX: %x  RBX: %x  RCX: %x  RDX: %x\n", frame->rax, frame->rbx, frame->rcx, frame->rdx);
+	kprintf("RSI: %x  RDI: %x  RBP: %x\n\n", frame->rsi, frame->rdi, frame->rbp);
+	kprintf("R15: %x  R14: %x  R13: %x  R12: %x\n", frame->r15, frame->r14, frame->r13, frame->r12);
+	kprintf("R11: %x  R10: %x  R09: %x  R08: %x\n\n", frame->r11, frame->r10, frame->r9, frame->r8);
+	kprintf("RIP: %x  CS: %x  FLAGS: %x  RSP: %x  DS: %x\n\n", frame->rip, frame->cs, frame->flags, frame->rsp, frame-> ds);
 }
 
 static void fillIdt()
@@ -63,18 +63,18 @@ void trapHandler(uint16_t vector, uint32_t errorCode, struct trapFrame* frame)
 {
 	if(vector >= BOBAOS_TOTAL_INTERRUPTS)
 	{
-		kprintf("[ERROR] Trap handler got called with the illegal vector %u/n", vector);
+		kprintf("[ERROR] Trap handler got called with the illegal vector %u\n", vector);
 		return;
 	}
 	
 	if((uint64_t)(handlerList[vector]) == 0)
 	{
-		kprintf("[ERROR] No trap handler available for vector %u/n", vector);
+		kprintf("[ERROR] No trap handler available for vector %u\n", vector);
 	}
 
 	if(handlerList[vector](frame) < 0)
 	{
-		kprintf("[ERROR] Trap handler %u returned an error/n");
+		kprintf("[ERROR] Trap handler %u returned an error\n", vector);
 	}
 
 	if(vector > 31 && vector < 48) //IRQ interrupt

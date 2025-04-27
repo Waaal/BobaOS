@@ -21,8 +21,6 @@ uint8_t curCol = 0;
 
 uint16_t* videoMemory = (uint16_t*)0xb8000;
 
-uint8_t terminalNextCharSpecial = 0;
-
 void terminalClear(uint8_t color)
 {
 	for(uint16_t i = 0; i < VGA_WIDTH * VGA_HEIGHT; i++)
@@ -74,22 +72,11 @@ int terminalPutchar(char c)
 		terminalMoveUp();
 	}
 	
-	if(c == '/')
+	if(c == 0xA) // \n
 	{
-		terminalNextCharSpecial = 1;
+		curRow++;
+		curCol = 0;
 		return 0;
-	}
-
-	if(terminalNextCharSpecial == 1)
-	{
-		terminalNextCharSpecial = 0;
-		if(c == 'n')
-		{
-			curRow++;
-			curCol = 0;
-
-			return 0;
-		}
 	}
 
 	videoMemory[curCol + curRow*VGA_WIDTH] += c;

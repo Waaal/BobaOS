@@ -20,7 +20,7 @@ static int kheapInitTable()
 	{
 		return -ENMEM;
 	}
-	kprintf("Kernel heap table/n  Max size: %x Actual size: %x Start: %x/n/n", tableMaxSize, table_size, BOBAOS_KERNEL_HEAP_TABLE_ADDRESS);	
+	kprintf("Kernel heap table\n  Max size: %x Actual size: %x Start: %x\n\n", tableMaxSize, table_size, BOBAOS_KERNEL_HEAP_TABLE_ADDRESS);	
 	
 	memset((void*)BOBAOS_KERNEL_HEAP_TABLE_ADDRESS, 0x0, table_size);
 	return 0;

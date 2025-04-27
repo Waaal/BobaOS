@@ -7,7 +7,7 @@
 
 static int8_t noInterruptHandler(struct trapFrame* frame)
 {
-	print("[ERROR] No IRQ handler available/n");
+	print("[ERROR] No IRQ handler available\n");
 	return 0;
 }
 
