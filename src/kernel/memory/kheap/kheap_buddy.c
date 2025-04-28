@@ -297,13 +297,7 @@ static struct blockEntry* splitEntryUp(uint16_t lvl)
 				{
 					newEntry->next = temp;
 				}
-
-
-				//If list was totally empty
-				if((lvlTable[entry->lvl+1]->flags & KHEAP_B_FLAG_HAS_ENTRIES) == 0)
-				{
-					lvlTable[entry->lvl+1]->next = newEntry+1;
-				}
+				lvlTable[entry->lvl+1]->next = newEntry-1;
 			}
 			
 			//We now wrote new enttries so now we have entries in this list, if we didnt had before
