@@ -5,6 +5,7 @@
 #include "terminal.h"
 #include "print.h"
 #include "memory/kheap/kheap.h"
+#include "memory/kheap/kheap_buddy.h"
 #include "memory/paging/paging.h"
 #include "gdt/gdt.h"
 #include "koal/koal.h"
@@ -52,13 +53,25 @@ void kmain()
 	terminalInit();
 	koalSelectCurrentOutputByName("TEXT_TERMINAL");
 
-	kprintf("Hello World\n\n");
+	print("Hello World\n\n");
 	
 	idtInit();
 	enableInterrupts();
 	
 	readMemoryMap();	
 	kprintf("Memory\n  Available memory: %x\n  Available upper memory: %x\n\n", getMaxMemorySize(), getUpperMemorySize());
+	
+	if(kheapBInit() < 0)
+	{
+		panic(PANIC_TYPE_KERNEL, NULL, "Not enough memory to initialize Kernel Heap");
+	}
+	
+	void* test1 = kzBalloc(3000);
+	void* test2 = kzBalloc(5000);
+
+	if(test1 && test2){}
+
+	while(1){}
 
 	if(kheapInit() < 0)
 	{
