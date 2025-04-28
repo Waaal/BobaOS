@@ -6,7 +6,15 @@
 #define KHEAP_MAX_ALLOWED_LEVEL 32
 
 #define KHEAP_B_FLAG_FREE 0x1
-#define KHEAP_B_FLAG_HAS_ENTRIES 0x80 //This entrie is use for the traverse of the linked list
+#define KHEAP_B_FLAG_HAS_ENTRIES 0x80 
+
+struct tableMetaData
+{
+	uint64_t maxEntries;
+	uint64_t tableSize;
+	uint64_t tableStartAddress;
+	uint64_t blockSize;
+};
 
 struct blockEntry
 {

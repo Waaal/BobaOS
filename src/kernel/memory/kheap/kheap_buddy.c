@@ -3,6 +3,7 @@
 #include <stddef.h>
 
 #include "config.h"
+#include "kernel.h"
 #include "memory/memory.h"
 #include "print.h"
 #include "memory/paging/paging.h"
@@ -10,8 +11,11 @@
 #include "stdint.h"
 
 struct blockEntry* lvlTable[KHEAP_MAX_ALLOWED_LEVEL];
+struct tableMetaData tableMetaData[KHEAP_MAX_ALLOWED_LEVEL];
 
 uint8_t* tableStartAddress = NULL;
+uint64_t lowerMemorySize = 0;
+uint64_t heapSize = 0;
 
 uint16_t maxLvl = 0;
 uint64_t maxPage = 0;
@@ -32,14 +36,6 @@ static uint64_t toNextLvl(uint64_t n)
 	return ret;
 }
 
-static uint64_t detectMemoryPerLvlTable()
-{
-	uint64_t lowerMemorySize = getMaxMemorySize() - getUpperMemorySize();
-	lowerMemorySize -= (uint64_t)tableStartAddress;
-
-	return lowerMemorySize / maxLvl; 	
-}
-
 static uint16_t detectMaxLvl(uint64_t maxPage)
 {
 	uint64_t ret = 0;
@@ -56,15 +52,14 @@ static uint16_t detectMaxLvl(uint64_t maxPage)
 	return ret;
 }
 
-static void initLvlTable(uint64_t memoryPerLvlTable)
+static void initLvlTable()
 {
 	for(uint8_t i = 0; i < maxLvl; i++)
 	{
-		lvlTable[i] = (struct blockEntry*)(tableStartAddress + (i*memoryPerLvlTable));
+		lvlTable[i] = (struct blockEntry*)(tableMetaData[i].tableStartAddress);
 	}
 
-	uint64_t entriesMaxLvlTable = (uint64_t)BOBAOS_KERNEL_HEAP_SIZE / maxPage;
-	for(uint64_t i = 0; i < entriesMaxLvlTable; i++)
+	for(uint64_t i = 0; i < tableMetaData[0].maxEntries; i++)
 	{
 		struct blockEntry* entry = lvlTable[0]+i;
 		entry->lvl = 0;
@@ -75,24 +70,52 @@ static void initLvlTable(uint64_t memoryPerLvlTable)
 			entry->prev = (lvlTable[0] + (i-1));
 		}
 
-		if(i+1 != entriesMaxLvlTable)
+		if(i+1 != tableMetaData[0].maxEntries)
 		{
 			entry->next = (lvlTable[0] + (i+1));
 		}
 	}
 }
 
+static int readMetaData()
+{
+	uint64_t currentBlockSize = maxPage;
+	uint64_t currentAddress = (uint64_t)tableStartAddress;
+	for(uint16_t i = 0; i < maxLvl; i++)
+	{
+		struct tableMetaData* data = &tableMetaData[i];
+
+		data->blockSize = currentBlockSize;
+		data->maxEntries = heapSize/currentBlockSize;
+		data->tableSize = data->maxEntries * sizeof(struct blockEntry);
+		data->tableStartAddress = currentAddress;
+		
+		currentAddress += data->tableSize;
+		currentBlockSize >>= 1;
+	
+		kprintf("  [%u] Block: %x Entries: %u TableSize: %x TableStart: %x\n", i, data->blockSize, data->maxEntries, data->tableSize, data->tableStartAddress);
+	}
+	
+	if(tableMetaData[maxLvl-1].tableStartAddress + tableMetaData[maxLvl-1].tableSize > lowerMemorySize)
+	{
+		return -ENMEM;
+	}
+	return 0;
+}
+
 int kheapBInit()
 {
 	tableStartAddress = (uint8_t*)BOBAOS_KERNEL_HEAP_TABLE_ADDRESS;
-	
+	lowerMemorySize = getMaxMemorySize() - getUpperMemorySize();
+
 	//Skip one enty, so that if the start address is at 0x0 we dont get problems later, becaues 0x0 is the NULL pointer which is used for error stuff
 	if(tableStartAddress == NULL)
 	{
 		tableStartAddress += sizeof(struct blockEntry);
 	}
-
-	maxPage = toNextLvl((uint64_t)BOBAOS_KERNEL_HEAP_SIZE);
+	
+	heapSize = toNextLvl((uint64_t)BOBAOS_KERNEL_HEAP_SIZE);
+	maxPage = heapSize;
 	while(maxPage != BOBAOS_KERNEL_HEAP_BIGGEST_PAGE)
 	{
 		maxPage/=2;
@@ -110,44 +133,34 @@ int kheapBInit()
 	{
 		return -ENMEM;
 	}
-
-	uint64_t memoryPerLvlTable = detectMemoryPerLvlTable();
-	uint64_t maxEntriesPerLvlTable = memoryPerLvlTable / sizeof(struct blockEntry);
 	
-	uint64_t size = getMaxMemorySize() - getUpperMemorySize();
-	memset((void*)tableStartAddress, 0x0, size); 
-	
-	initLvlTable(memoryPerLvlTable);
-
 	kprintf("Kernel heap\n");	
-	kprintf("  Biggest page: %x Smallest page: %x Level: %u\n", maxPage, minPage, maxLvl);
-	kprintf("  Memory per lvl table: %x Max entries per lvl table: %u\n", memoryPerLvlTable, maxEntriesPerLvlTable);
+	kprintf("  Biggest page: %x Smallest page: %x Level: %u\n\n", maxPage, minPage, maxLvl);
+
+	if(readMetaData() < 0)
+	{
+		return -ENMEM;
+	}
 	
+	memset((void*)tableStartAddress, 0x0, lowerMemorySize); 
+	initLvlTable();	
+
 	return 0;
 }
 
 static uint64_t lvlToBlockSize(uint16_t lvl)
 {
-	uint16_t searchLvl = 0;
-	uint64_t ret = maxPage;
-	while(searchLvl != lvl)
-	{
-		ret >>= 1;
-		searchLvl++;
-	}
-	return ret;
+	return tableMetaData[lvl].blockSize;
 }
 
 static int findLvlForBlock(uint64_t block)
 {
 	int searchLvl = maxLvl-1;
-	uint64_t temp = minPage;
 
 	while(searchLvl >= 0)
 	{
-		if(temp == block){break;}
+		if(tableMetaData[searchLvl].blockSize == block){break;}
 
-		temp <<=1;
 		searchLvl--;
 	}
 
@@ -297,7 +310,7 @@ static struct blockEntry* splitEntryUp(uint16_t lvl)
 				{
 					newEntry->next = temp;
 				}
-				lvlTable[entry->lvl+1]->next = newEntry-1;
+				lvlTable[entry->lvl+1]->next = newEntry;
 			}
 			
 			//We now wrote new enttries so now we have entries in this list, if we didnt had before
