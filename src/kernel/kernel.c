@@ -72,7 +72,23 @@ void kmain()
 	void* test3 = kzBalloc(3000);
 	void* test4 = kzBalloc(3000);
 
-	if(test1 && test2 && test3 && test4){}
+	kzBfree(test2);
+	kzBfree(test1);
+
+	kzBfree(test3);
+	kzBfree(test4);
+
+	test1 = kzBalloc(3000);
+	test2 = kzBalloc(3000);
+
+ 	test3 = kzBalloc(3000);
+	test4 = kzBalloc(3000);
+	
+	kzBfree(test2);
+	kzBfree(test1);
+
+	kzBfree(test3);
+	kzBfree(test4);
 
 	while(1){}
 

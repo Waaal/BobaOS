@@ -6,7 +6,15 @@
 #define KHEAP_MAX_ALLOWED_LEVEL 32
 
 #define KHEAP_B_FLAG_FREE 0x1
+#define KHEAP_B_FLAG_SPLITUP 0x2
+#define KHEAP_B_FLAG_ALLOCATED 0x4
 #define KHEAP_B_FLAG_HAS_ENTRIES 0x80 
+
+enum removeType
+{
+	REMOVE_TYPE_SPLIT = 0,
+	REMOVE_TYPE_ALLOCATED = 1
+};
 
 struct tableMetaData
 {
@@ -26,5 +34,6 @@ struct blockEntry
 
 int kheapBInit();
 void* kzBalloc(uint64_t size);
+int kzBfree(void* pointer);
 
 #endif

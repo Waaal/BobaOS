@@ -148,6 +148,12 @@ int kheapBInit()
 	return 0;
 }
 
+static char addressIsABlock(void* address)
+{
+	//TODO: IMPLEMENT
+	return 1;
+}
+
 static uint64_t lvlToBlockSize(uint16_t lvl)
 {
 	return tableMetaData[lvl].blockSize;
@@ -207,7 +213,36 @@ static void* entryToHeapAddress(struct blockEntry* entry)
 	return (void*)((uint64_t)BOBAOS_KERNEL_HEAP_ADDRESS + (index * blockSize));
 }
 
-static int removeEntry(struct blockEntry* entry)
+static struct blockEntry* heapAddressToEntry(void* address)
+{
+	uint64_t offsetInHeap = (uint64_t)address - (uint64_t)BOBAOS_KERNEL_HEAP_ADDRESS;
+	
+	uint16_t curLvl = 0;
+	uint64_t curPage = maxPage;
+
+	uint64_t lvlTableIndex = offsetInHeap / curPage;
+	
+	struct blockEntry* entry = 0x0;
+	while(curLvl < maxLvl)
+	{
+		entry = lvlTable[curLvl] + lvlTableIndex;
+		if((entry->flags & KHEAP_B_FLAG_ALLOCATED) != 0)
+		{
+			break;
+		}
+		curLvl++;
+		curPage>>=1;
+		lvlTableIndex = offsetInHeap / curPage;
+	}
+
+	if(curLvl == maxLvl)
+	{
+		return 0x0;
+	}
+	return entry;
+}
+
+static int removeEntry(struct blockEntry* entry, enum removeType type)
 {
 	if((entry->flags & KHEAP_B_FLAG_FREE) != 0)
 	{
@@ -222,6 +257,12 @@ static int removeEntry(struct blockEntry* entry)
 			if(entry->next != NULL)
 			{
 				entry->next->prev = entry->prev;
+				
+				//We need to update the start of the linked list always if this is the entry the start is pointing at
+				if(entry->prev == NULL && lvlTable[entry->lvl]->next == entry)
+				{
+					lvlTable[entry->lvl]->next = entry->next;
+				}	
 			}
 
 			if(entry->prev == NULL && entry->next == NULL)
@@ -230,6 +271,8 @@ static int removeEntry(struct blockEntry* entry)
 				lvlTable[entry->lvl]->flags &= ~KHEAP_B_FLAG_HAS_ENTRIES;
 				lvlTable[entry->lvl]->next = NULL;
 			}
+			entry->next = NULL;
+			entry->prev = NULL;
 		}
 		else
 		{
@@ -239,6 +282,18 @@ static int removeEntry(struct blockEntry* entry)
 				entry->flags |= KHEAP_B_FLAG_HAS_ENTRIES;
 			}
 		}
+
+		switch(type)
+		{
+			case REMOVE_TYPE_SPLIT:
+				entry->flags |= KHEAP_B_FLAG_SPLITUP;
+				break;
+			case REMOVE_TYPE_ALLOCATED:
+				entry->flags |= KHEAP_B_FLAG_ALLOCATED;
+			default:
+				return -EIARG;
+		}
+		
 		return 0;
 	}
 
@@ -247,6 +302,11 @@ static int removeEntry(struct blockEntry* entry)
 
 static int addEntry(void* entryAddress, uint16_t lvl)
 {
+	if((uint64_t)entryAddress < tableMetaData[lvl].tableStartAddress && (uint64_t)entryAddress > (tableMetaData[lvl].tableStartAddress + tableMetaData[lvl].tableSize))
+	{
+		return -EIARG;
+	}
+
 	struct blockEntry* newEntry = (struct blockEntry*)entryAddress;	
 	newEntry->lvl = lvl;
 
@@ -278,13 +338,16 @@ static int addEntry(void* entryAddress, uint16_t lvl)
 	}
 	else
 	{
-		//Do nothing if it is the lvlTable
-		//next pointer is still okay and everything
+		//next pointer is still okay	
+		lvlTable[lvl]->next->prev = lvlTable[lvl];
 	}
 
 out:
 	lvlTable[lvl]->flags |= KHEAP_B_FLAG_HAS_ENTRIES;
-	newEntry->flags |= KHEAP_B_FLAG_FREE;
+
+	newEntry->flags |= KHEAP_B_FLAG_FREE;	
+	newEntry->flags &= ~(KHEAP_B_FLAG_SPLITUP | KHEAP_B_FLAG_ALLOCATED);
+
 	return 0;
 }
 
@@ -317,7 +380,7 @@ static struct blockEntry* splitEntryUp(uint16_t lvl)
 		return NULL;
 	}
 
-	removeEntry(entry);
+	removeEntry(entry, REMOVE_TYPE_SPLIT);
 		
 	//Write 2 new entries in next Table
 	for(uint8_t i = 0; i < 2; i++)
@@ -377,6 +440,24 @@ void* kzBalloc(uint64_t size)
 		takeEntry = getFreeEntry(searchLvl);
 	}
 
-	removeEntry(takeEntry);
+	removeEntry(takeEntry, REMOVE_TYPE_ALLOCATED);
 	return entryToHeapAddress(takeEntry);
+}
+
+int kzBfree(void* pointer)
+{
+	//TODO: Check if pointer is in heap address space
+
+	if(addressIsABlock((void*)0x0)){}
+
+	struct blockEntry* entry = heapAddressToEntry(pointer);
+	if(entry == NULL)
+	{
+		return -EIARG;
+	}
+
+	//TODO: Missing merge functionallity
+
+	addEntry(entry, entry->lvl);
+	return 0;
 }
