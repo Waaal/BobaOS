@@ -182,20 +182,20 @@ static void* getHigherTableEntryAddressFromBlock(struct blockEntry* entry)
 	uint64_t currentTableIndex = ((uint64_t)entry - (uint64_t)lvlTable[entry->lvl]) / sizeof(struct blockEntry);
 	uint64_t nextTableIndex = currentTableIndex*2;
 
-	return (void*)(lvlTable[entry->lvl+1] + (nextTableIndex * sizeof(struct blockEntry)));
+	return (void*)(lvlTable[entry->lvl+1] + nextTableIndex);
 }
 
 static struct blockEntry* getFreeEntry(uint16_t lvl)
 {
 	if((lvlTable[lvl]->flags & KHEAP_B_FLAG_HAS_ENTRIES) != 0)
 	{
+		if((lvlTable[lvl]->flags & KHEAP_B_FLAG_FREE) != 0)
+		{
+			return lvlTable[lvl];
+		}
 		return lvlTable[lvl]->next;
 	}
-
-	if((lvlTable[lvl]->flags & KHEAP_B_FLAG_FREE) != 0)
-	{
-		return lvlTable[lvl];
-	}
+	
 	return NULL;
 }
 
@@ -211,7 +211,7 @@ static int removeEntry(struct blockEntry* entry)
 {
 	if((entry->flags & KHEAP_B_FLAG_FREE) != 0)
 	{
-		entry->flags -= KHEAP_B_FLAG_FREE;	
+		entry->flags &= ~KHEAP_B_FLAG_FREE;	
 		if(entry != lvlTable[entry->lvl])
 		{
 			if(entry->prev != NULL)
@@ -227,7 +227,8 @@ static int removeEntry(struct blockEntry* entry)
 			if(entry->prev == NULL && entry->next == NULL)
 			{
 				//LIST IS NOW TOTALLY EMPTY OR FULL
-				lvlTable[entry->lvl]->flags -= KHEAP_B_FLAG_HAS_ENTRIES;
+				lvlTable[entry->lvl]->flags &= ~KHEAP_B_FLAG_HAS_ENTRIES;
+				lvlTable[entry->lvl]->next = NULL;
 			}
 		}
 		else
@@ -242,6 +243,49 @@ static int removeEntry(struct blockEntry* entry)
 	}
 
 	return -EIARG;
+}
+
+static int addEntry(void* entryAddress, uint16_t lvl)
+{
+	struct blockEntry* newEntry = (struct blockEntry*)entryAddress;	
+	newEntry->lvl = lvl;
+
+	if((lvlTable[lvl]->flags & KHEAP_B_FLAG_HAS_ENTRIES) == 0)
+	{
+		//If there are no further entries in the list
+		
+		if(lvlTable[lvl] != newEntry)
+		{
+			lvlTable[lvl]->next = newEntry;
+		}
+		goto out;
+	}
+
+	if(newEntry != lvlTable[lvl])
+	{
+		if((lvlTable[lvl]->flags & KHEAP_B_FLAG_FREE) == 0)
+		{
+			newEntry->prev = NULL;
+		}
+		else
+		{
+			newEntry->prev = lvlTable[lvl];
+		}
+		newEntry->next = lvlTable[lvl]->next;
+		newEntry->next->prev = newEntry;
+
+		lvlTable[lvl]->next = newEntry;
+	}
+	else
+	{
+		//Do nothing if it is the lvlTable
+		//next pointer is still okay and everything
+	}
+
+out:
+	lvlTable[lvl]->flags |= KHEAP_B_FLAG_HAS_ENTRIES;
+	newEntry->flags |= KHEAP_B_FLAG_FREE;
+	return 0;
 }
 
 static struct blockEntry* splitEntryUp(uint16_t lvl)
@@ -278,46 +322,7 @@ static struct blockEntry* splitEntryUp(uint16_t lvl)
 	//Write 2 new entries in next Table
 	for(uint8_t i = 0; i < 2; i++)
 	{
-		struct blockEntry* newEntry = (newStartAddr + i);
-		
-		if(newEntry == lvlTable[entry->lvl+1])
-		{
-			//First entry in new table
-			
-			newStartAddr->flags |= KHEAP_B_FLAG_HAS_ENTRIES;
-			newEntry->next = newEntry+1;
-			newEntry->prev = NULL;
-		}
-		else
-		{
-			if(i == 0)
-			{
-				if((lvlTable[entry->lvl+1]->flags & KHEAP_B_FLAG_FREE) != 0)
-				{
-					newEntry->prev = lvlTable[entry->lvl+1];
-				}
-				else
-				{
-					newEntry->prev = NULL;
-				}
-				newEntry->next = newEntry+1;
-			}
-			else
-			{
-				newEntry->prev = newEntry-1;
-				struct blockEntry* temp = getFreeEntry(entry->lvl+1);
-				if(temp != newEntry && temp != newEntry-1 && temp != lvlTable[entry->lvl+1])
-				{
-					newEntry->next = temp;
-				}
-				lvlTable[entry->lvl+1]->next = newEntry;
-			}
-			
-			//We now wrote new enttries so now we have entries in this list, if we didnt had before
-			lvlTable[entry->lvl+1]->flags |= KHEAP_B_FLAG_HAS_ENTRIES;
-		}
-		newEntry->lvl = entry->lvl+1;
-		newEntry->flags |= KHEAP_B_FLAG_FREE;
+		addEntry(newStartAddr + i, entry->lvl+1);
 	}
 
 	return newStartAddr;

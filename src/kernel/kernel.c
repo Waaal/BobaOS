@@ -67,9 +67,12 @@ void kmain()
 	}
 	
 	void* test1 = kzBalloc(3000);
-	void* test2 = kzBalloc(5000);
+	void* test2 = kzBalloc(3000);
 
-	if(test1 && test2){}
+	void* test3 = kzBalloc(3000);
+	void* test4 = kzBalloc(3000);
+
+	if(test1 && test2 && test3 && test4){}
 
 	while(1){}
 
