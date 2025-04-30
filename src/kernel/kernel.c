@@ -3,6 +3,8 @@
 #include <stddef.h>
 
 #include "config.h"
+#include "version.h"
+
 #include "terminal.h"
 #include "print.h"
 #include "memory/kheap/kheap.h"
@@ -53,7 +55,7 @@ void kmain()
 	terminalInit();
 	koalSelectCurrentOutputByName("TEXT_TERMINAL");
 
-	print("Hello World\n\n");
+	kprintf("BobaOS v%u.%u.%u - Milk Tea\n\n", KERNEL_VERSION_MAJOR, KERNEL_VERSION_MINOR, KERNEL_VERSION_PATCH);
 	
 	idtInit();
 	enableInterrupts();
