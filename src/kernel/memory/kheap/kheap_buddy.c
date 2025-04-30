@@ -103,7 +103,7 @@ static int readMetaData()
 	return 0;
 }
 
-int kheapBInit()
+int kheapInitBuddy()
 {
 	tableStartAddress = (uint8_t*)BOBAOS_KERNEL_HEAP_TABLE_ADDRESS;
 	lowerMemorySize = getMaxMemorySize() - getUpperMemorySize();
@@ -150,7 +150,7 @@ int kheapBInit()
 
 static char addressIsABlock(void* address)
 {
-	//TODO: IMPLEMENT
+	//TODO: IMPLEMENT	
 	return 1;
 }
 
@@ -191,6 +191,20 @@ static void* getHigherTableEntryAddressFromBlock(struct blockEntry* entry)
 	return (void*)(lvlTable[entry->lvl+1] + nextTableIndex);
 }
 
+
+static void* getLowerTableEntryAddressFromBlock(struct blockEntry* entry)
+{
+	if(entry->lvl-1 < 0)
+	{
+		//Cant go lower
+		return NULL;
+	}
+	uint64_t currentTableIndex = ((uint64_t) entry - (uint64_t)lvlTable[entry->lvl]) / sizeof(struct blockEntry);
+	uint64_t nextTableIndex = currentTableIndex/2;
+
+	return (void*)(lvlTable[entry->lvl-1] + nextTableIndex);
+}
+
 static struct blockEntry* getFreeEntry(uint16_t lvl)
 {
 	if((lvlTable[lvl]->flags & KHEAP_B_FLAG_HAS_ENTRIES) != 0)
@@ -203,6 +217,17 @@ static struct blockEntry* getFreeEntry(uint16_t lvl)
 	}
 	
 	return NULL;
+}
+
+static struct blockEntry* getBuddy(struct blockEntry* entry)
+{
+	struct blockEntry* buddy = (struct blockEntry*)0x0;
+	
+	uint64_t index = ((uint64_t)entry - (uint64_t)lvlTable[entry->lvl]) / sizeof(struct blockEntry);
+	uint64_t asd = (index % 2 == 0 ? 1 : -1);
+
+	buddy = entry+asd;
+	return buddy;
 }
 
 static void* entryToHeapAddress(struct blockEntry* entry)
@@ -290,6 +315,8 @@ static int removeEntry(struct blockEntry* entry, enum removeType type)
 				break;
 			case REMOVE_TYPE_ALLOCATED:
 				entry->flags |= KHEAP_B_FLAG_ALLOCATED;
+			case REMOVE_TYPE_MERGE:
+				break;
 			default:
 				return -EIARG;
 		}
@@ -402,7 +429,41 @@ static struct blockEntry* splitAndReturn(uint16_t startLvl, uint16_t endLvl)
 	return entry;	
 }
 
-void* kzBalloc(uint64_t size)
+static void clearFlags(struct blockEntry* entry)
+{
+	entry->flags &= 0x0;
+}
+
+static void merge(struct blockEntry* block1, struct blockEntry* block2)
+{
+	if(block1->lvl == 0)
+	{
+		return;
+	}
+
+	if(block1->lvl != block2->lvl)
+	{
+		return;
+	}
+
+	removeEntry(block1, REMOVE_TYPE_MERGE);
+	removeEntry(block2, REMOVE_TYPE_MERGE);
+	
+	clearFlags(block1);
+	clearFlags(block2);
+
+	struct blockEntry* newBlock = getLowerTableEntryAddressFromBlock(block1);
+	addEntry(newBlock, block1->lvl-1);
+	
+	struct blockEntry* newBuddy;
+	if(((newBuddy = getBuddy(newBlock))->flags & KHEAP_B_FLAG_FREE) != 0)
+	{
+		//Merge down
+		merge(newBlock, newBuddy);
+	}
+}
+
+void* kzallocBuddy(uint64_t size)
 {
 	void* ret = (void*)0x0;
 
@@ -441,12 +502,18 @@ void* kzBalloc(uint64_t size)
 	}
 
 	removeEntry(takeEntry, REMOVE_TYPE_ALLOCATED);
-	return entryToHeapAddress(takeEntry);
+
+	void* address = entryToHeapAddress(takeEntry);
+	memset(address, 0x0, requestedBlock);
+	return address;
 }
 
-int kzBfree(void* pointer)
+int kzfreeBuddy(void* pointer)
 {
-	//TODO: Check if pointer is in heap address space
+	if(((uint64_t)pointer < (uint64_t)BOBAOS_KERNEL_HEAP_ADDRESS) || ((uint64_t)pointer > (uint64_t)BOBAOS_KERNEL_HEAP_ADDRESS + heapSize))
+	{
+		return -EIARG;
+	}
 
 	if(addressIsABlock((void*)0x0)){}
 
@@ -455,9 +522,16 @@ int kzBfree(void* pointer)
 	{
 		return -EIARG;
 	}
-
-	//TODO: Missing merge functionallity
-
-	addEntry(entry, entry->lvl);
+	
+	struct blockEntry* buddy = getBuddy(entry);
+	if(buddy->lvl > 0 && (buddy->flags & KHEAP_B_FLAG_FREE) != 0)
+	{
+		//Merge
+		merge(entry, buddy);
+	}
+	else
+	{
+		addEntry(entry, entry->lvl);
+	}
 	return 0;
 }

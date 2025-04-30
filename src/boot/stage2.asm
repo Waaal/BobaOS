@@ -30,15 +30,15 @@ pml:
 pagingSetup:	
 	;Zero locations for our 2 page tables
 	xor eax,eax
-	mov edi, 0xA00000
+	mov edi, 0x4B00000
 	mov ecx, 0x10000/4
 	rep stosd
 		
-	;Setup PLM4 at location 0xA00000 and PDP at location 0xA10000 and do a 1GB 1 to 1 mapping
-	mov dword[0xA00000], 0xA10003		; P = 1, RW = 1
+	;Setup PLM4 at location 0x4B00000 and PDP at location 0x4B10000 and do a 1GB 1 to 1 mapping
+	mov dword[0x4B00000], 0x4B10003		; P = 1, RW = 1
 	;mov dword[0x50000+0x800], 0x51003	; P = 1, RW = 1	
 	
-	mov dword[0xA10000], 0x83			; P = 1, RW = 1, PS = 1
+	mov dword[0x4B10000], 0x83			; P = 1, RW = 1, PS = 1
 
 enablePaging:
 	;Enables Phyiscal address extension
@@ -47,7 +47,7 @@ enablePaging:
 	mov cr4, eax
 	
 	;Set cr3 to first page table 
-	mov eax, 0xA00000
+	mov eax, 0x4B00000
 	mov cr3, eax
 
 	; go into 64 bit compability mode

@@ -2,10 +2,10 @@
 
 #include <stddef.h>
 
+#include "config.h"
 #include "terminal.h"
 #include "print.h"
 #include "memory/kheap/kheap.h"
-#include "memory/kheap/kheap_buddy.h"
 #include "memory/paging/paging.h"
 #include "gdt/gdt.h"
 #include "koal/koal.h"
@@ -57,51 +57,32 @@ void kmain()
 	
 	idtInit();
 	enableInterrupts();
-	
+
 	readMemoryMap();	
 	kprintf("Memory\n  Available memory: %x\n  Available upper memory: %x\n\n", getMaxMemorySize(), getUpperMemorySize());
-	
-	if(kheapBInit() < 0)
+
+#if BOBAOS_USE_BUDDY_FOR_KERNEL_HEAP == 1
+	if(kheapInit(KERNEL_HEAP_TYPE_BUDDY) < 0)
 	{
-		panic(PANIC_TYPE_KERNEL, NULL, "Not enough memory to initialize Kernel Heap");
-	}
-	
-	void* test1 = kzBalloc(3000);
-	void* test2 = kzBalloc(3000);
-
-	void* test3 = kzBalloc(3000);
-	void* test4 = kzBalloc(3000);
-
-	kzBfree(test2);
-	kzBfree(test1);
-
-	kzBfree(test3);
-	kzBfree(test4);
-
-	test1 = kzBalloc(3000);
-	test2 = kzBalloc(3000);
-
- 	test3 = kzBalloc(3000);
-	test4 = kzBalloc(3000);
-	
-	kzBfree(test2);
-	kzBfree(test1);
-
-	kzBfree(test3);
-	kzBfree(test4);
-
-	while(1){}
-
-	if(kheapInit() < 0)
-	{
-		panic(PANIC_TYPE_KERNEL, NULL, "Not enough memory to initialize Kernel Heap");
+		panic(PANIC_TYPE_KERNEL, NULL, "Not enough memory to initialize Kernel buddy Heap");
 	}	
+#else
+	if(kheapInit(KERNEL_HEAP_TYPE_PAGE) < 0)
+	{
+		panic(PANIC_TYPE_KERNEL, NULL, "Not enough memory to initialize Kernel page Heap");
+	}	
+#endif
 	
 	PML4Table kernelPageTable = createKernelTable(0x0, 0x0, getMaxMemorySize());
 	if(kernelPageTable == NULL)
 	{
 		panic(PANIC_TYPE_KERNEL, NULL, "Not enough memory for Kernel");
 	}	
+	
+	void* test1 = kzalloc(1);
+	void* test2 = kzalloc(2);
+
+	if(test1 && test2){}
 
 	while(1){}
 }

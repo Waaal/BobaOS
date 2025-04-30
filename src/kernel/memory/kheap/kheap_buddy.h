@@ -12,8 +12,9 @@
 
 enum removeType
 {
-	REMOVE_TYPE_SPLIT = 0,
-	REMOVE_TYPE_ALLOCATED = 1
+	REMOVE_TYPE_SPLIT,
+	REMOVE_TYPE_ALLOCATED,
+	REMOVE_TYPE_MERGE
 };
 
 struct tableMetaData
@@ -32,8 +33,8 @@ struct blockEntry
 	uint8_t flags;
 } __attribute__((packed));
 
-int kheapBInit();
-void* kzBalloc(uint64_t size);
-int kzBfree(void* pointer);
+int kheapInitBuddy();
+void* kzallocBuddy(uint64_t size);
+int kzfreeBuddy(void* pointer);
 
 #endif
