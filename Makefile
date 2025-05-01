@@ -1,4 +1,4 @@
-FILES= ./build/kernel.asm.o ./build/kernel.o ./build/memory.o ./build/kheap.o ./build/kheapP.o ./build/kheapB.o ./build/gdt.o ./build/gdt.asm.o ./build/paging.o ./build/paging.asm.o ./build/terminal.o ./build/string.o ./build/io.asm.o ./build/idt.o ./build/idt.asm.o ./build/irqHandler.o ./build/exceptionHandler.o ./build/koal.o ./build/print.o
+FILES= ./build/kernel.asm.o ./build/kernel.o ./build/memory.o ./build/kheap.o ./build/kheapP.o ./build/kheapB.o ./build/gdt.o ./build/gdt.asm.o ./build/paging.o ./build/paging.asm.o ./build/terminal.o ./build/string.o ./build/io.asm.o ./build/idt.o ./build/idt.asm.o ./build/irqHandler.o ./build/exceptionHandler.o ./build/koal.o ./build/print.o ./build/pci.o
 INCLUDE= -I ./src/kernel/
 FLAGS= -g -ffreestanding -mcmodel=kernel -fno-pic -fno-pie -mno-red-zone -falign-jumps -falign-functions -falign-labels -falign-loops -fstrength-reduce -fomit-frame-pointer -Wno-unused-parameter -finline-functions -fno-builtin -Wno-cpp -nostdlib -nostartfiles -nodefaultlibs -Wall -O0 -Wall -Werror -Iinc
 
@@ -74,6 +74,9 @@ kernel: $(FILES)
 
 ./build/print.o: ./src/kernel/print.c
 	x86_64-elf-gcc $(FLAGS) -m64 -c -std=gnu99 $(INCLUDE) ./src/kernel/print.c -o ./build/print.o
+
+./build/pci.o: ./src/kernel/hardware/pci/pci.c
+	x86_64-elf-gcc $(FLAGS) -m64 -c -std=gnu99 $(INCLUDE) ./src/kernel/hardware/pci/pci.c -o ./build/pci.o
 
 clean:
 	rm -r ./bin/*.bin

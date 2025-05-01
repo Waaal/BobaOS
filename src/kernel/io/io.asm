@@ -3,6 +3,8 @@ global outw
 global outd
 
 global inb
+global inw
+global ind
 
 section .text.asm
 

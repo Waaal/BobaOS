@@ -11,6 +11,7 @@
 #include "memory/paging/paging.h"
 #include "gdt/gdt.h"
 #include "koal/koal.h"
+#include "hardware/pci/pci.h"
 
 void panic(enum panicType type, struct trapFrame* frame, const char* message)
 {
@@ -81,10 +82,7 @@ void kmain()
 		panic(PANIC_TYPE_KERNEL, NULL, "Not enough memory for Kernel");
 	}	
 	
-	void* test1 = kzalloc(1);
-	void* test2 = kzalloc(2);
-
-	if(test1 && test2){}
+	pciInit();
 
 	while(1){}
 }
