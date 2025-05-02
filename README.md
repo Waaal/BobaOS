@@ -76,8 +76,7 @@ break *ADDRESS_ASSEMBLY_LABEL
 
 ## 📦 Releases
 
-Each version milestone will be tagged and released here once stable.  
-Stay tuned for `v0.1 – Milk Tea`.
+Each version milestone will be tagged and released here once stable and usable. 
 
 ---
 
