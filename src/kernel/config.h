@@ -1,6 +1,9 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+//PCI
+#define BOBOAOS_MAX_PCI_DEVICES 0xF
+
 // MEMORY
 #define BOBAOS_MEMORY_MAP_MAX_ENTRIES 0xF
 

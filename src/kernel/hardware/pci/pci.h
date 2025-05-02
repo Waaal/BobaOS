@@ -11,6 +11,15 @@
 #define PCI_HEADER_TYPE_CARD_BUS_BRIDGE 0x2
 #define PCI_HEADER_TYPE_MULTI_FUNCTION 0x80
 
+/*
+ *
+ * For IDE controller. ATA PIO pins are in BAR0 - 3. 
+ * If BAR0-3 are empty, ATA PIO is using the legacy ports 0x1F0 Master and 0x170 Slave
+ *
+ * If BAR0-3 are not empty. Find out if I can use I/O ports (mask with & 1 == true => IO ports)
+ * Then mask BAR0-3 with & 0xFFFC to get I/O ports
+ */
+
 struct pciDevice
 {
 	uint8_t bus;

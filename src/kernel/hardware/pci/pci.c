@@ -104,7 +104,7 @@ static struct pciDevice* readPciDevice(uint8_t bus, uint8_t device, uint8_t func
 					struct pciDevice* subDevice = readPciDevice(bus, device, i);
 					if(subDevice != NULL)
 					{
-						kprintf("  [PCI-SubDevice]: %u Class: %u SubClass: %u\n", pciDevice->header->deviceId, pciDevice->header->classCode, pciDevice->header->subClass);
+						kprintf("  [PCI-SubDevice]: %u Class: %u SubClass: %u\n", subDevice->header->deviceId, subDevice->header->classCode, subDevice->header->subClass);
 					}
 				}
 				break;
