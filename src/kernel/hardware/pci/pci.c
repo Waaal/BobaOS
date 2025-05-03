@@ -223,6 +223,27 @@ uint32_t sizeReporting(struct pciDevice* pciDevice, uint8_t bar)
 	return size;
 }
 
+struct pciBarInfo* getBarInfo(struct pciDevice* pciDevice, uint8_t bar)
+{
+	uint8_t offset = 0x10 + (bar*4);
+
+	uint32_t originalBAR = readConfig(pciDevice->bus, pciDevice->device, pciDevice->function, offset);
+	writeConfig(pciDevice->bus, pciDevice->device, pciDevice->function, offset, 0xFFFFFFFF);
+
+	uint32_t mask = readConfig(pciDevice->bus, pciDevice->device, pciDevice->function, offset);
+	writeConfig(pciDevice->bus, pciDevice->device, pciDevice->function, offset, originalBAR);
+	
+	uint8_t isIo = (originalBAR & 1) ? 1 : 0;
+	struct pciBarInfo* info = (struct pciBarInfo*)kzalloc(sizeof(struct pciBarInfo));
+	uint32_t sizeMask = isIo ? 0xFFFFFFFC : 0xFFFFFFF0;
+
+	info->isIo = isIo;
+	info->size = ~(mask & sizeMask) + 1; 
+	info->base = mask & sizeMask;
+	return info;
+}
+
+
 void updateStatusRegister(struct pciDevice* pciDevice)
 {
 	uint32_t status_command = readConfig(pciDevice->bus, pciDevice->device, pciDevice->function, 0x4);
