@@ -11,14 +11,47 @@
 #define PCI_HEADER_TYPE_CARD_BUS_BRIDGE 0x2
 #define PCI_HEADER_TYPE_MULTI_FUNCTION 0x80
 
-/*
- *
- * For IDE controller. ATA PIO pins are in BAR0 - 3. 
- * If BAR0-3 are empty, ATA PIO is using the legacy ports 0x1F0 Master and 0x170 Slave
- *
- * If BAR0-3 are not empty. Find out if I can use I/O ports (mask with & 1 == true => IO ports)
- * Then mask BAR0-3 with & 0xFFFC to get I/O ports
- */
+enum pciClasses
+{
+	PCI_CLASS_UNCLASSIFIED = 0x0,
+	PCI_CLASS_MASS_STORAGE_CONTROLLER = 0x1,
+	PCI_CLASS_NETWORK_CONTROLLER = 0x2,
+	PCI_CLASS_DISPLAY_CONTROLLER = 0x3,
+	PCI_CLASS_MULTIMEDIA_CONTROLLER = 0x4,
+	PCI_CLASS_MEMORY_CONTROLLER = 0x5,
+	PCI_CLASS_BRIDGE = 0x6,
+	PCI_CLASS_SIMPLE_COMMUNICATION_CONTROLLER = 0x7,
+	PCI_CLASS_BASE_SYSTEM_PERIPHERAL = 0x8,
+	PCI_CLASS_INPUT_DEVICE_CONTROLLER = 0x9,
+	PCI_CLASS_DOCKING_STATION = 0xA,
+	PCI_CLASS_PROCESSOR = 0xB,
+	PCI_CLASS_SERIAL_BUS_CONTROLLER = 0xC,
+	PCI_CLASS_WIRELESS_CONTROLLER = 0xD,
+	PCI_CLASS_INTELLIGENT_CONTROLLER = 0xE,
+	PCI_CLASS_SATELLITE_CONTROLLER = 0xF,
+	PCI_CLASS_ENCRYPTION_CONTROLLER = 0x10,
+	PCI_CLASS_SIGNAL_PROCESSING_CONTROLLER = 0x11
+};
+
+//The first 2 bytes are the actuall subclass and the last 2 bytes are the class
+//Example: 0x0101 = 
+// MASS STORAGE 		IDE CONTROLLER
+// 0x01            		01
+enum pciSubClasses
+{
+	PCI_SUBCLASS_UN_NON_VGA_COMPATIBLE = 				0x0000,
+	PCI_SUBCLASS_UN_VGA_COMPATIBLE = 					0x0001,
+
+	PCI_SUBCLASS_MA_IDE_CONTROLLER = 					0x0101,
+	PCI_SUBCLASS_MA_FLOPPY_CONTROLLER = 				0x0102,
+	PCI_SUBCLASS_MA_IPI_BUS_CONTROLLER =				0x0103,
+	PCI_SUBCLASS_MA_RAID_CONTROLLER =					0x0104,
+	PCI_SUBCLASS_MA_ATA_CONTROLLER =					0x0105,
+	PCI_SUBCLASS_MA_SATA_CONTROLLER =					0x0106,
+	PCI_SUBCLASS_MA_S_ATTACHED_SCSI_CONTROLLER = 		0x0107,
+	PCI_SUBCLASS_MA_NON_VOLATILE_MEMORY_CONTROLLER = 	0x0108,
+	PCI_SUBCLASS_MA_OTHER = 							0x0180
+};
 
 struct pciDevice
 {
@@ -77,6 +110,17 @@ struct pciHeaderCardBridge
 {
 };
 
+struct pciBarInfo
+{
+	uint8_t isIo;
+	uint32_t base;
+	uint32_t size;
+};
+
 void pciInit();
+struct pciDevice* getPciDeviceByClass(enum pciClasses class, enum pciSubClasses subClass, uint8_t progIf);
+struct pciDevice* getPciDeviceByVendor(uint16_t vendorId, uint16_t deviceId);
+uint32_t sizeReporting(struct pciDevice* pciDevice, uint8_t bar);
+void updateStatusRegister(struct pciDevice* pciDevice);
 
 #endif

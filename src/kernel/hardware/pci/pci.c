@@ -2,9 +2,28 @@
 
 #include <stddef.h>
 
+#include "config.h"
 #include "io/io.h"
 #include "memory/kheap/kheap.h"
 #include "print.h"
+#include "status.h"
+#include "stdint.h"
+
+struct pciDevice* pciDevices[BOBOAOS_MAX_PCI_DEVICES];
+uint16_t nextDevicesIndex = 0;
+
+static int pushDevice(struct pciDevice* device)
+{
+	if(nextDevicesIndex == BOBOAOS_MAX_PCI_DEVICES)
+	{
+		return -ENMEM;
+	}
+
+	pciDevices[nextDevicesIndex] = device;
+	nextDevicesIndex++;
+	
+	return 0;
+}
 
 static uint32_t readConfig(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset)
 {
@@ -12,6 +31,14 @@ static uint32_t readConfig(uint8_t bus, uint8_t device, uint8_t function, uint8_
 	
 	outd(PCI_CONFIG_ADDRESS, out);
 	return ind(PCI_CONFIG_DATA);
+}
+
+static void writeConfig(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset, uint32_t value)
+{
+	uint32_t out = (1 << 31) | (bus << 16) | (device << 11) | (function << 8) | (offset & 0xFC);
+
+	outd(PCI_CONFIG_ADDRESS, out);
+	outd(PCI_CONFIG_DATA, value);
 }
 
 static struct pciHeaderDevice* readDeviceHeader(uint8_t bus, uint8_t device, uint8_t function)
@@ -97,13 +124,14 @@ static struct pciDevice* readPciDevice(uint8_t bus, uint8_t device, uint8_t func
 			}
 			case PCI_HEADER_TYPE_MULTI_FUNCTION:
 			{
-				for(uint8_t i = 1; i < 255; i++)
+				for(uint8_t i = 1; i < 8; i++)
 				{
 					uint16_t vendor = (uint16_t)(readConfig(bus, device, i, 0x0) & 0xFFFF);
-					if(vendor == 0xFFFF){break;}
+					if(vendor == 0xFFFF){continue;}
 					struct pciDevice* subDevice = readPciDevice(bus, device, i);
 					if(subDevice != NULL)
 					{
+						pushDevice(subDevice);
 						kprintf("  [PCI-SubDevice]: %u Class: %u SubClass: %u\n", subDevice->header->deviceId, subDevice->header->classCode, subDevice->header->subClass);
 					}
 				}
@@ -141,11 +169,64 @@ static void pciScanBus()
 				struct pciDevice* pciDevice = readPciDevice(bus, device, 0);
 				if(pciDevice != NULL)
 				{
+					pushDevice(pciDevice);
 					kprintf("  [PCI-Device]: %u Class: %u SubClass: %u\n", pciDevice->header->deviceId, pciDevice->header->classCode, pciDevice->header->subClass);
 				}
 			}
 		}
 	}
+}
+
+struct pciDevice* getPciDeviceByClass(enum pciClasses class, enum pciSubClasses subClass, uint8_t progIf)
+{
+	struct pciDevice* ret = (void*)0x0;
+	for(uint16_t i = 0; i < nextDevicesIndex; i++)
+	{
+		if(pciDevices[i]->header->classCode == class && pciDevices[i]->header->subClass == (subClass & 0xFF) && pciDevices[i]->header->prog == progIf)
+		{
+			ret = pciDevices[i];
+			break;
+		}
+	}
+
+	return ret;
+}
+
+struct pciDevice* getPciDeviceByVendor(uint16_t vendorId, uint16_t deviceId)
+{
+	struct pciDevice* ret = (void*)0x0;
+	for(uint16_t i = 0; i < nextDevicesIndex; i++)
+	{
+		if(pciDevices[i]->header->vendorId == vendorId && pciDevices[i]->header->deviceId == deviceId)
+		{
+			ret = pciDevices[i];
+			break;
+		}
+	}
+
+	return ret;
+}
+//Please write BAR as a value from 0 - 5 and not as a offset
+uint32_t sizeReporting(struct pciDevice* pciDevice, uint8_t bar)
+{
+	uint8_t newOffset = 0x10 + (bar*4);
+	uint32_t originalBAR = readConfig(pciDevice->bus, pciDevice->device, pciDevice->function, newOffset);
+	
+	writeConfig(pciDevice->bus, pciDevice->device, pciDevice->function, newOffset, 0xFFFFFFFF);
+	uint32_t mask = readConfig(pciDevice->bus, pciDevice->device, pciDevice->function, newOffset);
+
+	writeConfig(pciDevice->bus, pciDevice->device, pciDevice->function, newOffset, originalBAR);
+
+	uint32_t size_mask = (originalBAR & 1) ? 0xFFFFFFFC : 0xFFFFFFF0;
+	uint32_t size = ~(mask & size_mask) + 1;
+
+	return size;
+}
+
+void updateStatusRegister(struct pciDevice* pciDevice)
+{
+	uint32_t status_command = readConfig(pciDevice->bus, pciDevice->device, pciDevice->function, 0x4);
+	pciDevice->header->status = status_command >> 16;
 }
 
 void pciInit()
