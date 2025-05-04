@@ -206,21 +206,21 @@ struct pciDevice* getPciDeviceByVendor(uint16_t vendorId, uint16_t deviceId)
 
 	return ret;
 }
-//Please write BAR as a value from 0 - 5 and not as a offset
-uint32_t sizeReporting(struct pciDevice* pciDevice, uint8_t bar)
+
+struct pciDevice** getAllPciDevicesByClass(enum pciClasses class, enum pciSubClasses subClass, uint8_t progIf)
 {
-	uint8_t newOffset = 0x10 + (bar*4);
-	uint32_t originalBAR = readConfig(pciDevice->bus, pciDevice->device, pciDevice->function, newOffset);
+	struct pciDevice** arr = (struct pciDevice**)kzalloc(BOBOAOS_MAX_PCI_DEVICES * sizeof(struct pciDevice));
 	
-	writeConfig(pciDevice->bus, pciDevice->device, pciDevice->function, newOffset, 0xFFFFFFFF);
-	uint32_t mask = readConfig(pciDevice->bus, pciDevice->device, pciDevice->function, newOffset);
-
-	writeConfig(pciDevice->bus, pciDevice->device, pciDevice->function, newOffset, originalBAR);
-
-	uint32_t size_mask = (originalBAR & 1) ? 0xFFFFFFFC : 0xFFFFFFF0;
-	uint32_t size = ~(mask & size_mask) + 1;
-
-	return size;
+	uint8_t counter = 0;
+	for(uint8_t i = 0; i< nextDevicesIndex; i++)
+	{
+		if(pciDevices[i]->header->classCode == class && pciDevices[i]->header->subClass == (subClass & 0xFF) && pciDevices[i]->header->prog == progIf)
+		{
+			arr[counter] = pciDevices[i];
+			counter++;
+		}
+	}
+	return arr;
 }
 
 struct pciBarInfo* getPciBarInfo(struct pciDevice* pciDevice, uint8_t bar)
@@ -242,7 +242,6 @@ struct pciBarInfo* getPciBarInfo(struct pciDevice* pciDevice, uint8_t bar)
 	info->base = originalBAR & sizeMask;
 	return info;
 }
-
 
 void updateStatusRegister(struct pciDevice* pciDevice)
 {

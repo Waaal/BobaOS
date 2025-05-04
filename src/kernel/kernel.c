@@ -85,8 +85,8 @@ void kmain()
 	pciInit();
 	
 	//Pci testing stuff
-	struct pciDevice* ideController = getPciDeviceByClass(PCI_CLASS_MASS_STORAGE_CONTROLLER, PCI_SUBCLASS_MA_IDE_CONTROLLER, 0x80);
-	struct pciBarInfo* barInfo = getPciBarInfo(ideController, 4);
+	struct pciDevice** ideControllers = getAllPciDevicesByClass(PCI_CLASS_MASS_STORAGE_CONTROLLER, PCI_SUBCLASS_MA_IDE_CONTROLLER, 0x80);
+	struct pciBarInfo* barInfo = getPciBarInfo(ideControllers[0], 4);
 
 	if(barInfo){}
 	while(1){}

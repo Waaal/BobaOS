@@ -119,6 +119,7 @@ struct pciBarInfo
 
 void pciInit();
 struct pciDevice* getPciDeviceByClass(enum pciClasses class, enum pciSubClasses subClass, uint8_t progIf);
+struct pciDevice** getAllPciDevicesByClass(enum pciClasses class, enum pciSubClasses subClass, uint8_t progIf);
 struct pciDevice* getPciDeviceByVendor(uint16_t vendorId, uint16_t deviceId);
 struct pciBarInfo* getPciBarInfo(struct pciDevice* device, uint8_t bar);
 void updateStatusRegister(struct pciDevice* pciDevice);
