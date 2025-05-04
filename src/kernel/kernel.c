@@ -86,8 +86,8 @@ void kmain()
 	
 	//Pci testing stuff
 	struct pciDevice* ideController = getPciDeviceByClass(PCI_CLASS_MASS_STORAGE_CONTROLLER, PCI_SUBCLASS_MA_IDE_CONTROLLER, 0x80);
-	uint32_t size = sizeReporting(ideController, 4);
+	struct pciBarInfo* barInfo = getPciBarInfo(ideController, 4);
 
-	if(size){}
+	if(barInfo){}
 	while(1){}
 }

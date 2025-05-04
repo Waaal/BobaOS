@@ -223,7 +223,7 @@ uint32_t sizeReporting(struct pciDevice* pciDevice, uint8_t bar)
 	return size;
 }
 
-struct pciBarInfo* getBarInfo(struct pciDevice* pciDevice, uint8_t bar)
+struct pciBarInfo* getPciBarInfo(struct pciDevice* pciDevice, uint8_t bar)
 {
 	uint8_t offset = 0x10 + (bar*4);
 
@@ -239,7 +239,7 @@ struct pciBarInfo* getBarInfo(struct pciDevice* pciDevice, uint8_t bar)
 
 	info->isIo = isIo;
 	info->size = ~(mask & sizeMask) + 1; 
-	info->base = mask & sizeMask;
+	info->base = originalBAR & sizeMask;
 	return info;
 }
 
