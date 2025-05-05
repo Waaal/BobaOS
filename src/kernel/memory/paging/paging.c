@@ -161,7 +161,7 @@ uint64_t getMaxMemorySize()
 
 void readMemoryMap()
 {
-	uint8_t* mapAddress = (uint8_t*) 0x8000;
+	uint8_t* mapAddress = (uint8_t*) 0xF000;
 	uint16_t offset = 0x0;
 	
 	uint8_t length = 0;

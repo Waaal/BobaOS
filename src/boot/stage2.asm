@@ -1,5 +1,42 @@
 [bits 16]
-[org 0x7E00]
+[org 0x8000]
+
+	mov [driveId], dl
+
+readKernel:
+	mov si, extreadKernelPackage
+	call extendedRead
+
+; Zero out 1000 bytes for the memory map
+zeroBytes:	
+	xor ax,ax
+	mov es, ax
+	mov di, 0xF000
+	mov cx, 1000
+	rep stosd
+
+; for this BIOS int we need to use 32 bit registers lol
+getMemoryMap:
+	xor ebx, ebx
+	mov es, bx
+	mov edi, 0xF000
+	mov ecx, 20
+
+.loop:
+	mov eax, 0xE820
+	mov edx, 0x534D4150		;'SMAP' 
+
+	int 0x15
+	jc .error
+
+	cmp ebx, 0
+	jz prepare32bit
+
+	add edi, 20
+	jnc .loop
+.error:
+	;TODO error message
+	jmp $
 
 prepare32bit:
 	lgdt [cs:gdt_ptr32]
@@ -9,6 +46,37 @@ prepare32bit:
 	mov cr0, eax
 
 	jmp 0x8:pml
+
+; Extended read function
+; Expects:
+;			- Pointer to readPackage si
+;			- Pointer to error message string in di
+; Modifies: ax, dx, si, di
+extendedRead:
+	xor ax, ax
+	xor dx, dx 
+	mov ah, 0x42
+	mov dl, [driveId]
+
+	int 0x13	
+	jnc .end
+	
+	;TODO print
+	;read error
+
+	jmp $
+.end:
+	ret
+
+extreadKernelPackage:
+	dw 0x10					; Package size(0x10 or 0x16)
+	dw 100					; Total LBA to load
+	dw 0x0					; destination address(0x00:[0x00])
+	dw 0x1000				; destination (segment [0x1000]:0x00)
+	dd 0x4					; starting LBA in our img file
+	dd 0x0					; more storage bytes for bigger lbas
+
+driveId: db 0
 
 [bits 32]
 pml:

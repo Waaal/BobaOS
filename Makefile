@@ -4,12 +4,14 @@ FLAGS= -g -ffreestanding -mcmodel=kernel -fno-pic -fno-pie -mno-red-zone -falign
 
 all: boot kernel
 	dd if=./bin/boot.bin >> ./bin/os.bin
+	dd if=./bin/fsinfo.bin >> ./bin/os.bin
 	dd if=./bin/stage2.bin >> ./bin/os.bin
 	dd if=./bin/kernel.bin >> ./bin/os.bin
-	dd if=/dev/zero bs=512 count=100 >> ./bin/os.bin
+	dd if=/dev/zero bs=1048576 count=16 >> ./bin/os.bin
 
-boot: ./src/boot/boot.asm ./src/boot/stage2.asm
+boot: ./src/boot/boot.asm ./src/boot/fsinfo.asm ./src/boot/stage2.asm
 	nasm -f bin ./src/boot/boot.asm -o ./bin/boot.bin
+	nasm -f bin ./src/boot/fsinfo.asm -o ./bin/fsinfo.bin
 	nasm -f bin ./src/boot/stage2.asm -o ./bin/stage2.bin
 
 kernel: $(FILES)
