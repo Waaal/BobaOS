@@ -13,6 +13,9 @@
 #include "koal/koal.h"
 #include "hardware/pci/pci.h"
 
+#include "disk/disk.h"
+#include "disk/diskDriver.h"
+
 void panic(enum panicType type, struct trapFrame* frame, const char* message)
 {
 	disableInterrupts();
@@ -83,11 +86,13 @@ void kmain()
 	}	
 	
 	pciInit();
-	
-	//Pci testing stuff
-	struct pciDevice** ideControllers = getAllPciDevicesByClass(PCI_CLASS_MASS_STORAGE_CONTROLLER, PCI_SUBCLASS_MA_IDE_CONTROLLER, 0x80);
-	struct pciBarInfo* barInfo = getPciBarInfo(ideControllers[0], 4);
 
-	if(barInfo){}
+	if(diskDriverInit())
+	{
+		panic(PANIC_TYPE_KERNEL, NULL, "Faild to init diskDriver-System");
+	}
+	
+	diskInit();
+
 	while(1){}
 }

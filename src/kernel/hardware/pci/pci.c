@@ -170,7 +170,7 @@ static void pciScanBus()
 				if(pciDevice != NULL)
 				{
 					pushDevice(pciDevice);
-					kprintf("  [PCI-Device]: %u Class: %u SubClass: %u\n", pciDevice->header->deviceId, pciDevice->header->classCode, pciDevice->header->subClass);
+					kprintf("  [PCI-Device]: %u Class: %u SubClass: %u ProgIf: %u\n", pciDevice->header->deviceId, pciDevice->header->classCode, pciDevice->header->subClass, pciDevice->header->prog);
 				}
 			}
 		}

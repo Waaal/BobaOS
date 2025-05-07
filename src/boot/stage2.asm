@@ -70,7 +70,7 @@ extendedRead:
 
 extreadKernelPackage:
 	dw 0x10					; Package size(0x10 or 0x16)
-	dw 100					; Total LBA to load
+	dw 125					; Total LBA to load
 	dw 0x0					; destination address(0x00:[0x00])
 	dw 0x1000				; destination (segment [0x1000]:0x00)
 	dd 0x4					; starting LBA in our img file
@@ -166,7 +166,7 @@ PICSetup:
 moveKernel:
 	mov rsi, 0x10000
 	mov rdi, 0x100000
-	mov rcx, 51200/8			; 100 sectors	
+	mov rcx, 64000/8			; 125 sectors	
 
 	rep movsq
 

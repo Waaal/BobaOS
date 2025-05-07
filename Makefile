@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-FILES= ./build/kernel.asm.o ./build/kernel.o ./build/memory.o ./build/kheap.o ./build/kheapP.o ./build/kheapB.o ./build/gdt.o ./build/gdt.asm.o ./build/paging.o ./build/paging.asm.o ./build/terminal.o ./build/string.o ./build/io.asm.o ./build/idt.o ./build/idt.asm.o ./build/irqHandler.o ./build/exceptionHandler.o ./build/koal.o ./build/print.o ./build/pci.o ./build/disk.o ./build/diskDriver.o
+FILES= ./build/kernel.asm.o ./build/kernel.o ./build/memory.o ./build/kheap.o ./build/kheapP.o ./build/kheapB.o ./build/gdt.o ./build/gdt.asm.o ./build/paging.o ./build/paging.asm.o ./build/terminal.o ./build/string.o ./build/io.asm.o ./build/idt.o ./build/idt.asm.o ./build/irqHandler.o ./build/exceptionHandler.o ./build/koal.o ./build/print.o ./build/pci.o ./build/disk.o ./build/diskDriver.o ./build/ataPioDriver.o
 INCLUDE= -I ./src/kernel/
 FLAGS= -g -ffreestanding -mcmodel=kernel -fno-pic -fno-pie -mno-red-zone -falign-jumps -falign-functions -falign-labels -falign-loops -fstrength-reduce -fomit-frame-pointer -Wno-unused-parameter -finline-functions -fno-builtin -Wno-cpp -nostdlib -nostartfiles -nodefaultlibs -Wall -O0 -Wall -Werror -Iinc
 
@@ -9,7 +9,7 @@ all: boot kernel
 	dd if=./bin/fsinfo.bin >> ./bin/os.bin
 	dd if=./bin/stage2.bin >> ./bin/os.bin
 	dd if=./bin/kernel.bin >> ./bin/os.bin
-	dd if=/dev/zero bs=512 count=100 >> ./bin/os.bin
+	dd if=/dev/zero bs=512 count=125 >> ./bin/os.bin
 	truncate -s 32M ./bin/os.bin
 	echo -ne '\xF8\xFF\xFF\x0F\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x0F' | dd of=./bin/os.bin bs=1 seek=102400 conv=notrunc
 	echo -ne '\xF8\xFF\xFF\x0F\xFF\xFF\xFF\xFF\xFF\xFF\xFF\x0F' | dd of=./bin/os.bin bs=1 seek=364544 conv=notrunc
@@ -90,6 +90,9 @@ kernel: $(FILES)
 
 ./build/diskDriver.o: ./src/kernel/disk/diskDriver.c
 	x86_64-elf-gcc $(FLAGS) -m64 -c -std=gnu99 $(INCLUDE) ./src/kernel/disk/diskDriver.c -o ./build/diskDriver.o
+
+./build/ataPioDriver.o: ./src/kernel/disk/driver/ataPio.c
+	x86_64-elf-gcc $(FLAGS) -m64 -c -std=gnu99 $(INCLUDE) ./src/kernel/disk/driver/ataPio.c -o ./build/ataPioDriver.o
 
 clean:
 	rm -r ./bin/*.bin

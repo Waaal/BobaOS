@@ -29,4 +29,8 @@
 // KOAL
 #define BOBAOS_MAX_KOAL_ENTRIES 12
 
+//DISK
+#define BOBAOS_MAX_DISK_DRIVER 12
+#define BOBAOS_MAX_DISKS 255
+
 #endif

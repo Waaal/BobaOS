@@ -15,7 +15,9 @@ struct disk
 	uint8_t id;
 	char name[32];
 	enum diskType type;
-	struct diskDriver driver;
+	struct diskDriver* driver;
 };
+
+int diskInit();
 
 #endif

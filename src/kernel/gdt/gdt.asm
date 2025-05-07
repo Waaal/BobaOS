@@ -8,11 +8,6 @@ loadGdtPtr:
 	
 	mov rax, rdi
 	lgdt [rax]
-	
-	push qword 0x08		; CS selector
-	lea rax, [rel setGdt]
-	push rax
-	retqf
-	
+		
 setGdt:
 	ret
