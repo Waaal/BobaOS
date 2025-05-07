@@ -12,6 +12,7 @@
 struct ataPioPrivate
 {
 	uint16_t port;
+	uint16_t select; 
 };
 
 static int ataPioRead(uint64_t lba, void* out);
@@ -39,6 +40,18 @@ static void resetDrive(uint16_t base)
 	outb(base + ATAPIO_REG_DEVICECON, 0x00); 
 } 
 
+static void selectDrive(uint16_t base, uint16_t select)
+{
+	outb(base + ATAPIO_REG_DEVICECON, select);
+}
+
+static void disableInterruptSend(uint16_t base, uint16_t select)
+{
+	selectDrive(base, select);
+	wait(base);
+	outb(base + ATAPIO_REG_DEVICECON, 0x02);
+}
+
 static int ataPioRead(uint64_t lba, void* out)
 {
 	return 0;
@@ -65,13 +78,17 @@ int ataPioProbeLegacyPorts(uint16_t base)
 	return 1;
 }
 
-int ataPioAttach(struct disk* disk, uint16_t base)
+//Attaches a ataPIO driver to the disk and disable IRQs for PIO mode
+int ataPioAttach(struct disk* disk, uint16_t base, uint16_t select)
 {
 	struct ataPioPrivate* private = (struct ataPioPrivate*)kzalloc(sizeof(struct ataPioPrivate));
 	if(private != NULL)
 	{
 		private->port = base;
+		private->select = select;
 		disk->driver->private = private;
+		
+		disableInterruptSend(base, select);
 		return 0;
 	}
 	return -ENMEM;

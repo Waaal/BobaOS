@@ -39,7 +39,7 @@ static void scanLegacyPorts()
 			disk->id = currentDisk;
 			disk->type = DISK_TYPE_PHYSICAL;
 			disk->driver = driver;
-			if(ataPioAttach(disk, 0x1F0) < 0)
+			if(ataPioAttach(disk, 0x1F0, 0xA0) < 0)
 			{
 				kzfree(disk);
 			}

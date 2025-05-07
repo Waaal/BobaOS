@@ -30,7 +30,7 @@
 #define ATAPIO_DEVICECON_SRST 4
 
 int ataPioProbeLegacyPorts(uint16_t port);
-int ataPioAttach(struct disk* disk, uint16_t base);
+int ataPioAttach(struct disk* disk, uint16_t base, uint16_t select);
 struct diskDriver* registerAtaPioDriver();
 
 #endif
