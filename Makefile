@@ -51,5 +51,5 @@ build/%.o: src/kernel/%.c
 
 clean:
 	@echo "Clean bin and build directorys"
-	@rm -r ./build/*
-	@rm -r ./bin/*
+	@find ./build -mindepth 1 ! -name '.gitkeep' -exec rm -rf {} +
+	@find ./bin -mindepth 1 ! -name '.gitkeep' -exec rm -rf {} +
