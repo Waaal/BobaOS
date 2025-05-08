@@ -35,7 +35,7 @@ void terminalInit()
 {
 	strncpy(koal.name, "TEXT_TERMINAL", 32);
 	koalAttach(&koal);
-	
+
 	for(uint16_t i = 0; i < VGA_WIDTH * VGA_HEIGHT; i++)
 	{
 		videoMemory[i] = (TERMINAL_BACKCOLOR << 12) + (TERMINAL_FORECOLOR << 8);

@@ -16,9 +16,12 @@ struct ataPioPrivate
 };
 
 static int ataPioRead(uint64_t lba, void* out);
+static char* ataPioIdentify(uint16_t base, uint16_t select);
+
 struct diskDriver driver =
 {
 	.type = DISK_DRIVER_TYPE_ATA_LEGACY,
+	.getModelString = ataPioIdentify,
 	.read = ataPioRead
 };
 
@@ -50,6 +53,41 @@ static void disableInterruptSend(uint16_t base, uint16_t select)
 	selectDrive(base, select);
 	wait(base);
 	outb(base + ATAPIO_REG_DEVICECON, 0x02);
+}
+
+static void ataPioWaitBsy(uint16_t base)
+{
+	while ((inb(base + ATAPIO_REG_STATUS) & ATAPIO_STATUS_BSY));
+}
+
+static void ataPioWaitDrq(uint16_t base)
+{
+	while(!(inb(base + ATAPIO_REG_STATUS) & ATAPIO_STATUS_DRQ));
+}
+
+static char* ataPioIdentify(uint16_t base, uint16_t select)
+{
+	selectDrive(base, select);
+	outb(base + ATAPIO_REG_SECTOR, 0);
+	outb(base + ATAPIO_REG_LBA0, 0);
+	outb(base + ATAPIO_REG_LBA1, 0);
+	outb(base + ATAPIO_REG_LBA2, 0);
+	outb(base + ATAPIO_REG_COMMAND, ATAPIO_COMMAND_IDENTIFY);
+	ataPioWaitBsy(base);
+	ataPioWaitDrq(base);
+
+	uint16_t dataBuffer[256];
+	for (uint32_t i = 0; i < 256; i++)
+		dataBuffer[i] = inw(base);
+
+	char* model = kzalloc(41);
+	for (uint32_t i = 0; i < 20; i++)
+	{
+		model[i*2] = dataBuffer[27+i] >> 8;
+		model[i*2+1] = dataBuffer[27+i] & 0xFF;
+	}
+
+	return model;
 }
 
 static int ataPioRead(uint64_t lba, void* out)

@@ -21,7 +21,7 @@ static int insertDriver(struct diskDriver* driver)
 	return 0;
 }
 
-//load all the driver that got statically compield with BobaOS
+//load all the driver that got statically compiled with BobaOS
 static int loadStaticDriver()
 {
 	int ret = 0;

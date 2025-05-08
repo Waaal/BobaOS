@@ -6,6 +6,7 @@
 #include "status.h"
 #include "disk/driver/ataPio.h"
 #include "memory/kheap/kheap.h"
+#include "string/string.h"
 
 struct disk* diskList[BOBAOS_MAX_DISKS];
 uint16_t currentDisk = 0;
@@ -45,6 +46,9 @@ static void scanLegacyPorts()
 			}
 			else
 			{
+				char* modelString = disk->driver->getModelString(0x1F0, 0xA0);
+				strncpy(disk->name, modelString, sizeof(disk->name));
+				kzfree(modelString);
 				insertDisk(disk);
 			}
 		}

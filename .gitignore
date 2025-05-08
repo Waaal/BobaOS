@@ -6,6 +6,8 @@ build/*
 .vscode/
 .clangd
 .cache
+.idea/
+.gdbinit
 
 # Specific stuff
 create_compileJson.sh
