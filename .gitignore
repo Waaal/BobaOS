@@ -1,13 +1,9 @@
-bin/*
-!bin/.gitkeep
-build/*
-!build/.gitkeep
-
 .vscode/
 .clangd
 .cache
 .idea/
 .gdbinit
+build/
 
 # Specific stuff
 create_compileJson.sh

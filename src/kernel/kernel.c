@@ -40,7 +40,7 @@ void panic(enum panicType type, struct trapFrame* frame, const char* message)
 			print("Panic Type: UNKNOWN\n");
 			break;
 	}
-	
+
 	kprintf("Panic message: %s", message);
 	while(1){}
 }
@@ -93,6 +93,5 @@ void kmain()
 	}
 	
 	diskInit();
-
 	while(1){}
 }

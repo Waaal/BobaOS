@@ -41,12 +41,16 @@ BobaOS is being developed in versioned stages:
 - GDB
 
 ### Building, Booting & Debugging
-Use Make to build.
-There is a script provided for running and debugging
-
-
+The buildsystem is CMAKE.
 ```bash
-make        # Build the project with makefile and x86_64 elf cross-compiler
+cmake -B build -S .                 # Use on first time init
+cmake --build build                 # Use to build the project
+cmake --build build --target clean  # Also always use clean before building again
+```
+
+
+There is a boot and debug script provided for booting and debugging with qemu and gdb
+```bash
 boot.sh     # Boot the project with qemu
 debug.sh    # Debug the project with qemu and gdb
 ```
