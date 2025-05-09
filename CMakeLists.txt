@@ -3,9 +3,9 @@ project(BOBAOS C ASM)
 
 # Cross Compiler Toolchain
 set(CMAKE_SYSTEM_NAME Generic)
-set(CMAKE_C_COMPILER /home/luke/opt/cross64/bin/x86_64-elf-gcc)
-set(LINKER /home/luke/opt/cross64/bin/x86_64-elf-ld)
-set(OBJCOPY /home/luke/opt/cross64/bin/x86_64-elf-objcopy)
+set(CMAKE_C_COMPILER $ENV{HOME}/opt/cross64/bin/x86_64-elf-gcc)
+set(LINKER $ENV{HOME}/opt/cross64/bin/x86_64-elf-ld)
+set(OBJCOPY $ENV{HOME}/opt/cross64/bin/x86_64-elf-objcopy)
 
 # Compiler Flags
 set(KERNEL_C_FLAGS 
