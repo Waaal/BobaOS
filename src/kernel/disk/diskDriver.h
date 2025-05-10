@@ -11,7 +11,7 @@ enum diskDriverType
 };
 
 typedef int (*DISK_READ)(uint64_t lba, void* out);
-typedef char* (*DISK_GETMODELSTRING)(uint16_t base, uint16_t select);
+typedef char* (*DISK_GETMODELSTRING)(void* private);
 
 struct diskDriver
 {

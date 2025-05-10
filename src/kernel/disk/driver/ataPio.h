@@ -20,7 +20,6 @@
 #define ATAPIO_REG_COMMAND 7
 
 #define ATAPIO_COMMAND_IDENTIFY 0xEC
-#define ATAPIO_REG_DEVICECON 0x206
 
 #define ATAPIO_STATUS_ERR 0x1
 #define ATAPIO_STATUS_DRQ 0x8
@@ -29,8 +28,8 @@
 
 #define ATAPIO_DEVICECON_SRST 4
 
-int ataPioProbeLegacyPorts(uint16_t port);
-int ataPioAttach(struct disk* disk, uint16_t base, uint16_t select);
-struct diskDriver* registerAtaPioDriver();
+int ataPioProbePort(uint16_t port, uint16_t deviceCon);
+int ataPioAttach(struct disk* disk, uint16_t base, uint16_t select, uint16_t deviceCon);
+struct diskDriver* registerAtaPioDriver(enum diskDriverType type);
 
 #endif

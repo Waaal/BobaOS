@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 project(BOBAOS C ASM)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Cross Compiler Toolchain
 set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_C_COMPILER $ENV{HOME}/opt/cross64/bin/x86_64-elf-gcc)
@@ -125,8 +127,25 @@ add_custom_command(
 )
 
 add_custom_target(BobaOS ALL
-	COMMAND /bin/bash ${CMAKE_SOURCE_DIR}/script/addFat32Tables.sh
+	COMMAND /bin/bash ${CMAKE_SOURCE_DIR}/script/addFat32Tables.sh ${CMAKE_BINARY_DIR}/os.bin
 	DEPENDS ${CMAKE_BINARY_DIR}/os.bin
 )
 
 add_custom_target(build_all DEPENDS BobaOS)
+
+# =============== CUSTOM TARGET FOR IDS THAT CAN SCAN THE MAKEFILE ===============
+
+add_custom_target(dummy_target_for_clion_indexing
+		SOURCES
+		${KERNEL_C_SOURCES}
+		${KERNEL_ASM_SOURCES}
+		${KERNEL_ASM_SRC}
+		${BOOT_ASM_BOOTLOADER_SRC}
+		${BOOT_ASM_FSINFO_SRC}
+		${BOOT_ASM_STAGE2_SRC}
+)
+add_executable(clion_dummy_target EXCLUDE_FROM_ALL
+		${KERNEL_C_SOURCES}
+)
+target_compile_options(clion_dummy_target PRIVATE ${KERNEL_C_FLAGS})
+target_include_directories(clion_dummy_target PRIVATE ${CMAKE_SOURCE_DIR}/src/kernel)

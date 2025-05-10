@@ -12,11 +12,12 @@
 struct ataPioPrivate
 {
 	uint16_t port;
-	uint16_t select; 
+	uint16_t select;
+	uint16_t deviceCon;
 };
 
 static int ataPioRead(uint64_t lba, void* out);
-static char* ataPioIdentify(uint16_t base, uint16_t select);
+static char* ataPioIdentify(void* private);
 
 struct diskDriver driver =
 {
@@ -34,25 +35,25 @@ static void wait(uint16_t base)
 	inb(base + ATAPIO_REG_STATUS);
 }
 
-static void resetDrive(uint16_t base)
+static void resetDrive(uint16_t base, uint16_t deviceCon)
 {	
 	//set SRST
-	outb(base + ATAPIO_REG_DEVICECON, ATAPIO_DEVICECON_SRST);
+	outb(base + deviceCon, ATAPIO_DEVICECON_SRST);
 	wait(base);
 	// clear SRST
-	outb(base + ATAPIO_REG_DEVICECON, 0x00); 
+	outb(base + deviceCon, 0x00);
 } 
 
-static void selectDrive(uint16_t base, uint16_t select)
+static void selectDrive(uint16_t base, uint16_t select, uint16_t deviceCon)
 {
-	outb(base + ATAPIO_REG_DEVICECON, select);
+	outb(base + deviceCon, select);
 }
 
-static void disableInterruptSend(uint16_t base, uint16_t select)
+static void disableInterruptSend(uint16_t base, uint16_t select, uint16_t deviceCon)
 {
-	selectDrive(base, select);
+	selectDrive(base, select, deviceCon);
 	wait(base);
-	outb(base + ATAPIO_REG_DEVICECON, 0x02);
+	outb(base + deviceCon, 0x02);
 }
 
 static void ataPioWaitBsy(uint16_t base)
@@ -65,26 +66,28 @@ static void ataPioWaitDrq(uint16_t base)
 	while(!(inb(base + ATAPIO_REG_STATUS) & ATAPIO_STATUS_DRQ));
 }
 
-static char* ataPioIdentify(uint16_t base, uint16_t select)
+static char* ataPioIdentify(void* private)
 {
-	selectDrive(base, select);
-	outb(base + ATAPIO_REG_SECTOR, 0);
-	outb(base + ATAPIO_REG_LBA0, 0);
-	outb(base + ATAPIO_REG_LBA1, 0);
-	outb(base + ATAPIO_REG_LBA2, 0);
-	outb(base + ATAPIO_REG_COMMAND, ATAPIO_COMMAND_IDENTIFY);
-	ataPioWaitBsy(base);
-	ataPioWaitDrq(base);
+	struct ataPioPrivate* pr = (struct ataPioPrivate*)private;
+
+	selectDrive(pr->port, pr->select, pr->deviceCon);
+	outb(pr->port + ATAPIO_REG_SECTOR, 0);
+	outb(pr->port + ATAPIO_REG_LBA0, 0);
+	outb(pr->port + ATAPIO_REG_LBA1, 0);
+	outb(pr->port + ATAPIO_REG_LBA2, 0);
+	outb(pr->port + ATAPIO_REG_COMMAND, ATAPIO_COMMAND_IDENTIFY);
+	ataPioWaitBsy(pr->port);
+	ataPioWaitDrq(pr->port);
 
 	uint16_t dataBuffer[256];
 	for (uint32_t i = 0; i < 256; i++)
-		dataBuffer[i] = inw(base);
+		dataBuffer[i] = inw(pr->port);
 
 	char* model = kzalloc(41);
 	for (uint32_t i = 0; i < 20; i++)
 	{
-		model[i*2] = dataBuffer[27+i] >> 8;
-		model[i*2+1] = dataBuffer[27+i] & 0xFF;
+		model[i*2] = (char)(dataBuffer[27+i] >> 8);
+		model[i*2+1] = (char)(dataBuffer[27+i] & 0xFF);
 	}
 
 	return model;
@@ -95,18 +98,19 @@ static int ataPioRead(uint64_t lba, void* out)
 	return 0;
 }
 
-struct diskDriver* registerAtaPioDriver()
+struct diskDriver* registerAtaPioDriver(enum diskDriverType type)
 {
 	//copy the driver since we can have multiple disk who use the ataPio driver with different settings
 	struct diskDriver* cpyDriver = (struct diskDriver*)kzalloc(sizeof(struct diskDriver));
 	memcpy(cpyDriver,&driver, sizeof(struct diskDriver));	
 
+	cpyDriver->type = type;
 	return cpyDriver;
 }
 
-int ataPioProbeLegacyPorts(uint16_t base)
+int ataPioProbePort(uint16_t base, uint16_t deviceCon)
 {
-	resetDrive(base);
+	resetDrive(base, deviceCon);
 	
 	uint8_t status = inb(base + ATAPIO_REG_STATUS);
 	if(status == 0xFF || status == 0x00)
@@ -117,16 +121,17 @@ int ataPioProbeLegacyPorts(uint16_t base)
 }
 
 //Attaches a ataPIO driver to the disk and disable IRQs for PIO mode
-int ataPioAttach(struct disk* disk, uint16_t base, uint16_t select)
+int ataPioAttach(struct disk* disk, uint16_t base, uint16_t select, uint16_t deviceCon)
 {
 	struct ataPioPrivate* private = (struct ataPioPrivate*)kzalloc(sizeof(struct ataPioPrivate));
 	if(private != NULL)
 	{
 		private->port = base;
 		private->select = select;
+		private->deviceCon = deviceCon;
 		disk->driver->private = private;
 		
-		disableInterruptSend(base, select);
+		disableInterruptSend(base, select, deviceCon);
 		return 0;
 	}
 	return -ENMEM;

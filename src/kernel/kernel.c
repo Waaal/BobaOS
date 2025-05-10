@@ -91,7 +91,8 @@ void kmain()
 	{
 		panic(PANIC_TYPE_KERNEL, NULL, "Faild to init diskDriver-System");
 	}
-	
+
 	diskInit();
+
 	while(1){}
 }

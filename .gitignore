@@ -1,5 +1,6 @@
 .vscode/
 .clangd
+.clang-tidy
 .cache
 .idea/
 .gdbinit
@@ -8,3 +9,4 @@ build/
 # Specific stuff
 create_compileJson.sh
 compile_commands.json
+cmake-build-debug/

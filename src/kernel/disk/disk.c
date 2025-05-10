@@ -1,6 +1,7 @@
 #include "disk.h"
 
 #include <stddef.h>
+#include <hardware/pci/pci.h>
 
 #include "config.h"
 #include "status.h"
@@ -23,6 +24,27 @@ static int insertDisk(struct disk* disk)
 	return 0;
 }
 
+static void insertAtaPioDisk(struct diskDriver* driver, uint16_t commandPort, uint16_t devConPort, uint16_t select)
+{
+	//We found a disk. YAYYYYYYYYYYY :3
+	struct disk* disk = (struct disk*)kzalloc(sizeof(struct disk));
+
+	disk->id = currentDisk;
+	disk->type = DISK_TYPE_PHYSICAL;
+	disk->driver = driver;
+	if(ataPioAttach(disk, commandPort, select, devConPort) < 0)
+	{
+		kzfree(disk);
+	}
+	else
+	{
+		char* modelString = disk->driver->getModelString(disk->driver->private);
+		strncpy(disk->name, modelString, sizeof(disk->name));
+		kzfree(modelString);
+		insertDisk(disk);
+	}
+}
+
 //See if a disk is connected to legacy ports
 static void scanLegacyPorts()
 {
@@ -31,27 +53,42 @@ static void scanLegacyPorts()
 	if(driver != NULL)
 	{
 		//TODO: probe all legacy ports lol
-		int diskAvailable = ataPioProbeLegacyPorts(0x1F0);
+		int diskAvailable = ataPioProbePort(0x1F0, 0x206);
 		if(diskAvailable > 0)
 		{
-			//We found a disk. YAYYYYYYYYYYY :3
-			struct disk* disk = (struct disk*)kzalloc(sizeof(struct disk));
-			
-			disk->id = currentDisk;
-			disk->type = DISK_TYPE_PHYSICAL;
-			disk->driver = driver;
-			if(ataPioAttach(disk, 0x1F0, 0xA0) < 0)
+			insertAtaPioDisk(driver, 0x1F0, 0x206, 0xA);
+		}
+	}
+}
+//See if we have a native ide controller connected
+static void scanPciBusAtaNative()
+{
+	//Check if we have a driver for ATAPIO native ports
+	struct diskDriver* driver = getDriver(DISK_DRIVER_TYPE_ATA_NATIVE);
+	if (driver == NULL){return;}
+
+	struct pciDevice** ideControllers = getAllPciDevicesByClass(PCI_CLASS_MASS_STORAGE_CONTROLLER, PCI_SUBCLASS_MA_IDE_CONTROLLER, 0x8F);
+
+	uint8_t count = 0;
+	while (ideControllers[count] != NULL)
+	{
+		for (uint8_t i = 0; i < 3; i+=2)
+		{
+			struct pciBarInfo* barCommand = getPciBarInfo(ideControllers[count], i);
+			struct pciBarInfo* barDevcon = getPciBarInfo(ideControllers[count], i+1);
+
+			uint16_t select = i < 1 ? 0xA : 0xB;
+
+			if (barCommand->isIo)
 			{
-				kzfree(disk);
-			}
-			else
-			{
-				char* modelString = disk->driver->getModelString(0x1F0, 0xA0);
-				strncpy(disk->name, modelString, sizeof(disk->name));
-				kzfree(modelString);
-				insertDisk(disk);
+				int diskAvailable = ataPioProbePort(barCommand->base, barDevcon->base);
+				if (diskAvailable == 1)
+				{
+					insertAtaPioDisk(driver, barCommand->base, barDevcon->base, select);
+				}
 			}
 		}
+		count++;
 	}
 }
 
@@ -59,6 +96,7 @@ static void scanLegacyPorts()
 static void scanDisks()
 {
 	scanLegacyPorts();
+	scanPciBusAtaNative();
 	//TODO: scan pci bus etc
 }
 
