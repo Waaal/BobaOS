@@ -1,6 +1,7 @@
 #include "kernel.h"
 
 #include <stddef.h>
+#include <memory/memory.h>
 
 #include "config.h"
 #include "version.h"
@@ -93,6 +94,11 @@ void kmain()
 	}
 
 	diskInit();
+	struct disk* disk = diskGet(0);
+	kprintf("Disk 0: %s", disk->name);
+
+	uint8_t* diskOutBuffer = kzalloc(512);
+	disk->driver->read(0, 1, diskOutBuffer, disk->driver->private);
 
 	while(1){}
 }

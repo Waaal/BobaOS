@@ -16,14 +16,16 @@ struct ataPioPrivate
 	uint16_t deviceCon;
 };
 
-static int ataPioRead(uint64_t lba, void* out);
+static int ataPioRead(uint64_t lba, uint64_t total, void* out, void* private);
+static int ataPioWrite(uint64_t lba, uint64_t total, void* in, void* private);
 static char* ataPioIdentify(void* private);
 
 struct diskDriver driver =
 {
 	.type = DISK_DRIVER_TYPE_ATA_LEGACY,
 	.getModelString = ataPioIdentify,
-	.read = ataPioRead
+	.read = ataPioRead,
+	.write = ataPioWrite
 };
 
 static void wait(uint16_t base)
@@ -83,18 +85,79 @@ static char* ataPioIdentify(void* private)
 	for (uint32_t i = 0; i < 256; i++)
 		dataBuffer[i] = inw(pr->port);
 
-	char* model = kzalloc(41);
-	for (uint32_t i = 0; i < 20; i++)
+	char* model = kzalloc(42);
+	for (uint8_t i = 0; i < 20; i++)
 	{
 		model[i*2] = (char)(dataBuffer[27+i] >> 8);
 		model[i*2+1] = (char)(dataBuffer[27+i] & 0xFF);
 	}
-
+	model[41] = 0;
 	return model;
 }
 
-static int ataPioRead(uint64_t lba, void* out)
+static void cacheFlush(uint16_t port)
 {
+	outb(port+ ATAPIO_REG_COMMAND, 0xE7);
+	ataPioWaitBsy(port);
+}
+
+static int ataPioWrite(uint64_t lba, uint64_t total, void* in, void* private)
+{
+	struct ataPioPrivate* pr = (struct ataPioPrivate*)private;
+
+	selectDrive(pr->port, pr->select, pr->deviceCon);
+	ataPioWaitBsy(pr->port);
+
+	outb(pr->port + ATAPIO_REG_ERROR, 0x00);
+	outb(pr->port + ATAPIO_REG_SECTOR, total);
+	outb(pr->port + ATAPIO_REG_LBA0, (unsigned char)(lba & 0xFF)); //Bits 0 - 7 from address
+	outb(pr->port + ATAPIO_REG_LBA1, (unsigned char)(lba >> 8) & 0xFF); //Bits 8 - 15 from address
+	outb(pr->port + ATAPIO_REG_LBA2, (unsigned char)(lba >> 16) & 0xFF); //Bits 16- 23 from address
+	outb(pr->port + ATAPIO_REG_DRIVESELECT, 0xE0 | ((lba >> 24) & 0x0F)); //Bits 24- 27 from address, bits 28 - 31 are set to 1110
+	outb(pr->port + ATAPIO_REG_COMMAND, ATAPIO_COMMAND_WRITE_SECTORS);
+
+	ataPioWaitDrq(pr->port);
+
+	uint16_t* ptr = (uint16_t*)in;
+	for (uint64_t b = 0; b < total; b++)
+	{
+		for (uint16_t i = 0; i < 256; i++)
+		{
+			outw(pr->port, *ptr);
+			ptr++;
+		}
+	}
+	cacheFlush(pr->port);
+	return 0;
+}
+
+static int ataPioRead(uint64_t lba, uint64_t total, void* out, void* private)
+{
+	struct ataPioPrivate* pr = (struct ataPioPrivate*)private;
+
+	selectDrive(pr->port, pr->select, pr->deviceCon);
+	ataPioWaitBsy(pr->port);
+
+	outb(pr->port + ATAPIO_REG_ERROR, 0x00);
+	outb(pr->port + ATAPIO_REG_SECTOR, total);
+	outb(pr->port + ATAPIO_REG_LBA0, (unsigned char)(lba & 0xFF)); //Bits 0 - 7 from address
+	outb(pr->port + ATAPIO_REG_LBA1, (unsigned char)(lba >> 8) & 0xFF); //Bits 8 - 15 from address
+	outb(pr->port + ATAPIO_REG_LBA2, (unsigned char)(lba >> 16) & 0xFF); //Bits 16- 23 from address
+	outb(pr->port + ATAPIO_REG_DRIVESELECT, 0xE0 | ((lba >> 24) & 0x0F)); //Bits 24- 27 from address, bits 28 - 31 are set to 1110
+	outb(pr->port + ATAPIO_REG_COMMAND, ATAPIO_COMMAND_READ_SECTORS);
+
+	ataPioWaitDrq(pr->port);
+
+	uint16_t* ptr = (uint16_t*)out;
+	for (uint64_t b = 0; b < total; b++)
+	{
+		for (uint16_t i = 0; i < 256; i++)
+		{
+			*ptr = inw(pr->port);
+			ptr++;
+		}
+	}
+
 	return 0;
 }
 

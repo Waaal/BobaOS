@@ -100,6 +100,15 @@ static void scanDisks()
 	//TODO: scan pci bus etc
 }
 
+struct disk* diskGet(uint8_t id)
+{
+	if (id >= currentDisk)
+	{
+		return NULL;
+	}
+	return diskList[id];
+}
+
 int diskInit()
 {
 	scanDisks();

@@ -4,6 +4,7 @@
 .cache
 .idea/
 .gdbinit
+.gdbbinit
 build/
 
 # Specific stuff
