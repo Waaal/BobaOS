@@ -13,7 +13,8 @@ enum diskType
 struct disk
 {
 	uint8_t id;
-	char name[32];
+	char name[64];
+	uint64_t size;
 	enum diskType type;
 	struct diskDriver* driver;
 };

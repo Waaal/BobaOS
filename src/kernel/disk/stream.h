@@ -12,7 +12,7 @@ struct diskStream
 };
 
 struct diskStream* diskStreamCreate(uint8_t driveId, uint64_t position);
-void diskStreamSeek(struct diskStream* stream, uint64_t position);
-void diskStreamRead(struct diskStream* stream, void* out, uint64_t length);
+int diskStreamSeek(struct diskStream* stream, uint64_t position);
+int diskStreamRead(struct diskStream* stream, void* out, uint64_t length);
 
 #endif

@@ -2,6 +2,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <string/string.h>
 
 #include "disk/diskDriver.h"
 #include "status.h"
@@ -14,16 +15,17 @@ struct ataPioPrivate
 	uint16_t port;
 	uint16_t select;
 	uint16_t deviceCon;
+	uint8_t lba48Enabled;
 };
 
 static int ataPioRead(uint64_t lba, uint64_t total, void* out, void* private);
 static int ataPioWrite(uint64_t lba, uint64_t total, void* in, void* private);
-static char* ataPioIdentify(void* private);
+static struct diskInfo ataPioIdentify(void* private);
 
 struct diskDriver driver =
 {
 	.type = DISK_DRIVER_TYPE_ATA_LEGACY,
-	.getModelString = ataPioIdentify,
+	.getInfo = ataPioIdentify,
 	.read = ataPioRead,
 	.write = ataPioWrite
 };
@@ -68,7 +70,7 @@ static void ataPioWaitDrq(uint16_t base)
 	while(!(inb(base + ATAPIO_REG_STATUS) & ATAPIO_STATUS_DRQ));
 }
 
-static char* ataPioIdentify(void* private)
+static struct diskInfo ataPioIdentify(void* private)
 {
 	struct ataPioPrivate* pr = (struct ataPioPrivate*)private;
 
@@ -85,6 +87,11 @@ static char* ataPioIdentify(void* private)
 	for (uint32_t i = 0; i < 256; i++)
 		dataBuffer[i] = inw(pr->port);
 
+	//Check lba48
+	uint8_t lba48Enabled = (uint8_t)((dataBuffer[83] & 0x400) >> 10);
+	pr->lba48Enabled = lba48Enabled;
+
+	//Extract mdoel string
 	char* model = kzalloc(42);
 	for (uint8_t i = 0; i < 20; i++)
 	{
@@ -92,7 +99,17 @@ static char* ataPioIdentify(void* private)
 		model[i*2+1] = (char)(dataBuffer[27+i] & 0xFF);
 	}
 	model[41] = 0;
-	return model;
+	//Extract total LBAs
+	uint32_t totalLBA = 0;
+	totalLBA = dataBuffer[60];
+	totalLBA |= dataBuffer[61] << 16;
+
+	//Fill diskinfo return struct
+	struct diskInfo info;
+	strncpy(info.name, model, 42);
+	info.size = totalLBA * 512;
+
+	return info;
 }
 
 static void cacheFlush(uint16_t port)

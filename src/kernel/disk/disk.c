@@ -39,9 +39,11 @@ static void insertAtaPioDisk(struct diskDriver* driver, uint16_t commandPort, ui
 	}
 	else
 	{
-		char* modelString = disk->driver->getModelString(disk->driver->private);
-		strncpy(disk->name, modelString, sizeof(disk->name));
-		kzfree(modelString);
+		struct diskInfo info = disk->driver->getInfo(disk->driver->private);
+
+		strncpy(disk->name, info.name, sizeof(disk->name));
+		disk->size = info.size;
+
 		insertDisk(disk);
 	}
 }

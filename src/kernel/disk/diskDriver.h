@@ -10,14 +10,20 @@ enum diskDriverType
 	DISK_DRIVER_TYPE_SATA_AHCI
 };
 
+struct diskInfo
+{
+	char name[64];
+	uint64_t size;
+};
+
 typedef int (*DISK_READ)(uint64_t lba, uint64_t total, void* out, void* private);
 typedef int (*DISK_WRITE)(uint64_t lba, uint64_t total, void* in, void* private);
-typedef char* (*DISK_GETMODELSTRING)(void* private);
+typedef struct diskInfo (*DISK_GETINFO)(void* private);
 
 struct diskDriver
 {
 	enum diskDriverType type;
-	DISK_GETMODELSTRING getModelString;
+	DISK_GETINFO getInfo;
 	DISK_READ read;
 	DISK_WRITE write;
 
