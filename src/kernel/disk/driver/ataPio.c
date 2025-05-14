@@ -146,11 +146,10 @@ static int ataPioRead(uint64_t lba, uint64_t total, void* out, void* private)
 	outb(pr->port + ATAPIO_REG_DRIVESELECT, 0xE0 | ((lba >> 24) & 0x0F)); //Bits 24- 27 from address, bits 28 - 31 are set to 1110
 	outb(pr->port + ATAPIO_REG_COMMAND, ATAPIO_COMMAND_READ_SECTORS);
 
-	ataPioWaitDrq(pr->port);
-
 	uint16_t* ptr = (uint16_t*)out;
 	for (uint64_t b = 0; b < total; b++)
 	{
+		ataPioWaitDrq(pr->port);
 		for (uint16_t i = 0; i < 256; i++)
 		{
 			*ptr = inw(pr->port);

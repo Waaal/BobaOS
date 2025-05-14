@@ -1,6 +1,7 @@
 #include "kernel.h"
 
 #include <stddef.h>
+#include <disk/stream.h>
 #include <memory/memory.h>
 
 #include "config.h"
@@ -90,13 +91,19 @@ void kmain()
 
 	if(diskDriverInit() < 0)
 	{
-		panic(PANIC_TYPE_KERNEL, NULL, "Faild to init diskDriver-system");
+		panic(PANIC_TYPE_KERNEL, NULL, "Failed to init diskDriver-system");
 	}
 
 	if (diskInit() < 0)
 	{
 		panic(PANIC_TYPE_KERNEL, NULL, "Kernel disk not found");
 	}
+
+	struct diskStream* testStream = diskStreamCreate(0, 0);
+	void* tempBufferTest = kzalloc(10);
+
+	diskStreamSeek(testStream, 0xc94);
+	diskStreamRead(testStream, tempBufferTest, 10);
 
 	while(1){}
 }
