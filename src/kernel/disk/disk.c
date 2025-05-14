@@ -2,6 +2,7 @@
 
 #include <stddef.h>
 #include <hardware/pci/pci.h>
+#include <memory/memory.h>
 
 #include "config.h"
 #include "status.h"
@@ -100,6 +101,35 @@ static void scanDisks()
 	//TODO: scan pci bus etc
 }
 
+//This function tries to find the disk the kernel boots from and give ot the id 0 (start of the diskList).
+static int findKernelDisk()
+{
+	int ret = 0;
+	for (uint16_t i = 0; i < currentDisk; i++)
+	{
+		if (diskList[i] == NULL){break;}
+
+		char buff[512];
+		char* bobaOsSignature = "BOBAV";
+		diskList[i]->driver->read(0, 1, &buff, diskList[i]->driver->private);
+		if (memcmp(buff+3, bobaOsSignature, 5) == 0)
+		{
+			//found kernel disk
+			if (i != 0)
+			{
+				struct disk* tempDisk = diskList[0];
+				diskList[0] = diskList[i];
+				diskList[i] = tempDisk;
+
+				diskList[0]->id = 0;
+				diskList[i]->id = i;
+			}
+			ret = 1;
+		}
+	}
+	return ret;
+}
+
 struct disk* diskGet(uint8_t id)
 {
 	if (id >= currentDisk)
@@ -112,5 +142,12 @@ struct disk* diskGet(uint8_t id)
 int diskInit()
 {
 	scanDisks();
-	return 0;
+	if (findKernelDisk() == 1)
+	{
+		return 0;
+	}
+	else
+	{
+		return -ENFOUND;
+	}
 }

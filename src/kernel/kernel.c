@@ -88,17 +88,15 @@ void kmain()
 	
 	pciInit();
 
-	if(diskDriverInit())
+	if(diskDriverInit() < 0)
 	{
-		panic(PANIC_TYPE_KERNEL, NULL, "Faild to init diskDriver-System");
+		panic(PANIC_TYPE_KERNEL, NULL, "Faild to init diskDriver-system");
 	}
 
-	diskInit();
-	struct disk* disk = diskGet(0);
-	kprintf("Disk 0: %s", disk->name);
-
-	uint8_t* diskOutBuffer = kzalloc(512);
-	disk->driver->read(0, 1, diskOutBuffer, disk->driver->private);
+	if (diskInit() < 0)
+	{
+		panic(PANIC_TYPE_KERNEL, NULL, "Kernel disk not found");
+	}
 
 	while(1){}
 }
