@@ -49,7 +49,10 @@ uint64_t getMaxMemorySize();
 PML4Table createKernelTable(uint64_t physical, uint64_t virtual, uint64_t size);
 void* virtualToPhysical(void* virt, PML4Table table);
 void remapPage(void* to, void* from, PML4Table table);
+void removePageFlag(void* virtual, uint16_t flag, PML4Table table);
 
-void loadNewPageTable(PML4Table table); // function in paging.asm
+
+// Functions in paging.asm
+void loadNewPageTable(PML4Table table);
 
 #endif

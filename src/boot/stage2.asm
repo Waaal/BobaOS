@@ -135,7 +135,7 @@ enablePaging:
 
 [bits 64]
 longEntry:
-	mov rsp, 0x200000
+	mov rsp, 0x300000
 
 	xor rax, rax
 

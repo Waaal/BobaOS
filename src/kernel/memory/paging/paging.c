@@ -14,7 +14,7 @@ uint8_t memoryMapLength = 0x0;
 uint64_t upperMemorySize = 0x0;
 uint64_t totalMemorySize = 0x0;
 
-static void writePointerTableEntry(uint64_t* dest, uint64_t* src, uint64_t index, uint16_t flags)
+static void writePointerTableEntry(uint64_t* dest, const uint64_t* src, uint64_t index, uint16_t flags)
 {
 	dest[index] = ((uint64_t)src & 0xFFFFFFFFF000) | flags;	
 }
@@ -24,7 +24,7 @@ static uint64_t downToPage(uint64_t var)
 	return var - (var % SIZE_4KB);
 }
 
-static uint64_t* returnTableEntryNoFlags(uint64_t* table, uint16_t index)
+static uint64_t* returnTableEntryNoFlags(const uint64_t* table, uint16_t index)
 {
 	return (uint64_t*)(table[index] & 0xFFFFFFFFFFFFF000);
 }
@@ -53,6 +53,16 @@ static uint16_t getPdpIndexFromVirtual(void* virt)
 {
 	return ((uint64_t)virt >> SHIFT_PDP) & FULL_512;
 } 
+/*
+static uint16_t getPdIndexFromVirtual(void* virt)
+{
+	return ((uint64_t)virt >> SHIFT_PD) & FULL_512;
+}
+*/
+static uint16_t getPtIndexFromVirtual(void* virt)
+{
+	return ((uint64_t)virt >> SHIFT_PT) & FULL_512;
+}
 
 static PTTable getPTTable(void* virt, PML4Table table)
 {
@@ -148,6 +158,13 @@ void remapPage(void* to, void* from, PML4Table table)
 	uint16_t oldPtIndex = ((uint64_t)from >> SHIFT_PT) & FULL_512;
 
 	writePointerTableEntry(oldPt, to, oldPtIndex, PAGING_FLAG_P | PAGING_FLAG_RW | PAGING_FLAG_PS);	
+}
+
+void removePageFlag(void* virtual, uint16_t flag, PML4Table table)
+{
+	PTTable ptTable = getPTTable(virtual, table);
+	uint16_t ptIndex = getPtIndexFromVirtual(virtual);
+	ptTable[ptIndex] &= ~flag;
 }
 
 uint64_t getUpperMemorySize()

@@ -66,7 +66,7 @@ loadRegisters:
 	pop rcx
 	pop rbx
 	pop rax
-	
+
 	iretq
 
 ; Create a NASM macro to create a interrupt wrapper for each interrupt

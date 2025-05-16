@@ -85,8 +85,8 @@ void kmain()
 	if(kernelPageTable == NULL)
 	{
 		panic(PANIC_TYPE_KERNEL, NULL, "Not enough memory for Kernel");
-	}	
-	
+	}
+
 	pciInit();
 
 	if(diskDriverInit() < 0)
