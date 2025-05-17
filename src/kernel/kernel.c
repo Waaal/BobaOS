@@ -1,8 +1,6 @@
 #include "kernel.h"
 
 #include <stddef.h>
-#include <disk/stream.h>
-#include <memory/memory.h>
 
 #include "config.h"
 #include "version.h"
@@ -17,6 +15,8 @@
 
 #include "disk/disk.h"
 #include "disk/diskDriver.h"
+#include "disk/stream.h"
+#include "vfsl/virtualFilesystemLayer.h"
 
 void panic(enum panicType type, struct trapFrame* frame, const char* message)
 {
@@ -99,11 +99,10 @@ void kmain()
 		panic(PANIC_TYPE_KERNEL, NULL, "Kernel disk not found");
 	}
 
-	struct diskStream* testStream = diskStreamCreate(0, 0);
-	void* tempBufferTest = kzalloc(10);
-
-	diskStreamSeek(testStream, 0xc94);
-	diskStreamRead(testStream, tempBufferTest, 10);
+	if (vfslInit() < 0)
+	{
+		panic(PANIC_TYPE_KERNEL, NULL, "Failed to init the virtual filesystem layer");
+	}
 
 	while(1){}
 }

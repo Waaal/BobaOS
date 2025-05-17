@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "diskDriver.h"
+#include "vfsl/virtualFilesystemLayer.h"
 
 enum diskType
 {
@@ -17,6 +18,7 @@ struct disk
 	uint64_t size;
 	enum diskType type;
 	struct diskDriver* driver;
+	struct fileSystem* fileSystem;
 };
 
 int diskInit();

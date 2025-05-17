@@ -121,7 +121,7 @@ add_custom_command(
 	COMMAND dd if=${CMAKE_BINARY_DIR}/bin/fsinfo.bin >> ${CMAKE_BINARY_DIR}/os.bin
 	COMMAND dd if=${CMAKE_BINARY_DIR}/bin/stage2.bin >> ${CMAKE_BINARY_DIR}/os.bin
     COMMAND dd if=${CMAKE_BINARY_DIR}/kernel.bin >> ${CMAKE_BINARY_DIR}/os.bin
-    COMMAND dd if=/dev/zero bs=512 count=125 >> ${CMAKE_BINARY_DIR}/os.bin
+    COMMAND dd if=/dev/zero bs=512 count=200 >> ${CMAKE_BINARY_DIR}/os.bin
     COMMAND truncate -s 32M ${CMAKE_BINARY_DIR}/os.bin 
 	DEPENDS ${BOOT_ASM_BOOTLOADER_BIN} ${BOOT_ASM_FSINFO_BIN} ${BOOT_ASM_STAGE2_BIN} ${CMAKE_BINARY_DIR}/kernel.bin
 )

@@ -4,7 +4,9 @@
 	mov [driveId], dl
 
 readKernel:
-	mov si, extreadKernelPackage
+	mov si, extreadKernelPackage1
+	call extendedRead
+	mov si, extreadKernelPackage2
 	call extendedRead
 
 ; Zero out 1000 bytes for the memory map
@@ -68,12 +70,20 @@ extendedRead:
 .end:
 	ret
 
-extreadKernelPackage:
+extreadKernelPackage1:
 	dw 0x10					; Package size(0x10 or 0x16)
-	dw 125					; Total LBA to load
+	dw 120					; Total LBA to load
 	dw 0x0					; destination address(0x00:[0x00])
 	dw 0x1000				; destination (segment [0x1000]:0x00)
 	dd 0x4					; starting LBA in our img file
+	dd 0x0					; more storage bytes for bigger lbas
+
+extreadKernelPackage2:
+	dw 0x10					; Package size(0x10 or 0x16)
+	dw 80					; Total LBA to load
+	dw 0x0					; destination address(0x00:[0x00])
+	dw 0x1F00				; destination (segment [0x1FA00]:0x00)
+	dd 124				    ; starting LBA in our img file
 	dd 0x0					; more storage bytes for bigger lbas
 
 driveId: db 0
@@ -166,7 +176,7 @@ PICSetup:
 moveKernel:
 	mov rsi, 0x10000
 	mov rdi, 0x100000
-	mov rcx, 64000/8			; 125 sectors	
+	mov rcx, 102400/8			; 200 sectors
 
 	rep movsq
 
