@@ -141,8 +141,15 @@ struct disk* diskGet(uint8_t id)
 	return diskList[id];
 }
 
+struct disk** diskGetAll()
+{
+	return diskList;
+}
+
 int diskInit()
 {
+	memset(diskList, 0x0, sizeof(struct disk*) * BOBAOS_MAX_DISKS);
+
 	scanDisks();
 	if (findKernelDisk() == 1)
 	{

@@ -23,5 +23,6 @@ struct disk
 
 int diskInit();
 struct disk* diskGet(uint8_t id);
+struct disk** diskGetAll();
 
 #endif

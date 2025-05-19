@@ -1,6 +1,7 @@
 #include "kernel.h"
 
 #include <stddef.h>
+#include <string/string.h>
 
 #include "config.h"
 #include "version.h"
