@@ -28,6 +28,7 @@ struct fileListEntry
 
 struct disk;
 typedef int (*RESOLVE)(struct disk* disk);
+typedef struct fileSystem* (*ATTACH_CALLBACK)(struct disk* disk);
 typedef struct file* (*OPEN_FILE)(const char* path, const char* mode);
 typedef int (*READ_FILE)(void* ptr, uint64_t size, struct file* file);
 typedef int (*WRITE_FILE)(void* ptr, uint64_t size, struct file* file);
@@ -37,6 +38,7 @@ struct fileSystem
 {
     char name[32];
     RESOLVE resolve;
+    ATTACH_CALLBACK attach;
     OPEN_FILE open;
     READ_FILE read;
     WRITE_FILE write;

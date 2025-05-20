@@ -41,16 +41,33 @@ struct masterBootRecord
 } __attribute__ ((packed));
 
 static int resolve(struct disk* disk);
+static struct fileSystem* attachToDisk(struct disk* disk);
 struct fileSystem fs =
 {
     .name = "FAT32",
     .resolve = resolve,
+    .attach = attachToDisk,
     .open = NULL,
     .close = NULL,
     .read = NULL,
     .write = NULL,
     .private = NULL
 };
+
+static struct fileSystem* attachToDisk(struct disk* disk)
+{
+    if (disk == NULL){return NULL;}
+
+    void* private = kzalloc(8);
+    if (private == NULL){ return NULL; }
+
+    struct fileSystem* retFs = kzalloc(sizeof(struct fileSystem));
+    if (retFs == NULL){ kzfree(private); return NULL; }
+
+    memcpy(retFs, &fs, sizeof(struct fileSystem));
+    retFs->private = private;
+    return retFs;
+}
 
 static int resolve(struct disk* disk)
 {
@@ -68,13 +85,5 @@ static int resolve(struct disk* disk)
 
 struct fileSystem* insertIntoFileSystem()
 {
-    void* private = kzalloc(8);
-    if (private == NULL){ return NULL; }
-
-    fs.private = private;
-    struct fileSystem* retFs = kzalloc(sizeof(struct fileSystem));
-    if (retFs == NULL){ kzfree(private); return NULL; }
-
-    memcpy(retFs, &fs, sizeof(struct fileSystem));
-    return retFs;
+    return &fs;
 }

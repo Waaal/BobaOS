@@ -59,7 +59,7 @@ static int resolveStaticFileSystems()
         {
             if (fileSystemList[i]->resolve(*allDisks))
             {
-                if (appendFileSystemToDisk(fileSystemList[i], *allDisks) < 0)
+                if (appendFileSystemToDisk(fileSystemList[i]->attach(*allDisks), *allDisks) < 0)
                 {
                     return -EIARG;
                 }
