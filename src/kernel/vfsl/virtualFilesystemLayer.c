@@ -86,6 +86,11 @@ int vfslInit()
     return ret;
 }
 
+struct file* fopen(const char* path, const char* mode)
+{
+    return NULL;
+}
+
 // COULD NOT TEST THEM FOR NOW. JUST HOPE THEY WORK LATER
 /*
 

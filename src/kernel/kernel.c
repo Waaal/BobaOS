@@ -18,6 +18,7 @@
 #include "disk/diskDriver.h"
 #include "disk/stream.h"
 #include "vfsl/virtualFilesystemLayer.h"
+#include "vfsl/pathTracer.h"
 
 void panic(enum panicType type, struct trapFrame* frame, const char* message)
 {

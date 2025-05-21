@@ -47,6 +47,7 @@ struct fileSystem
 };
 
 int vfslInit();
+struct file* fopen(const char* path, const char* mode);
 /*
 int addOpenFile(struct file* file);
 int removeOpenFile(struct file* file);

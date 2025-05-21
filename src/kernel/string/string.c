@@ -82,6 +82,20 @@ void strcpy(char* dest, const char* src)
 	}
 }
 
+int8_t isNumber(const char c)
+{
+	if (c >= '0' && c <= '9')
+	{
+		return 1;
+	}
+	return 0;
+}
+
+uint8_t toNumber(const char c)
+{
+	return '0' - c;
+}
+
 uint64_t strHash(const char* str)
 {
 	uint64_t hash = 5381;
