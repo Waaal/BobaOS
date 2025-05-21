@@ -3,6 +3,8 @@
 #include <stddef.h>
 #include <memory/kheap/kheap.h>
 
+#include "macros.h"
+
 #include "status.h"
 #include "memory/memory.h"
 #include "string/string.h"
@@ -72,29 +74,7 @@ static int resolveStaticFileSystems()
     return -ENFOUND;
 }
 
-int vfslInit()
-{
-    int ret = 0;
-
-    memset(openFiles, 0, sizeof(openFiles));
-    memset(fileSystemList, 0, sizeof(fileSystemList));
-
-    ret = addStaticFileSystems();
-    if (ret < 0){return ret;}
-
-    resolveStaticFileSystems();
-    return ret;
-}
-
-struct file* fopen(const char* path, const char* mode)
-{
-    return NULL;
-}
-
-// COULD NOT TEST THEM FOR NOW. JUST HOPE THEY WORK LATER
-/*
-
-int addOpenFile(struct file* file)
+static int addOpenFile(struct file* file)
 {
     uint64_t id = strHash(file->path) % BOBAOS_MAX_OPEN_FILES;
 
@@ -122,8 +102,38 @@ int addOpenFile(struct file* file)
     return 0;
 }
 
-int removeOpenFile(struct file* file)
+int vfslInit()
 {
-    return 0;
+    int ret = 0;
+
+    memset(openFiles, 0, sizeof(openFiles));
+    memset(fileSystemList, 0, sizeof(fileSystemList));
+
+    ret = addStaticFileSystems();
+    if (ret < 0){return ret;}
+
+    resolveStaticFileSystems();
+    return ret;
 }
-*/
+
+struct file* fopen(const char* path, const char* mode)
+{
+    struct pathTracer* pathTracer = createPathTracer(path);
+    RETNULL(pathTracer);
+
+    struct disk* disk = diskGet(pathTracer->diskId);
+    RETNULL(disk);
+    RETNULL(disk->fileSystem);
+
+    struct file* file = disk->fileSystem->open(pathTracer, mode);
+    destroyPathTracer(pathTracer);
+    RETNULL(file);
+
+    if (addOpenFile(file) > 0)
+    {
+        return file;
+    }
+
+    kzfree(file);
+    return NULL;
+}

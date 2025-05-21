@@ -1,11 +1,26 @@
 #include "pathTracer.h"
 
-#include <status.h>
 #include <stddef.h>
 
+#include "status.h"
+#include "macros.h"
 #include "memory/kheap/kheap.h"
 #include "string/string.h"
 #include "disk/disk.h"
+
+void destroyPathTracer(struct pathTracer* tracer)
+{
+    if (tracer == NULL) {return;}
+    struct pathTracerPart* temp = tracer->root;
+    while (temp != NULL)
+    {
+        struct pathTracerPart* temp2 = temp;
+        temp = temp2->next;
+        kzfree(temp2);
+    }
+
+    kzfree(tracer);
+}
 
 struct pathTracer* createPathTracer(const char* path)
 {
@@ -18,10 +33,10 @@ struct pathTracer* createPathTracer(const char* path)
     uint8_t diskId = toNumber(path[0]);
 
     struct disk* disk = diskGet(diskId);
-    if (disk == NULL) {return NULL;}
+    RETNULL(disk);
 
     struct pathTracer* pathTracer = kzalloc(sizeof(struct pathTracer));
-    if (pathTracer == NULL){ return NULL;}
+    RETNULL(pathTracer);
 
     pathTracer->diskId = diskId;
 
@@ -69,16 +84,8 @@ struct pathTracer* createPathTracer(const char* path)
     }
     return pathTracer;
 
-    free: ;
-    struct pathTracerPart* temp = pathTracer->root;
-    while (temp != NULL)
-    {
-        struct pathTracerPart* temp2 = temp;
-        temp = temp2->next;
-        kzfree(temp2);
-    }
-
-    kzfree(pathTracer);
+    free:
+    destroyPathTracer(pathTracer);
     return NULL;
 }
 

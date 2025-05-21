@@ -5,9 +5,7 @@
 
 #include "config.h"
 #include "disk/disk.h"
-
-#define FILE_OPENING_MODE_RB "rb"
-#define FILE_OPENING_MODE_WB "wb"
+#include "pathTracer.h"
 
 struct file
 {
@@ -29,7 +27,7 @@ struct fileListEntry
 struct disk;
 typedef int (*RESOLVE)(struct disk* disk);
 typedef struct fileSystem* (*ATTACH_CALLBACK)(struct disk* disk);
-typedef struct file* (*OPEN_FILE)(const char* path, const char* mode);
+typedef struct file* (*OPEN_FILE)(struct pathTracer* tracer, const char* mode);
 typedef int (*READ_FILE)(void* ptr, uint64_t size, struct file* file);
 typedef int (*WRITE_FILE)(void* ptr, uint64_t size, struct file* file);
 typedef int (*CLOSE_FILE)(struct file* file);
@@ -48,8 +46,4 @@ struct fileSystem
 
 int vfslInit();
 struct file* fopen(const char* path, const char* mode);
-/*
-int addOpenFile(struct file* file);
-int removeOpenFile(struct file* file);
-*/
 #endif

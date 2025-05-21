@@ -42,12 +42,14 @@ struct masterBootRecord
 
 static int resolve(struct disk* disk);
 static struct fileSystem* attachToDisk(struct disk* disk);
+static struct file* openFile(struct pathTracer* tracer, const char* mode);
+
 struct fileSystem fs =
 {
     .name = "FAT32",
     .resolve = resolve,
     .attach = attachToDisk,
-    .open = NULL,
+    .open = openFile,
     .close = NULL,
     .read = NULL,
     .write = NULL,
@@ -86,4 +88,9 @@ static int resolve(struct disk* disk)
 struct fileSystem* insertIntoFileSystem()
 {
     return &fs;
+}
+
+static struct file* openFile(struct pathTracer* tracer, const char* mode)
+{
+    return NULL;
 }
