@@ -20,14 +20,14 @@ struct file
 struct fileListEntry
 {
     struct file* file;
-    struct file* next;
-    struct file* prev;
+    struct fileListEntry* next;
+    struct fileListEntry* prev;
 };
 
 struct disk;
 typedef int (*RESOLVE)(struct disk* disk);
 typedef struct fileSystem* (*ATTACH_CALLBACK)(struct disk* disk);
-typedef struct file* (*OPEN_FILE)(struct pathTracer* tracer, const char* mode);
+typedef struct file* (*OPEN_FILE)(struct pathTracer* tracer, const char* mode, void* private);
 typedef int (*READ_FILE)(void* ptr, uint64_t size, struct file* file);
 typedef int (*WRITE_FILE)(void* ptr, uint64_t size, struct file* file);
 typedef int (*CLOSE_FILE)(struct file* file);

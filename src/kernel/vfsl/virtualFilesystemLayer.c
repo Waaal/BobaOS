@@ -122,10 +122,9 @@ struct file* fopen(const char* path, const char* mode)
     RETNULL(pathTracer);
 
     struct disk* disk = diskGet(pathTracer->diskId);
-    RETNULL(disk);
     RETNULL(disk->fileSystem);
 
-    struct file* file = disk->fileSystem->open(pathTracer, mode);
+    struct file* file = disk->fileSystem->open(pathTracer, mode, disk->fileSystem->private);
     destroyPathTracer(pathTracer);
     RETNULL(file);
 

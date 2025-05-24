@@ -1,5 +1,6 @@
 #include "stream.h"
 
+#include <macros.h>
 #include <stddef.h>
 #include <memory/memory.h>
 #include <memory/kheap/kheap.h>
@@ -49,11 +50,12 @@ int diskStreamRead(struct diskStream* stream, void* out, uint64_t length)
     uint64_t totalLba = ((currLbaPos + length) / 512) + 1;
 
     uint8_t* buffer = kzalloc(totalLba * 512);
-    stream->disk->driver->read(currLba, totalLba, buffer, stream->disk->driver->private);
+    if (buffer == NULL){return -ENMEM;}
 
-    memcpy(out, buffer + currLbaPos, length);
+    stream->disk->driver->read(currLba, totalLba, buffer, stream->disk->driver->private);
     stream->position += length;
 
+    memcpy(out, buffer + currLbaPos, length);
     kzfree(buffer);
 
     return ret;
