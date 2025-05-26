@@ -81,6 +81,22 @@ static int resolve(struct disk* disk)
     return 0;
 }
 
+static uint32_t absoluteAddressToCluster(uint32_t absolute, struct fatPrivate* private)
+{
+    if (absolute < private->dataClusterStartAddress)
+    {
+        //Not inside data region
+        return 0;
+    }
+    return 2 + ((private->dataClusterStartAddress - absolute) / private->clusterSize);
+}
+
+static uint32_t dataClusterToAbsoluteAddress(uint32_t dataCluster, struct fatPrivate* private)
+{
+    return (dataCluster-2) * private->clusterSize + private->dataClusterStartAddress;
+}
+
+/*
 //Get multiple FAT-entries with 1 read operation from disk
 static FAT_ENTRY* getMultipleFatEntries(uint32_t start, uint32_t end, struct fatPrivate* private)
 {
@@ -95,7 +111,7 @@ static FAT_ENTRY* getMultipleFatEntries(uint32_t start, uint32_t end, struct fat
 
     return ret;
 }
-
+*/
 static FAT_ENTRY getFatEntry(uint32_t entry, struct fatPrivate* private)
 {
     FAT_ENTRY ret = 0;
@@ -110,33 +126,152 @@ struct fileSystem* insertIntoFileSystem()
     return &fs;
 }
 
-static struct file* openFile(struct pathTracer* tracer, const char* mode, void* private)
+//Returns all directoryEntries of a directory. Also if the directory is split on multiple clusters
+static struct directoryEntry* getDirEntries(uint32_t dataClusterNum, struct fatPrivate* private, uint32_t* outMaxEntries)
 {
-    struct fatPrivate* pr = (struct fatPrivate*)private;
+    uint32_t clusterList[255];
+    memset(clusterList, 0, sizeof(clusterList));
+    uint32_t clustersTotal = 0;
 
+    FAT_ENTRY fatDir = getFatEntry(dataClusterNum, private);
+    while (1)
+    {
+        clusterList[clustersTotal] = dataClusterNum;
+        clustersTotal++;
+        dataClusterNum = fatDir;
+
+        if (fatDir != FAT_ENTRY_USED && fatDir != FAT_ENTRY_FREE)
+        {
+            fatDir = getFatEntry(dataClusterNum, private);
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    if (clustersTotal == 0)
+        return NULL;
+
+    struct directoryEntry* ret = kzalloc(private->clusterSize * clustersTotal);
+    RETNULL(ret);
+
+    for (uint32_t i = 0; i < clustersTotal; i++)
+    {
+        diskStreamSeek(private->readStream, dataClusterToAbsoluteAddress(clusterList[i], private));
+        diskStreamRead(private->readStream, ret+=(i*private->clusterSize), private->clusterSize);
+    }
+
+    *outMaxEntries = (private->clusterSize * clustersTotal) / sizeof(struct directoryEntry);
+    return ret;
+}
+
+static int compareEntryWithPath(struct directoryEntry* entry, char* path)
+{
+    int ret = -1;
+
+    char* upperCaseName = toUpperCase(path, strlen(path));
+
+    char* realName = (char*)kzalloc(8);
+    char* extension = (char*)kzalloc(3);
+
+    int charPos = findChar(upperCaseName, '.');
+    if (charPos >= 0)
+    {
+        strncpy(extension, upperCaseName+charPos+1, 3);
+    }
+    strncpy(realName, upperCaseName, charPos);
+
+    ret = strncmp(entry->name, realName, strlen(realName));
+    if (charPos >= 0 && ret == 0)
+        ret = strncmp(entry->ext, extension, strlen(extension));
+
+    kzfree(realName);
+    kzfree(extension);
+    kzfree(upperCaseName);
+    return ret;
+}
+
+static struct directoryEntry* findDirEntry(uint32_t dataClusterNum, char* name, enum dirEntryAttribute attribute, struct fatPrivate* private)
+{
+    struct directoryEntry* ret = kzalloc(sizeof(struct directoryEntry));
+    RETNULL(ret);
+
+    uint32_t maxEntires = 0;
+    struct directoryEntry* entries = getDirEntries(dataClusterNum, private, &maxEntires);
+    RETNULL(entries);
+
+    uint32_t counter = 0;
+    while (entries+counter != NULL && counter < maxEntires)
+    {
+        if (compareEntryWithPath(entries+counter, name) == 0 && (entries+counter)->attributes == attribute)
+        {
+            memcpy(ret, entries+counter, sizeof(struct directoryEntry));
+            kzfree(entries);
+            return ret;
+        }
+        counter++;
+    }
+
+    kzfree(entries);
+    kzfree(ret);
+    return NULL;
+}
+
+static struct fatFile* findFile(struct pathTracer* tracer, struct fatPrivate* private)
+{
     struct pathTracerPart* part = pathTracerStartTrace(tracer);
     RETNULL(part);
 
-    struct directoryEntry* dirEntry = kzalloc(sizeof(struct directoryEntry));
-    RETNULL(dirEntry);
+    uint32_t dataClusterNum = absoluteAddressToCluster(private->rootDirStartAddress, private);
+    enum dirEntryAttribute curAttribute = part->type == PATH_TRACER_PART_FILE ? DIR_ENTRY_ATTRIBUTE_ARCHIVE : DIR_ENTRY_ATTRIBUTE_DIRECTORY;
+    struct directoryEntry* entry;
 
-    if (pr->bootRecord.rootDirCluster != 2)
+    while (1)
     {
-        //Just for now, while testing
-        return NULL;
+        entry = findDirEntry(dataClusterNum, part->pathPart, curAttribute, private);
+        part = pathTracerGetNext(part);
+
+        if (part == NULL || entry == NULL)
+            break;
+
+        if (curAttribute == DIR_ENTRY_ATTRIBUTE_DIRECTORY)
+        {
+            dataClusterNum = entry->startClusterHigh << 16 | entry->startClusterLow;
+            curAttribute = part->type == PATH_TRACER_PART_FILE ? DIR_ENTRY_ATTRIBUTE_ARCHIVE : DIR_ENTRY_ATTRIBUTE_DIRECTORY;
+            kzfree(entry);
+        }
+        else if (curAttribute == DIR_ENTRY_ATTRIBUTE_ARCHIVE)
+        {
+            break;
+        }
     }
 
-    getFatEntry(0, pr);
+    if (entry != NULL)
+    {
+        struct fatFile* file = (struct fatFile*)kzalloc(sizeof(struct fatFile));
+        RETNULL(file);
 
-    kprintf("\n\nFAT START: %u\n", pr->fatAddress);
-    FAT_ENTRY* entries = getMultipleFatEntries(0,5, pr);
-    for (uint8_t i = 0; i < 5; i++)
-        kprintf("FAT ENTRY%u: %x\n", i, entries[i]);
+        file->fileSize = entry->fileSize;
+        file->startCluster = entry->startClusterHigh << 16 | entry->startClusterLow;
 
-    struct directoryEntry dirBuffer[(pr->bootRecord.bytesPerSector * pr->bootRecord.sectorsPerCluster) / sizeof(struct directoryEntry)];
-    diskStreamSeek(pr->readStream, pr->rootDirStartAddress);
-    diskStreamRead(pr->readStream, dirBuffer, 200);
-
-    if (mode){}
+        kzfree(entry);
+        return file;
+    }
     return NULL;
+}
+
+static struct file* openFile(struct pathTracer* tracer, const char* mode, void* private)
+{
+    struct fatPrivate* pr = (struct fatPrivate*)private;
+    struct fatFile* fatFile = findFile(tracer, pr);
+    RETNULL(fatFile);
+
+    struct file* file = (struct file*)kzalloc(sizeof(struct file));
+    RETNULL(file);
+
+    file->size = fatFile->fileSize;
+    strncpy(file->path, pathTracerGetPathString(tracer), BOBAOS_MAX_PATH_SIZE);
+
+    return file;
 }

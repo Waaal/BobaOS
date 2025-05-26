@@ -100,3 +100,25 @@ struct pathTracerPart* pathTracerGetNext(struct pathTracerPart* tracer)
     if (tracer == NULL || tracer->next == NULL){return NULL;}
     return tracer->next;
 }
+
+char* pathTracerGetPathString(struct pathTracer* tracer)
+{
+    char* ret = kzalloc(BOBAOS_MAX_PATH_SIZE);
+    RETNULL(ret);
+
+    ret[0] = (char)(tracer->diskId + '0');
+    ret[1] = ':';
+
+    struct pathTracerPart* part = pathTracerStartTrace(tracer);
+    uint16_t counter = 2;
+    while (part != NULL)
+    {
+        strncpy(ret+counter, part->pathPart, strlen(part->pathPart));
+        part = pathTracerGetNext(part);
+
+        counter+= strlen(part->pathPart);
+        *(ret+counter) += '/';
+        counter++;
+    }
+    return ret;
+}

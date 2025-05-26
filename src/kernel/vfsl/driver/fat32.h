@@ -7,6 +7,22 @@
 
 #define FAT_ENTRY_AND 0x0FFFFFFF;
 
+#define FAT_ENTRY_FREE 0x0
+#define FAT_ENTRY_USED 0xFFFFFFF
+
+enum dirEntryAttribute
+{
+    DIR_ENTRY_ATTRIBUTE_READ_ONLY = 0x1,
+    DIR_ENTRY_ATTRIBUTE_HIDDEN = 0x2,
+    DIR_ENTRY_ATTRIBUTE_SYSTEM_FILE = 0x4,
+    DIR_ENTRY_ATTRIBUTE_VOLUME_ID = 0x8,
+    DIR_ENTRY_ATTRIBUTE_DIRECTORY = 0x10,
+    DIR_ENTRY_ATTRIBUTE_ARCHIVE = 0x20,
+    DIR_ENTRY_ATTRIBUTE_DEVICE = 0x40,
+    DIR_ENTRY_ATTRIBUTE_RESERVED = 0x80,
+    DIR_ENTRY_ATTRIBUTE_LNF = 0xF
+};
+
 typedef uint32_t FAT_ENTRY;
 
 struct masterBootRecord
@@ -56,6 +72,24 @@ struct directoryEntry
     uint16_t startClusterLow;
     uint32_t fileSize;
 } __attribute__ ((packed));
+
+struct longFileNameEntry
+{
+    uint8_t order;
+    uint16_t charsLow[5];
+    uint8_t attributes;
+    uint8_t reserved;
+    uint8_t checkSum;
+    uint16_t charsMid[6];
+    uint16_t reserved2;
+    uint16_t charsHigh[2];
+} __attribute__ ((packed));
+
+struct fatFile
+{
+    uint32_t startCluster;
+    uint32_t fileSize;
+};
 
 struct fileSystem* insertIntoFileSystem();
 

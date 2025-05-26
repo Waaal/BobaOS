@@ -128,7 +128,7 @@ struct file* fopen(const char* path, const char* mode)
     destroyPathTracer(pathTracer);
     RETNULL(file);
 
-    if (addOpenFile(file) > 0)
+    if (addOpenFile(file) >= 0)
     {
         return file;
     }

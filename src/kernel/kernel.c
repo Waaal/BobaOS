@@ -106,8 +106,8 @@ void kmain()
 		panic(PANIC_TYPE_KERNEL, NULL, "Failed to init the virtual filesystem layer");
 	}
 
-	struct file* testTXT = fopen("0:test.txt", "");
-	if (testTXT){}
+	struct file* file = fopen("0:testdir1/file.txt", "");
+	if (file){}
 
 	while(1){}
 }

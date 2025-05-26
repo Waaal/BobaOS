@@ -26,5 +26,6 @@ struct pathTracer* createPathTracer(const char* path);
 void destroyPathTracer(struct pathTracer* tracer);
 struct pathTracerPart* pathTracerStartTrace(struct pathTracer* tracer);
 struct pathTracerPart* pathTracerGetNext(struct pathTracerPart* tracer);
+char* pathTracerGetPathString(struct pathTracer* tracer);
 
 #endif
