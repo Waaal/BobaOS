@@ -6,5 +6,7 @@
 #define EIO	  	2;	// Input/Output error
 #define EIARG	3;  // Invalid argument
 #define ENFOUND 4;	// Not found error
+#define EIUSE   5;  // In use error
+#define EOF     6;  // End of file
 
 #endif

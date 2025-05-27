@@ -74,6 +74,26 @@ static int resolveStaticFileSystems()
     return -ENFOUND;
 }
 
+static int checkIfFileIsOpen(struct file* file)
+{
+    RETNULLERROR(file, -EIARG);
+
+    uint64_t id = strHash(file->path) % BOBAOS_MAX_OPEN_FILES;
+    if (openFiles[id].file != NULL)
+    {
+        struct fileListEntry* entry = &openFiles[id];
+        while (entry != NULL)
+        {
+            if (strcmp(file->path, entry->file->path) == 0)
+            {
+                return 1;
+            }
+            entry = entry->next;
+        }
+    }
+    return 0;
+}
+
 static int addOpenFile(struct file* file)
 {
     uint64_t id = strHash(file->path) % BOBAOS_MAX_OPEN_FILES;
@@ -93,9 +113,11 @@ static int addOpenFile(struct file* file)
         }
 
         struct fileListEntry* newEntry = kzalloc(sizeof(struct fileListEntry));
-        newEntry->file = file;
+        RETNULLERROR(newEntry, -ENMEM);
 
+        newEntry->file = file;
         newEntry->prev = currEntry;
+
         currEntry->next = newEntry;
     }
 
@@ -128,11 +150,32 @@ struct file* fopen(const char* path, const char* mode)
     destroyPathTracer(pathTracer);
     RETNULL(file);
 
-    if (addOpenFile(file) >= 0)
+    if (!checkIfFileIsOpen(file))
     {
-        return file;
+        if (addOpenFile(file) >= 0)
+        {
+            return file;
+        }
     }
 
     kzfree(file);
     return NULL;
+}
+
+int fread(struct file* file, void* out, uint64_t size, uint64_t count)
+{
+    if (!checkIfFileIsOpen(file)){return -ENFOUND;}
+
+    struct disk* disk = diskGet(file->diskId);
+    RETNULLERROR(disk, -EIARG);
+
+    if (size*count > file->size + file->position){return -EOF;}
+
+    int ret = disk->fileSystem->read(out, size*count, file, disk->fileSystem->private);
+    if (ret == 0)
+    {
+        file->position += (size*count);
+    }
+
+    return ret;
 }

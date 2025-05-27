@@ -9,7 +9,9 @@
 
 struct file
 {
+    uint16_t diskId;
     char path[BOBAOS_MAX_PATH_SIZE];
+    uint64_t position;
     uint64_t size;
 };
 
@@ -28,9 +30,8 @@ struct disk;
 typedef int (*RESOLVE)(struct disk* disk);
 typedef struct fileSystem* (*ATTACH_CALLBACK)(struct disk* disk);
 typedef struct file* (*OPEN_FILE)(struct pathTracer* tracer, const char* mode, void* private);
-typedef int (*READ_FILE)(void* ptr, uint64_t size, struct file* file);
-typedef int (*WRITE_FILE)(void* ptr, uint64_t size, struct file* file);
-typedef int (*CLOSE_FILE)(struct file* file);
+typedef int (*READ_FILE)(void* ptr, uint64_t size, struct file* file, void* private);
+typedef int (*WRITE_FILE)(void* ptr, uint64_t size, struct file* file, void* private);
 
 struct fileSystem
 {
@@ -40,10 +41,11 @@ struct fileSystem
     OPEN_FILE open;
     READ_FILE read;
     WRITE_FILE write;
-    CLOSE_FILE close;
     void* private;
 };
 
 int vfslInit();
 struct file* fopen(const char* path, const char* mode);
+int fread(struct file* file, void* out, uint64_t size, uint64_t count);
+
 #endif

@@ -106,8 +106,11 @@ void kmain()
 		panic(PANIC_TYPE_KERNEL, NULL, "Failed to init the virtual filesystem layer");
 	}
 
-	struct file* file = fopen("0:testdir1/file.txt", "");
-	if (file){}
+	struct file* file = fopen("0:big.bin", "");
+
+	uint8_t* buffer = kzalloc(file->size);
+	int res = fread(file, buffer, 512, 2);
+	if (file && res){}
 
 	while(1){}
 }

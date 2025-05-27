@@ -28,6 +28,7 @@ struct fatPrivate
 static int resolve(struct disk* disk);
 static struct fileSystem* attachToDisk(struct disk* disk);
 static struct file* openFile(struct pathTracer* tracer, const char* mode, void* private);
+static int readFile(void* ptr, uint64_t size, struct file* file, void* private);
 
 struct fileSystem fs =
 {
@@ -35,8 +36,7 @@ struct fileSystem fs =
     .resolve = resolve,
     .attach = attachToDisk,
     .open = openFile,
-    .close = NULL,
-    .read = NULL,
+    .read = readFile,
     .write = NULL,
     .private = NULL
 };
@@ -261,6 +261,56 @@ static struct fatFile* findFile(struct pathTracer* tracer, struct fatPrivate* pr
     return NULL;
 }
 
+static int readFatFile(struct fatFile* fatFile, uint64_t size, uint64_t filePos, void* ptr, struct fatPrivate* private)
+{
+    uint32_t clustersToRead = size / private->clusterSize;
+    uint64_t currentFilePos = filePos % private->clusterSize;
+    uint16_t currentToRead = private->clusterSize;
+    uint64_t totalRead = 0;
+
+    uint32_t currentCluster = fatFile->startCluster;
+    if (filePos >= private->clusterSize)
+    {
+        uint32_t clustersToSkip = filePos / private->clusterSize;
+        for (uint32_t i = 0; i < clustersToSkip; i++)
+        {
+            //TODO: Error checking
+            currentCluster = getFatEntry(currentCluster, private);
+        }
+    }
+
+    if (size % private->clusterSize != 0)
+    {
+        clustersToRead++;
+    }
+
+    if (size < private->clusterSize)
+    {
+        currentToRead -= private->clusterSize - (size % private->clusterSize);
+    }
+
+    for (uint32_t i = 0; i < clustersToRead; i++)
+    {
+        if ((i != 0 && currentCluster == FAT_ENTRY_USED) || currentCluster ==  FAT_ENTRY_FREE){break;}
+
+        diskStreamSeek(private->readStream,  dataClusterToAbsoluteAddress(currentCluster, private) + currentFilePos);
+        diskStreamRead(private->readStream,ptr + totalRead, currentToRead);
+
+        totalRead += currentToRead;
+        currentToRead = private->clusterSize;
+        currentCluster = getFatEntry(currentCluster, private);
+        currentFilePos = 0;
+
+        if (i+2 == clustersToRead)
+        {
+            //If next cluster is last cluster
+            currentToRead = (filePos + size) % private->clusterSize == 0 ? private->clusterSize : size % private->clusterSize;
+        }
+    }
+
+    return SUCCESS;
+}
+
 static struct file* openFile(struct pathTracer* tracer, const char* mode, void* private)
 {
     struct fatPrivate* pr = (struct fatPrivate*)private;
@@ -270,8 +320,23 @@ static struct file* openFile(struct pathTracer* tracer, const char* mode, void* 
     struct file* file = (struct file*)kzalloc(sizeof(struct file));
     RETNULL(file);
 
+    file->diskId = tracer->diskId;
     file->size = fatFile->fileSize;
+    file->position = 0;
     strncpy(file->path, pathTracerGetPathString(tracer), BOBAOS_MAX_PATH_SIZE);
 
     return file;
+}
+
+static int readFile(void* ptr, uint64_t size, struct file* file, void* private)
+{
+    struct fatPrivate* pr = (struct fatPrivate*)private;
+    struct pathTracer* tracer = createPathTracer(file->path);
+    RETNULLERROR(tracer, -ENMEM); // If the pathTracer fails its probably because the kernel heap is full
+
+    struct fatFile* fatFile = findFile(tracer,pr);
+    destroyPathTracer(tracer);
+    RETNULLERROR(fatFile, -ENFOUND);
+
+    return readFatFile(fatFile, size, file->position, ptr, pr);
 }
