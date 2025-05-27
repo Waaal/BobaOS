@@ -29,14 +29,14 @@ BobaOS is being developed in versioned stages:
 
 ## 🚀 Getting Started
 
-> ⚠️ BobaOS is not ready for any task (or even proper booting yet), but feel free to explore the code and follow along.
+> ⚠️ BobaOS is not ready for any real task, but feel free to explore the code and follow along.
 
 ### Requirements
 
 - Linux as development environment
 - NASM
 - x86_64-elf cross-compiler
-- make
+- CMAKE
 - QEMU
 - GDB
 
@@ -79,15 +79,30 @@ break *ADDRESS_ASSEMBLY_LABEL
 
 ---
 
+## 📂 Folder structure
+- assets/
+- script/
+- scr/
+
+**assets:** The files that get copied to the FAT32 system of BobaOS.
+
+
+**script:** Scripts for various tasks and tools.
+
+
+**scr:** The source code of the project.
+
+---
+
 ## 📦 Releases
 
-Each version milestone will be tagged and released here once stable and usable. 
+[v0.1 - Milk Tea](https://github.com/Waaal/BobaOS/releases/tag/V0.1)
 
 ---
 
 ## 🤝 Contributions
 
-Right now this is a learning project, but feel free to open issues, share ideas, or fork and build your own flavor.
+Right now this is a learning by doing project, but feel free to open issues, share ideas, or fork and build your own flavor.
 
 ---
 
