@@ -27,8 +27,9 @@ struct fatPrivate
 
 static int resolve(struct disk* disk);
 static struct fileSystem* attachToDisk(struct disk* disk);
-static struct file* openFile(struct pathTracer* tracer, const char* mode, void* private);
+static struct file* openFile(struct pathTracer* tracer, void* private);
 static int readFile(void* ptr, uint64_t size, struct file* file, void* private);
+static int writeFile(void* ptr, uint64_t size, struct file* file, void* private);
 
 struct fileSystem fs =
 {
@@ -37,7 +38,7 @@ struct fileSystem fs =
     .attach = attachToDisk,
     .open = openFile,
     .read = readFile,
-    .write = NULL,
+    .write = writeFile,
     .private = NULL
 };
 
@@ -289,9 +290,11 @@ static int readFatFile(struct fatFile* fatFile, uint64_t size, uint64_t filePos,
         currentToRead -= private->clusterSize - (size % private->clusterSize);
     }
 
-    for (uint32_t i = 0; i < clustersToRead; i++)
+    uint32_t i;
+
+    for (i = 0; i < clustersToRead; i++)
     {
-        if ((i != 0 && currentCluster == FAT_ENTRY_USED) || currentCluster ==  FAT_ENTRY_FREE){break;}
+        if (currentCluster == FAT_ENTRY_USED || currentCluster ==  FAT_ENTRY_FREE){break;}
 
         diskStreamSeek(private->readStream,  dataClusterToAbsoluteAddress(currentCluster, private) + currentFilePos);
         diskStreamRead(private->readStream,ptr + totalRead, currentToRead);
@@ -308,10 +311,14 @@ static int readFatFile(struct fatFile* fatFile, uint64_t size, uint64_t filePos,
         }
     }
 
+    if (i != clustersToRead)
+    {
+        return -EFSYSTEM;
+    }
     return SUCCESS;
 }
 
-static struct file* openFile(struct pathTracer* tracer, const char* mode, void* private)
+static struct file* openFile(struct pathTracer* tracer, void* private)
 {
     struct fatPrivate* pr = (struct fatPrivate*)private;
     struct fatFile* fatFile = findFile(tracer, pr);
@@ -339,4 +346,9 @@ static int readFile(void* ptr, uint64_t size, struct file* file, void* private)
     RETNULLERROR(fatFile, -ENFOUND);
 
     return readFatFile(fatFile, size, file->position, ptr, pr);
+}
+
+static int writeFile(void* ptr, uint64_t size, struct file* file, void* private)
+{
+    return -EFSYSTEM;
 }
