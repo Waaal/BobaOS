@@ -29,8 +29,7 @@ static int resolve(struct disk* disk);
 static struct fileSystem* attachToDisk(struct disk* disk);
 static struct file* openFile(struct pathTracer* tracer, void* private);
 static int readFile(void* ptr, uint64_t size, struct file* file, void* private);
-static int writeFile(void* ptr, uint64_t size, struct file* file, void* private);
-
+static int writeFile(const void* ptr, uint64_t size, struct file* file, void* private);
 struct fileSystem fs =
 {
     .name = "FAT32",
@@ -348,7 +347,7 @@ static int readFile(void* ptr, uint64_t size, struct file* file, void* private)
     return readFatFile(fatFile, size, file->position, ptr, pr);
 }
 
-static int writeFile(void* ptr, uint64_t size, struct file* file, void* private)
+static int writeFile(const void* ptr, uint64_t size, struct file* file, void* private)
 {
     return -EFSYSTEM;
 }

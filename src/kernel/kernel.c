@@ -1,6 +1,7 @@
 #include "kernel.h"
 
 #include <stddef.h>
+#include <memory/memory.h>
 #include <string/string.h>
 
 #include "config.h"
@@ -106,8 +107,5 @@ void kmain()
 		panic(PANIC_TYPE_KERNEL, NULL, "Failed to init the virtual filesystem layer");
 	}
 
-	struct file* file = fopen("0:test.txt", "r");
-
-	if (file){}
 	while(1){}
 }

@@ -47,7 +47,10 @@ int diskStreamRead(struct diskStream* stream, void* out, uint64_t length)
     uint64_t currLba = stream->position / 512;
     uint64_t currLbaPos = stream->position % 512;
 
-    uint64_t totalLba = ((currLbaPos + length) / 512) + 1;
+    uint64_t totalLba = ((currLbaPos + length) / 512);
+
+    if (((currLbaPos + length) % 512) > 0)
+        totalLba++;
 
     uint8_t* buffer = kzalloc(totalLba * 512);
     if (buffer == NULL){return -ENMEM;}
@@ -62,7 +65,7 @@ int diskStreamRead(struct diskStream* stream, void* out, uint64_t length)
 }
 
 int diskStreamWrite(struct diskStream* stream, const void* in, uint64_t length)
-{
+ {
     int ret = 0;
     ret = checkDiskStream(stream);
     if (ret < 0){return ret;}
@@ -71,9 +74,36 @@ int diskStreamWrite(struct diskStream* stream, const void* in, uint64_t length)
 
     uint64_t currLba = stream->position / 512;
     uint64_t currLbaPos = stream->position % 512;
+    uint64_t totalLba = ((currLbaPos + length) / 512);
 
-    uint64_t totalLba = ((currLbaPos + length) / 512) + 1;
+    if (((currLbaPos + length) % 512) > 0)
+        totalLba++;
 
-    if (currLba && totalLba){}
-    return -EIO;
+    uint8_t* buffer = kzalloc(totalLba*512);
+    RETNULLERROR(buffer, -ENMEM);
+
+    if (currLbaPos > 0)
+    {
+        //We need to get what was there in the sector
+        stream->disk->driver->read(currLba, 1, buffer, stream->disk->driver->private);
+    }
+
+    memcpy(buffer + currLbaPos, (void*)in, length);
+
+    if ((currLbaPos + length) % 512 != 0)
+    {
+        uint8_t buff[512];
+        //We need to get what was in last sector and keep it
+        stream->disk->driver->read(currLba+totalLba-1, 1, buff, stream->disk->driver->private);
+
+        uint64_t lastBlockOffset = (currLbaPos+length) % 512;
+
+        memcpy(buffer+((totalLba-1)*512)+lastBlockOffset, buff+lastBlockOffset, 512-lastBlockOffset);
+    }
+
+    stream->disk->driver->write(currLba, totalLba, buffer, stream->disk->driver->private);
+    stream->position += length;
+
+    kzfree(buffer);
+    return SUCCESS;
 }
