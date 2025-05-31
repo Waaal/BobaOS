@@ -82,7 +82,7 @@ break *ADDRESS_ASSEMBLY_LABEL
 ## 📂 Folder structure
 - assets/
 - script/
-- scr/
+- src/
 
 **assets:** The files that get copied to the FAT32 system of BobaOS.
 
@@ -90,7 +90,7 @@ break *ADDRESS_ASSEMBLY_LABEL
 **script:** Scripts for various tasks and tools.
 
 
-**scr:** The source code of the project.
+**src:** The source code of the project.
 
 ---
 
