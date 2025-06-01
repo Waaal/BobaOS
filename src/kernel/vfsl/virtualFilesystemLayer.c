@@ -221,7 +221,7 @@ struct file* fopen(const char* path, const char* mode)
     struct disk* disk = diskGet(pathTracer->diskId);
     RETNULL(disk->fileSystem);
 
-    struct file* file = disk->fileSystem->open(pathTracer, disk->fileSystem->private);
+    struct file* file = disk->fileSystem->open(pathTracer, (((m & FILE_MODE_WRITE) > 0) && ((m & FILE_MODE_APPEND) == 0) ? 1 : 0), disk->fileSystem->private);
     destroyPathTracer(pathTracer);
     RETNULL(file);
 

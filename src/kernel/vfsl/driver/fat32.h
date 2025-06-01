@@ -8,7 +8,7 @@
 #define FAT_ENTRY_AND 0x0FFFFFFF
 
 #define FAT_ENTRY_FREE 0x0
-#define FAT_ENTRY_USED 0xFFFFFFF
+#define FAT_ENTRY_USED 0x0FFFFFFF
 
 enum dirEntryAttribute
 {

@@ -122,3 +122,17 @@ char* pathTracerGetPathString(struct pathTracer* tracer)
     }
     return ret;
 }
+
+char* pathTracerGetFileName(struct pathTracer* tracer)
+{
+    struct pathTracerPart* part = pathTracerStartTrace(tracer);
+    while (part != NULL)
+    {
+        if (part->type == PATH_TRACER_PART_FILE)
+        {
+            return part->pathPart;
+        }
+        part = part->next;
+    }
+    return NULL;
+}

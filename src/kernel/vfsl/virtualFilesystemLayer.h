@@ -34,7 +34,7 @@ struct fileListEntry
 struct disk;
 typedef int (*RESOLVE)(struct disk* disk);
 typedef struct fileSystem* (*ATTACH_CALLBACK)(struct disk* disk);
-typedef struct file* (*OPEN_FILE)(struct pathTracer* tracer, void* private);
+typedef struct file* (*OPEN_FILE)(struct pathTracer* tracer, uint8_t create, void* private);
 typedef int (*READ_FILE)(void* ptr, uint64_t size, struct file* file, void* private);
 typedef int (*WRITE_FILE)(const void* ptr, uint64_t size, struct file* file, void* private);
 
