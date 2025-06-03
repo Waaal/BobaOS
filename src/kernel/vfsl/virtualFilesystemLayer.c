@@ -235,9 +235,14 @@ struct file* fopen(const char* path, const char* mode)
     return NULL;
 }
 
-void fseek(struct file* file, uint64_t offset)
+int fseek(struct file* file, uint64_t offset)
 {
-    file->position = offset;
+    if (offset <= file->size)
+    {
+        file->position = offset;
+        return SUCCESS;
+    }
+    return -ENMEM;
 }
 
 int fread(struct file* file, void* out, uint64_t size, uint64_t count)
@@ -255,7 +260,6 @@ int fread(struct file* file, void* out, uint64_t size, uint64_t count)
     {
         file->position += (size*count);
     }
-
     return ret;
 }
 
@@ -267,7 +271,21 @@ int fwrite(struct file* file, const void* in, uint64_t size, uint64_t count)
     struct disk* disk = diskGet(file->diskId);
     RETNULLERROR(disk, -EIARG);
 
-    return disk->fileSystem->write(in, size*count, file, disk->fileSystem->private);
+    int ret = disk->fileSystem->write(in, size*count, file, disk->fileSystem->private);
+    if (ret == 0)
+    {
+        if ((file->mode & FILE_MODE_APPEND) > 0)
+        {
+            file->position += (size*count);
+            file->size += (size*count);
+        }
+        else
+        {
+            file->size = file->position + (size*count);
+            file->position += (size*count);
+        }
+    }
+    return ret;
 }
 
 int fclose(struct file* file)

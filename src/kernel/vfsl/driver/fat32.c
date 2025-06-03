@@ -294,6 +294,13 @@ static struct directoryEntry* findDirEntry(uint32_t dataClusterNum, char* name, 
     return NULL;
 }
 
+/*
+static void updateDirectoryEntry(struct directoryEntry* newEntry)
+{
+
+}
+*/
+
 static struct directoryEntry* findDirectory(struct pathTracer* tracer, struct fatPrivate* private)
 {
     struct pathTracerPart* part = pathTracerStartTrace(tracer);
@@ -590,6 +597,20 @@ static int createLongFileNameEntryAtAddress(uint64_t address, const char* fileNa
     return SUCCESS;
 }
 
+//Free every FAT linkedListe except the startCluster
+static void unlinkFatChain(uint32_t cluster, struct fatPrivate* private)
+{
+    FAT_ENTRY fatEntry = getFatEntry(cluster, private);
+    while (fatEntry != FAT_ENTRY_USED && fatEntry != FAT_ENTRY_FREE)
+    {
+        FAT_ENTRY temp = fatEntry;
+        fatEntry = getFatEntry(fatEntry, private);
+        writeFATEntry(temp, FAT_ENTRY_FREE, private);
+    }
+
+    writeFATEntry(cluster, FAT_ENTRY_USED, private);
+}
+
 static struct fatFile* createFatFileInDir(struct directoryEntry* entry, const char* fileName, struct fatPrivate* private)
 {
     uint64_t entryAddress = getFreeDirEntryAddress(entry, private);
@@ -603,9 +624,115 @@ static struct fatFile* createFatFileInDir(struct directoryEntry* entry, const ch
     return file;
 }
 
-static int writeFatFile(struct fatFile* fatFile, uint64_t size, const void* in, uint8_t append, struct fatPrivate* private)
+static int writeFatFile(struct fatFile* fatFile, uint64_t size, uint64_t startPos, const void* in, uint8_t append, struct fatPrivate* private)
 {
-    return -EFSYSTEM;
+    if (append)
+    {
+        return -EFSYSTEM;
+    }
+
+    uint32_t startCluster = fatFile->startCluster;
+    uint32_t startClusterPos = startPos % private->clusterSize;
+    uint32_t clustersToWrite = (startClusterPos + size) / private->clusterSize;
+
+    if ((startClusterPos + size) % private->clusterSize != 0)
+        clustersToWrite ++;
+
+    //Skip some clusters
+    uint32_t clustersToSkip = startPos / private->clusterSize;
+    FAT_ENTRY fatEntry = startCluster;
+    FAT_ENTRY oldCluster = startCluster;
+    while (clustersToSkip > 0)
+    {
+        //TODO: Error checking
+        oldCluster = fatEntry;
+        fatEntry = getFatEntry(fatEntry, private);
+        if (fatEntry == FAT_ENTRY_FREE || fatEntry == FAT_ENTRY_USED)
+            break;
+
+        clustersToSkip--;
+    }
+
+    if (fatEntry != FAT_ENTRY_USED && fatEntry != FAT_ENTRY_FREE)
+        oldCluster = fatEntry;
+
+    if (clustersToSkip-1 == 0)
+    {
+        //If we append we may need to create 1 more cluster to append to
+        FAT_ENTRY newCluster = getFreeFatEntryCluster(private);
+        if (newCluster == 0)
+            return -ENMEM;
+
+        writeFATEntry(oldCluster, newCluster, private);
+        writeFATEntry(newCluster, FAT_ENTRY_USED, private);
+
+        startCluster = newCluster;
+    }
+    else if (clustersToSkip != 0)
+    {
+        return -ENFOUND;
+    }
+    else
+    {
+        startCluster = oldCluster;
+    }
+
+    uint16_t currentClusterToWrite = size % private->clusterSize;
+    if (currentClusterToWrite == 0)
+        currentClusterToWrite = private->clusterSize;
+
+    if (currentClusterToWrite+startClusterPos > private->clusterSize)
+    {
+        currentClusterToWrite -= (currentClusterToWrite+startClusterPos) % private->clusterSize;
+    }
+
+    uint64_t totalWritten = 0;
+    uint32_t currCluster = startCluster;
+    oldCluster = startCluster;
+
+    //Well this is a completly stupid solution but Im a completly stupid man and I cannot come up with something better right now cause Im annoyed as fuck
+    //Anyway we zero out this here, because if we are writing a file we dont want stuff that was there before
+    uint16_t zeroOutBytes = private->clusterSize - (startClusterPos + currentClusterToWrite);
+    if (zeroOutBytes != 0)
+    {
+        uint8_t zero[zeroOutBytes];
+        memset(zero, 0, zeroOutBytes);
+        diskStreamSeek(private->writeStream, dataClusterToAbsoluteAddress(currCluster, private) + currentClusterToWrite + startClusterPos);
+        diskStreamWrite(private->writeStream, zero, zeroOutBytes);
+    }
+
+    unlinkFatChain(currCluster, private);
+
+    for (uint32_t i = 0; i < clustersToWrite; i++)
+    {
+        diskStreamSeek(private->writeStream, dataClusterToAbsoluteAddress(currCluster, private) + startClusterPos);
+        diskStreamWrite(private->writeStream, in + totalWritten, currentClusterToWrite);
+
+        totalWritten += currentClusterToWrite;
+
+        currCluster = getFatEntry(currCluster, private);
+        if (currCluster == FAT_ENTRY_USED && i+1 != clustersToWrite)
+        {
+            FAT_ENTRY newFat = getFreeFatEntryCluster(private);
+            if (newFat == 0){return -ENMEM;}
+
+            writeFATEntry(oldCluster, newFat, private);
+            writeFATEntry(newFat, FAT_ENTRY_USED, private);
+
+            oldCluster = newFat;
+            currCluster = newFat;
+        }
+
+        currentClusterToWrite = private->clusterSize;
+        if (i+2 == clustersToWrite)
+        {
+            //See if the last cluster we need to write full cluster or not
+            currentClusterToWrite = size - totalWritten;
+        }
+        startClusterPos = 0;
+    }
+
+    return SUCCESS;
 }
 
 static struct file* openFile(struct pathTracer* tracer, uint8_t create, void* private)
@@ -662,5 +789,14 @@ static int writeFile(const void* ptr, uint64_t size, struct file* file, void* pr
     destroyPathTracer(tracer);
     RETNULLERROR(fatFile, -ENFOUND);
 
-    return writeFatFile(fatFile, size, ptr, ((file->mode & FILE_MODE_APPEND) > 0 ? 1 : 0), pr);
+    int ret = writeFatFile(fatFile, size, file->position ,ptr, ((file->mode & FILE_MODE_APPEND) > 0 ? 1 : 0), pr);
+    if (ret == 0)
+    {
+        //struct directoryEntry* entry = findDirectory(tracer, pr);
+        //append TODO
+        //entry->fileSize = size;
+        //updateDirectoryEntry(entry);
+    }
+
+    return ret;
 }

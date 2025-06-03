@@ -107,16 +107,14 @@ void kmain()
 		panic(PANIC_TYPE_KERNEL, NULL, "Failed to init the virtual filesystem layer");
 	}
 
-	struct file* file = fopen("0:new0.txt", "w");
-	file = fopen("0:new1.txt", "w");
-	file = fopen("0:new2.txt", "w");
-	file = fopen("0:new3.txt", "w");
-	file = fopen("0:new4.txt", "w");
-	file = fopen("0:new5.txt", "w");
-	file = fopen("0:new6.txt", "w");
-	file = fopen("0:new7.txt", "w");
-	file = fopen("0:new8.txt", "w"); //this file will overflow the fist cluster of the rootDir and now it should automatically make the rootDir 1 cluster bigger (I hope... pls)
+	void* iojuhersdfg = kzalloc(512*3);
+	memset(iojuhersdfg, 0x40, 512*3);
 
-	if (file){}
+	struct file* file = fopen("0:big.txt", "w");
+	fwrite(file, iojuhersdfg, 512 ,3);
+
+	fseek(file, 5);
+	fwrite(file, "HELP ME PLS", 11, 1);
+
 	while(1){}
 }

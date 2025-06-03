@@ -52,7 +52,7 @@ struct fileSystem
 int vfslInit();
 struct file* fopen(const char* path, const char* mode);
 int fread(struct file* file, void* out, uint64_t size, uint64_t count);
-void fseek(struct file* file, uint64_t offset);
+int fseek(struct file* file, uint64_t offset);
 int fwrite(struct file* file, const void* in, uint64_t size, uint64_t count);
 int fclose(struct file* file);
 
