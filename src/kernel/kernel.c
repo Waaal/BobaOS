@@ -107,15 +107,8 @@ void kmain()
 		panic(PANIC_TYPE_KERNEL, NULL, "Failed to init the virtual filesystem layer");
 	}
 
-	void* tempData = kzalloc(512*3);
-	memset(tempData, 0x40, 512*3);
-
-	struct file* file = fopen("0:file.txt", "w");
-	fwrite(file, tempData, 512 ,3);
-	fclose(file);
-
-	file = fopen("0:file.txt", "wa");
-	fwrite(file, ". More info on it lol", 21, 1);
+	struct file* file = fopen("0:big.bin", "w");
+	fwrite(file, "I overwrote the file", 20, 1);
 
 	while(1){}
 }

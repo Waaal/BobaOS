@@ -843,8 +843,9 @@ static int writeFile(const void* ptr, uint64_t size, struct file* file, void* pr
         memcpy(&newEntry, fileEntry, sizeof(struct directoryEntry));
         newEntry.fileSize = (append == 1 ? (file->size + size) : (size + startPos));
 
-        updateDirectoryEntry(clusterOfDirectory, fileEntry, &newEntry, private);
+        ret = updateDirectoryEntry(clusterOfDirectory, fileEntry, &newEntry, private);
     }
 
+    destroyPathTracer(tracer);
     return ret;
 }
