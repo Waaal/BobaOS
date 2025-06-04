@@ -153,7 +153,7 @@ static uint8_t checkMode(const char* mode)
             case 'a':
                 if ((ret & FILE_MODE_READ) == 0)
                 {
-                    ret |= FILE_MODE_WRITE;
+                    ret |= FILE_MODE_APPEND;
                     break;
                 }
                 return 0;
@@ -167,8 +167,6 @@ static uint8_t checkMode(const char* mode)
 
 static int closeFile(struct file* file)
 {
-    kprintf("close");
-
     uint64_t id = strHash(file->path) % BOBAOS_MAX_OPEN_FILES;
     struct fileListEntry* currEntry = &openFiles[id];
 

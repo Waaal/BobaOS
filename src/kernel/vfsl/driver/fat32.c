@@ -268,6 +268,15 @@ static int compareEntryWithPath(struct directoryEntry* entry, char* path)
     return ret;
 }
 
+static int compareEntryWithEntryByFullName(struct directoryEntry* entry1, struct directoryEntry* entry2)
+{
+    int ret = 0;
+    ret = strncmp(entry1->name, entry2->name, 8);
+    if (ret == 0)
+        ret = strncmp(entry1->ext, entry2->ext, 3);
+    return ret;
+}
+
 static struct directoryEntry* findDirEntry(uint32_t dataClusterNum, char* name, enum dirEntryAttribute attribute, struct fatPrivate* private)
 {
     struct directoryEntry* ret = kzalloc(sizeof(struct directoryEntry));
@@ -294,15 +303,48 @@ static struct directoryEntry* findDirEntry(uint32_t dataClusterNum, char* name, 
     return NULL;
 }
 
-/*
-static void updateDirectoryEntry(struct directoryEntry* newEntry)
+static void writeEntryAtAddress(struct directoryEntry* entry, uint64_t address, struct fatPrivate* private)
 {
-
+    diskStreamSeek(private->writeStream, address);
+    diskStreamWrite(private->writeStream, entry, sizeof(struct directoryEntry));
 }
-*/
 
-static struct directoryEntry* findDirectory(struct pathTracer* tracer, struct fatPrivate* private)
+//This function updates a directoryEntry in a directory
+static int updateDirectoryEntry(uint32_t clusterOfDirectory, struct directoryEntry* entryToUpdate, struct directoryEntry* newEntry, struct fatPrivate* private)
 {
+    int ret = 0;
+    FAT_ENTRY nextEntry = clusterOfDirectory;
+    uint32_t maxEntriesPerDirectory;
+
+    do
+    {
+        struct directoryEntry* entries = getDirEntrySingleCluster(nextEntry, private, &maxEntriesPerDirectory);
+        for (uint32_t i = 0; i < maxEntriesPerDirectory; i++)
+        {
+            if ((entries+i)->attributes != 0)
+            {
+                if (compareEntryWithEntryByFullName(entries+i, entryToUpdate) == 0)
+                {
+                    writeEntryAtAddress(newEntry, dataClusterToAbsoluteAddress(nextEntry, private) + (i * sizeof(struct directoryEntry)), private);
+                    goto out;
+                }
+            }
+        }
+        nextEntry = getFatEntry(clusterOfDirectory, private);
+    } while (nextEntry != FAT_ENTRY_FREE && nextEntry != FAT_ENTRY_USED);
+
+    ret = -ENFOUND;
+    out:
+    return ret;
+}
+
+
+//Returns the directory of a file. Also returns the ClusterNumber (*outCluster) of this directory for potential use
+static struct directoryEntry* findDirectory(struct pathTracer* tracer, struct fatPrivate* private, uint32_t *outCluster)
+{
+    if (outCluster != NULL)
+        *outCluster = 0;
+
     struct pathTracerPart* part = pathTracerStartTrace(tracer);
     RETNULL(part);
 
@@ -321,6 +363,9 @@ static struct directoryEntry* findDirectory(struct pathTracer* tracer, struct fa
         entry->startClusterHigh = dataClusterNum >> 16;
         entry->startClusterLow = dataClusterNum & 0xFFFF;
         entry->attributes = DIR_ENTRY_ATTRIBUTE_DIRECTORY;
+
+        if (outCluster != NULL)
+            *outCluster = dataClusterNum;
         return entry;
     }
 
@@ -352,14 +397,17 @@ static struct directoryEntry* findDirectory(struct pathTracer* tracer, struct fa
 
     if (entry != NULL && entry->attributes == DIR_ENTRY_ATTRIBUTE_DIRECTORY)
     {
+        if (outCluster != NULL)
+            *outCluster = dataClusterNum;
         return entry;
     }
+
     return NULL;
 }
 
 static struct fatFile* findFile(struct pathTracer* tracer, struct fatPrivate* private)
 {
-    struct directoryEntry* entry = findDirectory(tracer, private);
+    struct directoryEntry* entry = findDirectory(tracer, private, NULL);
     if (entry != NULL)
     {
         char* fileName = pathTracerGetFileName(tracer);
@@ -624,13 +672,8 @@ static struct fatFile* createFatFileInDir(struct directoryEntry* entry, const ch
     return file;
 }
 
-static int writeFatFile(struct fatFile* fatFile, uint64_t size, uint64_t startPos, const void* in, uint8_t append, struct fatPrivate* private)
+static int writeFatFile(struct fatFile* fatFile, uint64_t size, uint64_t startPos, const void* in, struct fatPrivate* private)
 {
-    if (append)
-    {
-        return -EFSYSTEM;
-    }
-
     uint32_t startCluster = fatFile->startCluster;
     uint32_t startClusterPos = startPos % private->clusterSize;
     uint32_t clustersToWrite = (startClusterPos + size) / private->clusterSize;
@@ -690,17 +733,6 @@ static int writeFatFile(struct fatFile* fatFile, uint64_t size, uint64_t startPo
     uint32_t currCluster = startCluster;
     oldCluster = startCluster;
 
-    //Well this is a completly stupid solution but Im a completly stupid man and I cannot come up with something better right now cause Im annoyed as fuck
-    //Anyway we zero out this here, because if we are writing a file we dont want stuff that was there before
-    uint16_t zeroOutBytes = private->clusterSize - (startClusterPos + currentClusterToWrite);
-    if (zeroOutBytes != 0)
-    {
-        uint8_t zero[zeroOutBytes];
-        memset(zero, 0, zeroOutBytes);
-        diskStreamSeek(private->writeStream, dataClusterToAbsoluteAddress(currCluster, private) + currentClusterToWrite + startClusterPos);
-        diskStreamWrite(private->writeStream, zero, zeroOutBytes);
-    }
-
     unlinkFatChain(currCluster, private);
 
     for (uint32_t i = 0; i < clustersToWrite; i++)
@@ -742,7 +774,7 @@ static struct file* openFile(struct pathTracer* tracer, uint8_t create, void* pr
     struct fatFile* fatFile = findFile(tracer, pr);
     if (fatFile == NULL && create)
     {
-        struct directoryEntry* entry = findDirectory(tracer, pr);
+        struct directoryEntry* entry = findDirectory(tracer, pr, NULL);
         if (entry != NULL)
         {
             const char* fileName = pathTracerGetFileName(tracer);
@@ -786,16 +818,32 @@ static int writeFile(const void* ptr, uint64_t size, struct file* file, void* pr
     RETNULLERROR(tracer, -ENMEM);
 
     struct fatFile* fatFile = findFile(tracer, pr);
-    destroyPathTracer(tracer);
-    RETNULLERROR(fatFile, -ENFOUND);
+    if (fatFile == NULL)
+    {
+        destroyPathTracer(tracer);
+        return -ENFOUND;
+    }
 
-    int ret = writeFatFile(fatFile, size, file->position ,ptr, ((file->mode & FILE_MODE_APPEND) > 0 ? 1 : 0), pr);
+    uint64_t startPos = file->position;
+    uint8_t append = (file->mode & FILE_MODE_APPEND) > 0 ? 1 : 0;
+
+    if (append)
+        startPos = file->size;
+
+    int ret = writeFatFile(fatFile, size, startPos, ptr, pr);
     if (ret == 0)
     {
-        //struct directoryEntry* entry = findDirectory(tracer, pr);
-        //append TODO
-        //entry->fileSize = size;
-        //updateDirectoryEntry(entry);
+        uint32_t clusterOfDirectory;
+        findDirectory(tracer, pr, &clusterOfDirectory);
+
+        struct directoryEntry* fileEntry = findDirEntry(clusterOfDirectory, pathTracerGetFileName(tracer), DIR_ENTRY_ATTRIBUTE_ARCHIVE, private);
+        RETNULLERROR(fileEntry, -ENFOUND); //should never happen
+
+        struct directoryEntry newEntry;
+        memcpy(&newEntry, fileEntry, sizeof(struct directoryEntry));
+        newEntry.fileSize = (append == 1 ? (file->size + size) : (size + startPos));
+
+        updateDirectoryEntry(clusterOfDirectory, fileEntry, &newEntry, private);
     }
 
     return ret;
