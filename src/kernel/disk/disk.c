@@ -72,14 +72,16 @@ static void scanLegacyPorts()
 		}
 	}
 }
-//See if we have a native ide controller connected
-static void scanPciBusAtaNative()
+
+/*
+//See if we have a legacy ide controller connected
+static void scanPciBusAtaLegacy()
 {
-	//Check if we have a driver for ATAPIO native ports
-	struct diskDriver* driver = getDriver(DISK_DRIVER_TYPE_ATA_NATIVE);
+	//Check if we have a driver for ATAPIO legacy ports
+	struct diskDriver* driver = getDriver(DISK_DRIVER_TYPE_ATA_LEGACY);
 	if (driver == NULL){return;}
 
-	struct pciDevice** ideControllers = getAllPciDevicesByClass(PCI_CLASS_MASS_STORAGE_CONTROLLER, PCI_SUBCLASS_MA_IDE_CONTROLLER, 0x8F);
+	struct pciDevice** ideControllers = getAllPciDevicesByClass(PCI_CLASS_MASS_STORAGE_CONTROLLER, PCI_SUBCLASS_MA_IDE_CONTROLLER, 0x80);
 
 	uint8_t count = 0;
 	while (ideControllers[count] != NULL)
@@ -88,6 +90,8 @@ static void scanPciBusAtaNative()
 		{
 			struct pciBarInfo* barCommand = getPciBarInfo(ideControllers[count], i);
 			struct pciBarInfo* barDevcon = getPciBarInfo(ideControllers[count], i+1);
+
+			kprintf("%u, barCommand %x\n", i, barCommand->base);
 
 			uint16_t select = i < 1 ? 0xA : 0xB;
 
@@ -104,12 +108,12 @@ static void scanPciBusAtaNative()
 		count++;
 	}
 }
+*/
 
 //This function trys to find all available disks on the system
 static void scanDisks()
 {
 	scanLegacyPorts();
-	scanPciBusAtaNative();
 }
 
 //This function tries to find the disk the kernel boots from and give ot the id 0 (start of the diskList).

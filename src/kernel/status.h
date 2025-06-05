@@ -10,5 +10,6 @@
 #define EOF         6;  // End of file
 #define EFSYSTEM    7;  // File system error
 #define EWMODE      8;  // Wrong mode
+#define EHARDWARE   9;  // Hardware error
 
 #endif

@@ -55,12 +55,15 @@ int diskStreamRead(struct diskStream* stream, void* out, uint64_t length)
     uint8_t* buffer = kzalloc(totalLba * 512);
     if (buffer == NULL){return -ENMEM;}
 
-    stream->disk->driver->read(currLba, totalLba, buffer, stream->disk->driver->private);
+    ret = stream->disk->driver->read(currLba, totalLba, buffer, stream->disk->driver->private);
+    GOTOERROR(ret, out);
+
     stream->position += length;
 
     memcpy(out, buffer + currLbaPos, length);
-    kzfree(buffer);
 
+    out:
+    kzfree(buffer);
     return ret;
 }
 
@@ -85,7 +88,8 @@ int diskStreamWrite(struct diskStream* stream, const void* in, uint64_t length)
     if (currLbaPos > 0)
     {
         //We need to get what was there in the sector
-        stream->disk->driver->read(currLba, 1, buffer, stream->disk->driver->private);
+        ret = stream->disk->driver->read(currLba, 1, buffer, stream->disk->driver->private);
+        GOTOERROR(ret, out);
     }
 
     memcpy(buffer + currLbaPos, (void*)in, length);
@@ -94,7 +98,8 @@ int diskStreamWrite(struct diskStream* stream, const void* in, uint64_t length)
     {
         uint8_t buff[512];
         //We need to get what was in last sector and keep it
-        stream->disk->driver->read(currLba+totalLba-1, 1, buff, stream->disk->driver->private);
+        ret = stream->disk->driver->read(currLba+totalLba-1, 1, buff, stream->disk->driver->private);
+        GOTOERROR(ret, out);
 
         uint64_t lastBlockOffset = (currLbaPos+length) % 512;
 
@@ -102,8 +107,11 @@ int diskStreamWrite(struct diskStream* stream, const void* in, uint64_t length)
     }
 
     stream->disk->driver->write(currLba, totalLba, buffer, stream->disk->driver->private);
+    GOTOERROR(ret, out);
+
     stream->position += length;
 
+    out:
     kzfree(buffer);
-    return SUCCESS;
+    return ret;
 }

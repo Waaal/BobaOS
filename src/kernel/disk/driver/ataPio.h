@@ -33,6 +33,6 @@
 
 int ataPioProbePort(uint16_t port, uint16_t deviceCon);
 int ataPioAttach(struct disk* disk, uint16_t base, uint16_t select, uint16_t deviceCon);
-struct diskDriver* registerAtaPioDriver(enum diskDriverType type);
+struct diskDriver* registerAtaPioDriver();
 
 #endif

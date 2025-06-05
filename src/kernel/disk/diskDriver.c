@@ -26,10 +26,7 @@ static int loadStaticDriver()
 {
 	int ret = 0;
 
-	ret = insertDriver(registerAtaPioDriver(DISK_DRIVER_TYPE_ATA_LEGACY));
-	if(ret < 0){return ret;}
-
-	ret = insertDriver(registerAtaPioDriver((DISK_DRIVER_TYPE_ATA_NATIVE)));
+	ret = insertDriver(registerAtaPioDriver());
 	return ret;
 }
 

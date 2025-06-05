@@ -1,5 +1,6 @@
 #include "ataPio.h"
 
+#include <print.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string/string.h>
@@ -70,6 +71,18 @@ static void ataPioWaitDrq(uint16_t base)
 	while(!(inb(base + ATAPIO_REG_STATUS) & ATAPIO_STATUS_DRQ));
 }
 
+static uint8_t checkStatusError(uint16_t base)
+{
+	if (inb(base + ATAPIO_REG_STATUS) & ATAPIO_STATUS_ERR)
+		return 1;
+	return 0;
+}
+
+static uint8_t getErrorCode(uint16_t base)
+{
+	return inb(base + ATAPIO_REG_ERROR);
+}
+
 static struct diskInfo ataPioIdentify(void* private)
 {
 	struct ataPioPrivate* pr = (struct ataPioPrivate*)private;
@@ -137,6 +150,13 @@ static int ataPioWrite(uint64_t lba, uint64_t total, void* in, void* private)
 	for (uint64_t b = 0; b < total; b++)
 	{
 		ataPioWaitDrq(pr->port);
+
+		if (checkStatusError(pr->port))
+		{
+			kprintf("[ERROR-ATAPIO]: Ata pio returned error code %u\n", getErrorCode(pr->port));
+			return -EHARDWARE;
+		}
+
 		for (uint16_t i = 0; i < 256; i++)
 		{
 			outw(pr->port, *ptr);
@@ -166,6 +186,13 @@ static int ataPioRead(uint64_t lba, uint64_t total, void* out, void* private)
 	for (uint64_t b = 0; b < total; b++)
 	{
 		ataPioWaitDrq(pr->port);
+
+		if (checkStatusError(pr->port))
+		{
+			kprintf("[ERROR-ATAPIO]: Ata pio returned error code %u\n", getErrorCode(pr->port));
+			return -EHARDWARE;
+		}
+
 		for (uint16_t i = 0; i < 256; i++)
 		{
 			*ptr = inw(pr->port);
@@ -174,16 +201,6 @@ static int ataPioRead(uint64_t lba, uint64_t total, void* out, void* private)
 	}
 
 	return 0;
-}
-
-struct diskDriver* registerAtaPioDriver(enum diskDriverType type)
-{
-	//copy the driver since we can have multiple disk who use the ataPio driver with different settings
-	struct diskDriver* cpyDriver = (struct diskDriver*)kzalloc(sizeof(struct diskDriver));
-	memcpy(cpyDriver,&driver, sizeof(struct diskDriver));	
-
-	cpyDriver->type = type;
-	return cpyDriver;
 }
 
 int ataPioProbePort(uint16_t base, uint16_t deviceCon)
@@ -196,6 +213,11 @@ int ataPioProbePort(uint16_t base, uint16_t deviceCon)
 		return 0;
 	}
 	return 1;
+}
+
+struct diskDriver* registerAtaPioDriver()
+{
+	return &driver;
 }
 
 //Attaches a ataPIO driver to the disk and disable IRQs for PIO mode

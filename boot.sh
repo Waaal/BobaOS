@@ -1,1 +1,1 @@
-qemu-system-x86_64  -m 4G -device piix3-ide,id=ide -drive id=disk,file=./build/os.bin,format=raw,if=none -device ide-hd,drive=disk,bus=ide.0
+qemu-system-x86_64  -m 4G -hda ./build/os.bin
