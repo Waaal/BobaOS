@@ -9,6 +9,7 @@
 #include "disk/driver/ataPio.h"
 #include "memory/kheap/kheap.h"
 #include "string/string.h"
+#include "print.h"
 
 struct disk* diskList[BOBAOS_MAX_DISKS];
 uint16_t currentDisk = 0;
@@ -55,11 +56,19 @@ static void scanLegacyPorts()
 	struct diskDriver* driver = getDriver(DISK_DRIVER_TYPE_ATA_LEGACY);
 	if(driver != NULL)
 	{
-		//TODO: probe all legacy ports lol
+		//Master
 		int diskAvailable = ataPioProbePort(0x1F0, 0x206);
 		if(diskAvailable > 0)
 		{
 			insertAtaPioDisk(driver, 0x1F0, 0x206, 0xA);
+			print("  Found ATA_LEGACY (Master) at 0x1F0\n");
+		}
+		//Slave
+		diskAvailable = ataPioProbePort(0x170, 0x206);
+		if(diskAvailable > 0)
+		{
+			insertAtaPioDisk(driver, 0x170, 0x206, 0xB);
+			print("  Found ATA_LEGACY (Slave) at 0x1F0\n");
 		}
 	}
 }
@@ -88,6 +97,7 @@ static void scanPciBusAtaNative()
 				if (diskAvailable == 1)
 				{
 					insertAtaPioDisk(driver, barCommand->base, barDevcon->base, select);
+					kprintf("  Found ATA_NATIVE at %x\n", barCommand->base);
 				}
 			}
 		}
@@ -100,7 +110,6 @@ static void scanDisks()
 {
 	scanLegacyPorts();
 	scanPciBusAtaNative();
-	//TODO: scan pci bus etc
 }
 
 //This function tries to find the disk the kernel boots from and give ot the id 0 (start of the diskList).

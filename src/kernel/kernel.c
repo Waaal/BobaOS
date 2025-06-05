@@ -97,6 +97,8 @@ void kmain()
 		panic(PANIC_TYPE_KERNEL, NULL, "Failed to init diskDriver-system");
 	}
 
+	print("Disk scan:\n");
+
 	if (diskInit() < 0)
 	{
 		panic(PANIC_TYPE_KERNEL, NULL, "Kernel disk not found");
@@ -106,9 +108,6 @@ void kmain()
 	{
 		panic(PANIC_TYPE_KERNEL, NULL, "Failed to init the virtual filesystem layer");
 	}
-
-	struct file* file = fopen("0:big.bin", "w");
-	fwrite(file, "I overwrote the file", 20, 1);
 
 	while(1){}
 }
