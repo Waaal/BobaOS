@@ -34,7 +34,7 @@ struct fileListEntry
 struct disk;
 typedef int (*RESOLVE)(struct disk* disk);
 typedef struct fileSystem* (*ATTACH_CALLBACK)(struct disk* disk);
-typedef struct file* (*OPEN_FILE)(struct pathTracer* tracer, uint8_t create, void* private);
+typedef struct file* (*OPEN_FILE)(struct pathTracer* tracer, uint8_t create, void* private, int* oErrCode);
 typedef int (*READ_FILE)(void* ptr, uint64_t size, struct file* file, void* private);
 typedef int (*WRITE_FILE)(const void* ptr, uint64_t size, struct file* file, void* private);
 
@@ -50,7 +50,7 @@ struct fileSystem
 };
 
 int vfslInit();
-struct file* fopen(const char* path, const char* mode);
+struct file* fopen(const char* path, const char* mode, int* oErrCode);
 int fread(struct file* file, void* out, uint64_t size, uint64_t count);
 int fseek(struct file* file, uint64_t offset);
 int fwrite(struct file* file, const void* in, uint64_t size, uint64_t count);

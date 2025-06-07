@@ -22,7 +22,7 @@ struct pathTracerPart
     struct pathTracerPart *next;
 };
 
-struct pathTracer* createPathTracer(const char* path);
+struct pathTracer* createPathTracer(const char* path, int* oErrCode);
 void destroyPathTracer(struct pathTracer* tracer);
 struct pathTracerPart* pathTracerStartTrace(struct pathTracer* tracer);
 struct pathTracerPart* pathTracerGetNext(struct pathTracerPart* tracer);

@@ -11,5 +11,7 @@
 #define EFSYSTEM    7;  // File system error
 #define EWMODE      8;  // Wrong mode
 #define EHARDWARE   9;  // Hardware error
+#define ENOPEN     10;  // No open error
+#define EFORMAT    11;  // Wrong format
 
 #endif

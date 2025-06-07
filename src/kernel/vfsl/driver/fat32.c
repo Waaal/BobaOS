@@ -29,7 +29,7 @@ struct fatPrivate
 
 static int resolve(struct disk* disk);
 static struct fileSystem* attachToDisk(struct disk* disk);
-static struct file* openFile(struct pathTracer* tracer, uint8_t create, void* private);
+static struct file* openFile(struct pathTracer* tracer, uint8_t create, void* private, int* oErrCode);
 static int readFile(void* ptr, uint64_t size, struct file* file, void* private);
 static int writeFile(const void* ptr, uint64_t size, struct file* file, void* private);
 struct fileSystem fs =
@@ -202,8 +202,8 @@ static struct directoryEntry* getDirEntrySingleCluster(uint32_t clusterNum, stru
     return entries;
 }
 
-//Returns all directoryEntries of a directory. Also if the directory is split on multiple clusters
-static struct directoryEntry* getDirEntries(uint32_t dataClusterNum, struct fatPrivate* private, uint32_t* outMaxEntries)
+//Returns all directoryEntries of a directory. Even if the directory is split on multiple clusters
+static struct directoryEntry* getDirEntries(uint32_t dataClusterNum, struct fatPrivate* private, uint32_t* outMaxEntries, int* oErrCode)
 {
     uint32_t clusterList[255];
     memset(clusterList, 0, sizeof(clusterList));
@@ -227,10 +227,13 @@ static struct directoryEntry* getDirEntries(uint32_t dataClusterNum, struct fatP
     }
 
     if (clustersTotal == 0)
+    {
+        *oErrCode = -EFSYSTEM;
         return NULL;
+    }
 
     struct directoryEntry* ret = kzalloc(private->clusterSize * clustersTotal);
-    RETNULL(ret);
+    RETNULLSETERROR(ret, -ENMEM, oErrCode);
 
     for (uint32_t i = 0; i < clustersTotal; i++)
     {
@@ -277,14 +280,14 @@ static int compareEntryWithEntryByFullName(struct directoryEntry* entry1, struct
     return ret;
 }
 
-static struct directoryEntry* findDirEntry(uint32_t dataClusterNum, char* name, enum dirEntryAttribute attribute, struct fatPrivate* private)
+static struct directoryEntry* findDirEntry(uint32_t dataClusterNum, char* name, enum dirEntryAttribute attribute, struct fatPrivate* private, int* oErrCode)
 {
     struct directoryEntry* ret = kzalloc(sizeof(struct directoryEntry));
-    RETNULL(ret);
+    RETNULLSETERROR(ret, -ENMEM, oErrCode);
 
     uint32_t maxEntires = 0;
-    struct directoryEntry* entries = getDirEntries(dataClusterNum, private, &maxEntires);
-    RETNULL(entries);
+    struct directoryEntry* entries = getDirEntries(dataClusterNum, private, &maxEntires, oErrCode);
+    RETNULL(entries); //ErrorCode already set by getDirEntries
 
     uint32_t counter = 0;
     while (entries+counter != NULL && counter < maxEntires)
@@ -300,6 +303,7 @@ static struct directoryEntry* findDirEntry(uint32_t dataClusterNum, char* name, 
 
     kzfree(entries);
     kzfree(ret);
+    *oErrCode = -ENFOUND;
     return NULL;
 }
 
@@ -340,13 +344,13 @@ static int updateDirectoryEntry(uint32_t clusterOfDirectory, struct directoryEnt
 
 
 //Returns the directory of a file. Also returns the ClusterNumber (*outCluster) of this directory for potential use
-static struct directoryEntry* findDirectory(struct pathTracer* tracer, struct fatPrivate* private, uint32_t *outCluster)
+static struct directoryEntry* findDirectory(struct pathTracer* tracer, struct fatPrivate* private, uint32_t* oCluster, int* oErrCode)
 {
-    if (outCluster != NULL)
-        *outCluster = 0;
+    if (oCluster != NULL)
+        *oCluster = 0;
 
     struct pathTracerPart* part = pathTracerStartTrace(tracer);
-    RETNULL(part);
+    RETNULLSETERROR(part, -EIARG, oErrCode);
 
     uint32_t dataClusterNum = absoluteAddressToCluster(private->rootDirStartAddress, private);
     enum dirEntryAttribute curAttribute = part->type == PATH_TRACER_PART_FILE ? DIR_ENTRY_ATTRIBUTE_ARCHIVE : DIR_ENTRY_ATTRIBUTE_DIRECTORY;
@@ -358,20 +362,22 @@ static struct directoryEntry* findDirectory(struct pathTracer* tracer, struct fa
         //We need to return the rootDir
 
         struct directoryEntry* entry = kzalloc(sizeof(struct directoryEntry));
-        RETNULL(entry);
+        RETNULLSETERROR(entry, -ENMEM, oErrCode);
 
         entry->startClusterHigh = dataClusterNum >> 16;
         entry->startClusterLow = dataClusterNum & 0xFFFF;
         entry->attributes = DIR_ENTRY_ATTRIBUTE_DIRECTORY;
 
-        if (outCluster != NULL)
-            *outCluster = dataClusterNum;
+        if (oCluster != NULL)
+            *oCluster = dataClusterNum;
         return entry;
     }
 
     while (1)
     {
-        entry = findDirEntry(dataClusterNum, part->pathPart, curAttribute, private);
+        entry = findDirEntry(dataClusterNum, part->pathPart, curAttribute, private, oErrCode);
+        RETNULL(entry); //ErrCode already set by findDirEntry
+
         part = pathTracerGetNext(part);
 
         if (part == NULL || part->type == PATH_TRACER_PART_FILE || entry == NULL)
@@ -397,41 +403,36 @@ static struct directoryEntry* findDirectory(struct pathTracer* tracer, struct fa
 
     if (entry != NULL && entry->attributes == DIR_ENTRY_ATTRIBUTE_DIRECTORY)
     {
-        if (outCluster != NULL)
-            *outCluster = dataClusterNum;
+        if (oCluster != NULL)
+            *oCluster = dataClusterNum;
         return entry;
     }
 
+    *oErrCode = -ENFOUND;
     return NULL;
 }
 
-static struct fatFile* findFile(struct pathTracer* tracer, struct fatPrivate* private)
+static struct fatFile* findFile(struct pathTracer* tracer, struct fatPrivate* private, int* oErrCode)
 {
-    struct directoryEntry* entry = findDirectory(tracer, private, NULL);
-    if (entry != NULL)
-    {
-        char* fileName = pathTracerGetFileName(tracer);
-        if (fileName == NULL)
-        {
-            kzfree(entry);
-            return NULL;
-        }
+    struct directoryEntry* entry = findDirectory(tracer, private, NULL, oErrCode);
+    RETNULL(entry);
 
-        uint32_t clusterNum = entry->startClusterHigh << 16 | entry->startClusterLow;
-        struct directoryEntry* fileEntry = findDirEntry(clusterNum, fileName, DIR_ENTRY_ATTRIBUTE_ARCHIVE, private);
-        kzfree(entry);
-        RETNULL(fileEntry);
+    char* fileName = pathTracerGetFileName(tracer);
+    RETNULLSETERROR(fileName, -EIARG, oErrCode);
 
-        struct fatFile* file = (struct fatFile*)kzalloc(sizeof(struct fatFile));
-        RETNULL(file);
+    uint32_t clusterNum = entry->startClusterHigh << 16 | entry->startClusterLow;
+    struct directoryEntry* fileEntry = findDirEntry(clusterNum, fileName, DIR_ENTRY_ATTRIBUTE_ARCHIVE, private, oErrCode);
+    kzfree(entry);
+    RETNULL(fileEntry);
 
-        file->fileSize = fileEntry->fileSize;
-        file->startCluster = fileEntry->startClusterHigh << 16 | fileEntry->startClusterLow;
+    struct fatFile* file = (struct fatFile*)kzalloc(sizeof(struct fatFile));
+    RETNULLSETERROR(file, -ENMEM, oErrCode);
 
-        kzfree(fileEntry);
-        return file;
-    }
-    return NULL;
+    file->fileSize = fileEntry->fileSize;
+    file->startCluster = fileEntry->startClusterHigh << 16 | fileEntry->startClusterLow;
+
+    kzfree(fileEntry);
+    return file;
 }
 
 static int readFatFile(struct fatFile* fatFile, uint64_t size, uint64_t filePos, void* ptr, struct fatPrivate* private)
@@ -767,14 +768,14 @@ static int writeFatFile(struct fatFile* fatFile, uint64_t size, uint64_t startPo
     return SUCCESS;
 }
 
-static struct file* openFile(struct pathTracer* tracer, uint8_t create, void* private)
+static struct file* openFile(struct pathTracer* tracer, uint8_t create, void* private, int* oErrCode)
 {
     struct fatPrivate* pr = (struct fatPrivate*)private;
 
-    struct fatFile* fatFile = findFile(tracer, pr);
-    if (fatFile == NULL && create)
+    struct fatFile* fatFile = findFile(tracer, pr, oErrCode);
+    if (fatFile == NULL && create && oErrCode == 0)
     {
-        struct directoryEntry* entry = findDirectory(tracer, pr, NULL);
+        struct directoryEntry* entry = findDirectory(tracer, pr, NULL, oErrCode);
         if (entry != NULL)
         {
             const char* fileName = pathTracerGetFileName(tracer);
@@ -784,10 +785,10 @@ static struct file* openFile(struct pathTracer* tracer, uint8_t create, void* pr
             kzfree(entry);
         }
     }
-    RETNULL(fatFile);
+    RETNULL(fatFile); //ErrCode already set by findFile or findDirectory
 
     struct file* file = (struct file*)kzalloc(sizeof(struct file));
-    RETNULL(file);
+    RETNULLSETERROR(file, -ENMEM, oErrCode);
 
     file->diskId = tracer->diskId;
     file->size = fatFile->fileSize;
@@ -800,28 +801,31 @@ static struct file* openFile(struct pathTracer* tracer, uint8_t create, void* pr
 
 static int readFile(void* ptr, uint64_t size, struct file* file, void* private)
 {
+    int errCode = 0;
     struct fatPrivate* pr = (struct fatPrivate*)private;
-    struct pathTracer* tracer = createPathTracer(file->path);
-    RETNULLERROR(tracer, -ENMEM); // If the pathTracer fails its probably because the kernel heap is full
+    struct pathTracer* tracer = createPathTracer(file->path, &errCode);
+    RETNULLERROR(tracer, errCode); // If the pathTracer fails its probably because the kernel heap is full
 
-    struct fatFile* fatFile = findFile(tracer,pr);
+    struct fatFile* fatFile = findFile(tracer,pr, &errCode);
     destroyPathTracer(tracer);
-    RETNULLERROR(fatFile, -ENFOUND);
+    RETNULLERROR(fatFile, errCode);
 
     return readFatFile(fatFile, size, file->position, ptr, pr);
 }
 
 static int writeFile(const void* ptr, uint64_t size, struct file* file, void* private)
 {
-    struct fatPrivate* pr = (struct fatPrivate*)private;
-    struct pathTracer* tracer = createPathTracer(file->path);
-    RETNULLERROR(tracer, -ENMEM);
+    int errCode = 0;
 
-    struct fatFile* fatFile = findFile(tracer, pr);
+    struct fatPrivate* pr = (struct fatPrivate*)private;
+    struct pathTracer* tracer = createPathTracer(file->path, &errCode);
+    RETNULLERROR(tracer, errCode);
+
+    struct fatFile* fatFile = findFile(tracer, pr, &errCode);
     if (fatFile == NULL)
     {
         destroyPathTracer(tracer);
-        return -ENFOUND;
+        return errCode;
     }
 
     uint64_t startPos = file->position;
@@ -830,22 +834,23 @@ static int writeFile(const void* ptr, uint64_t size, struct file* file, void* pr
     if (append)
         startPos = file->size;
 
-    int ret = writeFatFile(fatFile, size, startPos, ptr, pr);
-    if (ret == 0)
+    errCode = writeFatFile(fatFile, size, startPos, ptr, pr);
+    if (errCode == 0)
     {
         uint32_t clusterOfDirectory;
-        findDirectory(tracer, pr, &clusterOfDirectory);
+        findDirectory(tracer, pr, &clusterOfDirectory, &errCode);
+        RETERROR(errCode);
 
-        struct directoryEntry* fileEntry = findDirEntry(clusterOfDirectory, pathTracerGetFileName(tracer), DIR_ENTRY_ATTRIBUTE_ARCHIVE, private);
-        RETNULLERROR(fileEntry, -ENFOUND); //should never happen
+        struct directoryEntry* fileEntry = findDirEntry(clusterOfDirectory, pathTracerGetFileName(tracer), DIR_ENTRY_ATTRIBUTE_ARCHIVE, private, &errCode);
+        RETNULLERROR(fileEntry, errCode);
 
         struct directoryEntry newEntry;
         memcpy(&newEntry, fileEntry, sizeof(struct directoryEntry));
         newEntry.fileSize = (append == 1 ? (file->size + size) : (size + startPos));
 
-        ret = updateDirectoryEntry(clusterOfDirectory, fileEntry, &newEntry, private);
+        errCode = updateDirectoryEntry(clusterOfDirectory, fileEntry, &newEntry, private);
     }
 
     destroyPathTracer(tracer);
-    return ret;
+    return errCode;
 }

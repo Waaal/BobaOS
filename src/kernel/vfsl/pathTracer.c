@@ -22,26 +22,40 @@ void destroyPathTracer(struct pathTracer* tracer)
     kzfree(tracer);
 }
 
-struct pathTracer* createPathTracer(const char* path)
+struct pathTracer* createPathTracer(const char* path, int* oErrCode)
 {
-    if (path == NULL) {return NULL;}
-    if (!isNumber(path[0])){return NULL;}
+    RETNULLSETERROR(path, -EIARG, oErrCode);
+
+    if (!isNumber(path[0]))
+    {
+        *oErrCode = -EFORMAT;
+        return NULL;
+    }
 
     uint64_t strLen = strlen(path);
-    if (strLen >= BOBAOS_MAX_PATH_SIZE){return NULL;}
+    if (strLen >= BOBAOS_MAX_PATH_SIZE)
+    {
+        *oErrCode = -EFORMAT;
+        return NULL;
+    }
 
     uint8_t diskId = toNumber(path[0]);
 
     struct disk* disk = diskGet(diskId);
-    RETNULL(disk);
+    RETNULLSETERROR(disk, -ENFOUND, oErrCode);
 
     struct pathTracer* pathTracer = kzalloc(sizeof(struct pathTracer));
-    RETNULL(pathTracer);
+    RETNULLSETERROR(pathTracer, -ENMEM, oErrCode);
 
     pathTracer->diskId = diskId;
 
     struct pathTracerPart* part = kzalloc(sizeof(struct pathTracerPart));
-    if (part == NULL){ kzfree(pathTracer); return NULL;}
+    if (part == NULL)
+    {
+        kzfree(pathTracer);
+        *oErrCode = -ENMEM;
+        return NULL;
+    }
 
     pathTracer->root = part;
 
@@ -86,6 +100,7 @@ struct pathTracer* createPathTracer(const char* path)
 
     free:
     destroyPathTracer(pathTracer);
+    *oErrCode = -ENMEM;
     return NULL;
 }
 

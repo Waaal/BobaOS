@@ -206,30 +206,43 @@ int vfslInit()
     return ret;
 }
 
-struct file* fopen(const char* path, const char* mode)
+struct file* fopen(const char* path, const char* mode, int* oErrCode)
 {
-    if (checkIfFileIsOpenString((char*)path)){return NULL;}
+    *oErrCode = 0;
+
+    if (checkIfFileIsOpenString((char*)path))
+    {
+        *oErrCode = -EIUSE;
+        return NULL;
+    }
 
     uint8_t m = checkMode(mode);
-    if (!m){ return NULL; }
+    if (!m)
+    {
+        *oErrCode = -EWMODE;
+        return NULL;
+    }
 
-    struct pathTracer* pathTracer = createPathTracer(path);
+    struct pathTracer* pathTracer = createPathTracer(path, oErrCode);
     RETNULL(pathTracer);
 
     struct disk* disk = diskGet(pathTracer->diskId);
-    RETNULL(disk->fileSystem);
 
-    struct file* file = disk->fileSystem->open(pathTracer, (((m & FILE_MODE_WRITE) > 0) && ((m & FILE_MODE_APPEND) == 0) ? 1 : 0), disk->fileSystem->private);
+    int errCode = 0;
+    struct file* file = disk->fileSystem->open(pathTracer, (((m & FILE_MODE_WRITE) > 0) && ((m & FILE_MODE_APPEND) == 0) ? 1 : 0), disk->fileSystem->private, &errCode);
     destroyPathTracer(pathTracer);
-    RETNULL(file);
+    RETNULL(file); //ErrorCdoe set by fileSystem->open
 
     file->mode = m;
 
-    if (addOpenFile(file) >= 0)
+    int err = addOpenFile(file);
+    if (err >= 0)
     {
         return file;
     }
+
     kzfree(file);
+    *oErrCode = err;
     return NULL;
 }
 

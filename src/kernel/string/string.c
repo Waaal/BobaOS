@@ -12,12 +12,12 @@ uint64_t strlen(const char* str)
 	return len;
 }
 
-int8_t strcmp(const char* str1, const char* str2)
+int strcmp(const char* str1, const char* str2)
 {
-	int8_t ret = 0;
+	int ret = 0;
 	while(1)
 	{
-		if(*str1 == 0x0 && *str1 == 0x0)
+		if(*str1 == 0x0 && *str2 == 0x0)
 		{
 			break;
 		}
@@ -35,14 +35,14 @@ int8_t strcmp(const char* str1, const char* str2)
 	return ret;
 }
 
-int8_t strncmp(const char* str1, const char* str2, uint64_t len)
+int strncmp(const char* str1, const char* str2, uint64_t len)
 {
-	int8_t ret = 0;
+	int ret = 0;
 
 	uint64_t counter = 0;
 	while(counter < len)
 	{
-		if(*str1 == 0x0 && *str1 == 0x0)
+		if(*str1 == 0x0 && *str2 == 0x0)
 		{
 			break;
 		}
