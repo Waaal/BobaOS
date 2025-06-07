@@ -13,5 +13,6 @@
 #define EHARDWARE   9;  // Hardware error
 #define ENOPEN     10;  // No open error
 #define EFORMAT    11;  // Wrong format
+#define EDISKSPACE 12;  // Disk space error
 
 #endif

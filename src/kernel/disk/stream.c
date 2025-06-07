@@ -31,6 +31,11 @@ int diskStreamSeek(struct diskStream* stream, uint64_t position)
     ret = checkDiskStream(stream);
     if (ret < 0){return ret;}
 
+    if (position > (stream->disk->size * 512))
+    {
+        return -EDISKSPACE;
+    }
+
     stream->position = position;
 
     return ret;
@@ -106,7 +111,7 @@ int diskStreamWrite(struct diskStream* stream, const void* in, uint64_t length)
         memcpy(buffer+((totalLba-1)*512)+lastBlockOffset, buff+lastBlockOffset, 512-lastBlockOffset);
     }
 
-    stream->disk->driver->write(currLba, totalLba, buffer, stream->disk->driver->private);
+    ret = stream->disk->driver->write(currLba, totalLba, buffer, stream->disk->driver->private);
     GOTOERROR(ret, out);
 
     stream->position += length;
