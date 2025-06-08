@@ -6,7 +6,7 @@ Welcome to **BobaOS** – Boba
 
 ## 🔧 What is BobaOS?
 
-BobaOS is ax86-based 64 bit operating system.
+BobaOS is a x86-based 64 bit operating system.
 Current features include:
 
 - ATA PIO disk driver
