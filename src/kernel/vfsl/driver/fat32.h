@@ -89,6 +89,7 @@ struct fatFile
 {
     uint32_t startCluster;
     uint32_t fileSize;
+    uint8_t longFileName;
 };
 
 struct fileSystem* insertIntoFileSystem();

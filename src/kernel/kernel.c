@@ -113,6 +113,8 @@ void kmain()
 
 	int errCode = 0;
 	struct file* file = fopen("0:test.txt", "w", &errCode);
-	fwrite(file, "Hello from BOBAOS", 17, 1);
+	fwrite(file, "Hello from BobaOS", 17, 1);
+
+	if (file){}
 	while(1){}
 }

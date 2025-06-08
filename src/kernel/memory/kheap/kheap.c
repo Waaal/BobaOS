@@ -1,5 +1,7 @@
 #include "kheap.h"
 
+#include <macros.h>
+
 #include "status.h"
 #include "kheap_page.h"
 #include "kheap_buddy.h"
@@ -41,6 +43,8 @@ void* kzalloc(uint64_t size)
 
 int kzfree(void* pointer)
 {
+	RETNULLERROR(pointer, -EIARG);
+
 	int ret;
 	if(selected == KERNEL_HEAP_TYPE_PAGE)
 	{

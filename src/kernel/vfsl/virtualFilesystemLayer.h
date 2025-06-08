@@ -15,6 +15,7 @@ struct file
 {
     uint16_t diskId;
     char path[BOBAOS_MAX_PATH_SIZE];
+    char name[BOBAOS_MAX_PATH_SIZE];
     uint8_t mode;
     uint64_t position;
     uint64_t size;

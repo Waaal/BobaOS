@@ -264,29 +264,78 @@ static struct directoryEntry* getDirEntries(uint32_t dataClusterNum, struct fatP
     return ret;
 }
 
+static struct longFileNameEntry* toLongFileName(const char* name, int* oErrCode)
+{
+    struct longFileNameEntry* longEntry = kzalloc(sizeof(struct longFileNameEntry));
+    RETNULLSETERROR(longEntry, -ENMEM, oErrCode);
+
+    uint8_t fill[13] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+
+    uint8_t s = 0;
+    char* ptr = (char*)name;
+
+    for (uint8_t i = 0; i < 13; i++)
+    {
+        if (s || name[i] != 0x00)
+        {
+            if (i < 5)
+            {
+                longEntry->charsLow[i] = (uint16_t)ptr[i];
+            }
+            else if (i >= 5 && i < 11)
+            {
+                longEntry->charsMid[i-5] = (uint16_t)ptr[i];
+            }
+            else
+            {
+                longEntry->charsHigh[i-11] = (uint16_t)ptr[i];
+            }
+        }
+        else
+        {
+            ptr = (char*)fill;
+            s = 1;
+        }
+    }
+
+    longEntry->order = 0x41;
+    longEntry->attributes = 0x0F;
+    longEntry->checkSum = getCheckSumForLongFileName((char*)name);
+
+    return longEntry;
+}
+
+static int toDirEntryName(const char* name, char* oName, char* oExtension)
+{
+    char* upperCaseName = toUpperCase(name, 8);
+
+    int pointPos = findChar((char*)upperCaseName, '.');
+    if (pointPos < 0)
+    {
+        strncpy(oName, upperCaseName, 8);
+    }
+    else
+    {
+        strncpy(oName, upperCaseName, pointPos);
+        strncpy(oExtension, upperCaseName+pointPos+1, 3);
+    }
+    kzfree(upperCaseName);
+    return SUCCESS;
+}
+
 static int compareEntryWithPath(struct directoryEntry* entry, char* path)
 {
-    int ret = -1;
+    int ret = 0;
 
-    char* upperCaseName = toUpperCase(path, strlen(path));
+    char realName[8] = {0x20, 0x20, 0x20, 0x20,0x20, 0x20, 0x20, 0x20};
+    char extension[3] = {0x20, 0x20, 0x20};
+    ret = toDirEntryName(path, realName, extension);
+    RETERROR(ret);
 
-    char* realName = (char*)kzalloc(8);
-    char* extension = (char*)kzalloc(3);
+    ret = strncmp(entry->name, realName, 8);
+    if (ret == 0)
+        ret = strncmp(entry->ext, extension, 3);
 
-    int charPos = findChar(upperCaseName, '.');
-    if (charPos >= 0)
-    {
-        strncpy(extension, upperCaseName+charPos+1, 3);
-    }
-    strncpy(realName, upperCaseName, charPos);
-
-    ret = strncmp(entry->name, realName, strlen(realName));
-    if (charPos >= 0 && ret == 0)
-        ret = strncmp(entry->ext, extension, strlen(extension));
-
-    kzfree(realName);
-    kzfree(extension);
-    kzfree(upperCaseName);
     return ret;
 }
 
@@ -299,20 +348,35 @@ static int compareEntryWithEntryByFullName(struct directoryEntry* entry1, struct
     return ret;
 }
 
-static struct directoryEntry* findDirEntry(uint32_t dataClusterNum, char* name, enum dirEntryAttribute attribute, struct fatPrivate* private, int* oErrCode)
+static struct directoryEntry* findDirEntry(uint32_t dataClusterNum, char* name, enum dirEntryAttribute attribute, struct fatPrivate* private, int* oErrCode, uint8_t* oFoundByLongFileName)
 {
     struct directoryEntry* ret = kzalloc(sizeof(struct directoryEntry));
     RETNULLSETERROR(ret, -ENMEM, oErrCode);
 
+    *oFoundByLongFileName = 0;
+
     uint32_t maxEntires = 0;
     struct directoryEntry* entries = getDirEntries(dataClusterNum, private, &maxEntires, oErrCode);
-    RETNULL(entries); //ErrorCode already set by getDirEntries
+    if (entries == NULL){goto out;}
 
     uint32_t counter = 0;
     while (entries+counter != NULL && counter < maxEntires)
     {
         if (compareEntryWithPath(entries+counter, name) == 0 && (entries+counter)->attributes == attribute)
         {
+            struct longFileNameEntry* longFileName = toLongFileName(name, oErrCode);
+            if (longFileName == NULL){goto out;}
+
+            uint8_t checkSum = getCheckSumForLongFileName(name);
+            if (((struct longFileNameEntry*)(entries+counter-1))->checkSum == checkSum)
+            {
+                if (memcmp(entries+counter-1, longFileName, sizeof( struct directoryEntry)) == 0)
+                {
+                    *oFoundByLongFileName = 1;
+                }
+            }
+            kzfree(longFileName);
+
             memcpy(ret, entries+counter, sizeof(struct directoryEntry));
             kzfree(entries);
             return ret;
@@ -320,9 +384,11 @@ static struct directoryEntry* findDirEntry(uint32_t dataClusterNum, char* name, 
         counter++;
     }
 
+    *oErrCode = -ENFOUND;
+
+    out:
     kzfree(entries);
     kzfree(ret);
-    *oErrCode = -ENFOUND;
     return NULL;
 }
 
@@ -399,7 +465,8 @@ static struct directoryEntry* findDirectory(struct pathTracer* tracer, struct fa
 
     while (1)
     {
-        entry = findDirEntry(dataClusterNum, part->pathPart, curAttribute, private, oErrCode);
+        uint8_t foundByLongFileName = 0;
+        entry = findDirEntry(dataClusterNum, part->pathPart, curAttribute, private, oErrCode, &foundByLongFileName);
         RETNULL(entry); //ErrCode already set by findDirEntry
 
         part = pathTracerGetNext(part);
@@ -429,7 +496,6 @@ static struct directoryEntry* findDirectory(struct pathTracer* tracer, struct fa
     {
         if (oCluster != NULL)
             *oCluster = dataClusterNum;
-        return entry;
     }
 
     *oErrCode = -ENFOUND;
@@ -444,8 +510,9 @@ static struct fatFile* findFile(struct pathTracer* tracer, struct fatPrivate* pr
     char* fileName = pathTracerGetFileName(tracer);
     RETNULLSETERROR(fileName, -EIARG, oErrCode);
 
+    uint8_t foundByLongFileName = 0;
     uint32_t clusterNum = entry->startClusterHigh << 16 | entry->startClusterLow;
-    struct directoryEntry* fileEntry = findDirEntry(clusterNum, fileName, DIR_ENTRY_ATTRIBUTE_ARCHIVE, private, oErrCode);
+    struct directoryEntry* fileEntry = findDirEntry(clusterNum, fileName, DIR_ENTRY_ATTRIBUTE_ARCHIVE, private, oErrCode, &foundByLongFileName);
     kzfree(entry);
     RETNULL(fileEntry);
 
@@ -454,6 +521,7 @@ static struct fatFile* findFile(struct pathTracer* tracer, struct fatPrivate* pr
 
     file->fileSize = fileEntry->fileSize;
     file->startCluster = fileEntry->startClusterHigh << 16 | fileEntry->startClusterLow;
+    file->longFileName = foundByLongFileName;
 
     kzfree(fileEntry);
     return file;
@@ -612,25 +680,14 @@ static struct fatFile* createFileEntryAtAbsoluteAddress(uint64_t address, const 
 
     struct directoryEntry newEntry;
     memset(&newEntry, 0, sizeof(struct directoryEntry));
+    memset(&newEntry.name, 0x20, 8);
+    memset(&newEntry.ext, 020, 3);
 
-    int charPos = findChar((char*)fileName, '.');
-
-    char name[8] = "        ";
-    char extension[3] = "   ";
-
-    if (charPos >= 0)
+    if (toDirEntryName(fileName, newEntry.name, newEntry.ext) < 0)
     {
-        strncpy(name, fileName, charPos);
+        *oErrCode = -ENMEM;
+        return NULL;
     }
-    strncpy(extension, fileName+charPos+1, 3);
-
-    char* upperName = toUpperCase(name, 8);
-    char* upperExt = toUpperCase(extension, 3);
-
-    strncpy(newEntry.name, upperName, 8);
-    strncpy(newEntry.ext, upperExt, 3);
-    kzfree(upperName);
-    kzfree(upperExt);
 
     newEntry.attributes = DIR_ENTRY_ATTRIBUTE_ARCHIVE;
     newEntry.startClusterHigh = freeCluster >> 16;
@@ -657,48 +714,16 @@ static struct fatFile* createFileEntryAtAbsoluteAddress(uint64_t address, const 
 
 static int createLongFileNameEntryAtAddress(uint64_t address, const char* fileName, struct fatPrivate* private, int* oErrCode)
 {
-    struct longFileNameEntry longEntry;
-    memset(&longEntry, 0, sizeof(struct longFileNameEntry));
-
-    uint8_t fill[13] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-    char* ptr = (char*)fileName;
-
-    uint8_t s = 0;
-
-    for (uint8_t i = 0; i < 13; i++)
-    {
-        if (s || fileName[i] != 0x00)
-        {
-            if (i < 5)
-            {
-                longEntry.charsLow[i] = (uint16_t)ptr[i];
-            }
-            else if (i >= 5 && i < 11)
-            {
-                longEntry.charsMid[i-5] = (uint16_t)ptr[i];
-            }
-            else
-            {
-                longEntry.charsHigh[i-11] = (uint16_t)ptr[i];
-            }
-        }
-        else
-        {
-            ptr = (char*)fill;
-            s = 1;
-        }
-    }
-
-    longEntry.order = 0x41;
-    longEntry.attributes = 0x0F;
-    longEntry.checkSum = getCheckSumForLongFileName((char*)fileName);
+    struct longFileNameEntry* longEntry =  toLongFileName(fileName, oErrCode);
+    RETERROR(*oErrCode);
 
     *oErrCode = diskStreamSeek(private->writeStream, address);
     RETERROR(*oErrCode);
 
-    *oErrCode = diskStreamWrite(private->writeStream, &longEntry, sizeof(struct longFileNameEntry));
+    *oErrCode = diskStreamWrite(private->writeStream, longEntry, sizeof(struct longFileNameEntry));
     RETERROR(*oErrCode);
 
+    kzfree(longEntry);
     return SUCCESS;
 }
 
@@ -917,7 +942,8 @@ static int writeFile(const void* ptr, uint64_t size, struct file* file, void* pr
         findDirectory(tracer, pr, &clusterOfDirectory, &errCode);
         RETERROR(errCode);
 
-        struct directoryEntry* fileEntry = findDirEntry(clusterOfDirectory, pathTracerGetFileName(tracer), DIR_ENTRY_ATTRIBUTE_ARCHIVE, private, &errCode);
+        uint8_t foundByLongFileName = 0;
+        struct directoryEntry* fileEntry = findDirEntry(clusterOfDirectory, pathTracerGetFileName(tracer), DIR_ENTRY_ATTRIBUTE_ARCHIVE, private, &errCode, &foundByLongFileName);
         RETNULLERROR(fileEntry, errCode);
 
         struct directoryEntry newEntry;
