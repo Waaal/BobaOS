@@ -373,13 +373,17 @@ static struct directoryEntry* findDirEntry(uint32_t dataClusterNum, char* name, 
                 if (memcmp(entries+counter-1, longFileName, sizeof( struct directoryEntry)) == 0)
                 {
                     *oFoundByLongFileName = 1;
+                    goto found;
                 }
+                //We found a LongFileNameEntry, but we are case-sensitive and it did not match
+            }
+            else
+            {
+                //We found it as a normalEntry but not with a LongFileNameEntry. So now we need to check if we spelled it all in uppercase, since we are case-sensitive
+                goto found;
+
             }
             kzfree(longFileName);
-
-            memcpy(ret, entries+counter, sizeof(struct directoryEntry));
-            kzfree(entries);
-            return ret;
         }
         counter++;
     }
@@ -390,6 +394,11 @@ static struct directoryEntry* findDirEntry(uint32_t dataClusterNum, char* name, 
     kzfree(entries);
     kzfree(ret);
     return NULL;
+
+    found:
+    memcpy(ret, entries+counter, sizeof(struct directoryEntry));
+    kzfree(entries);
+    return ret;
 }
 
 static void writeEntryAtAddress(struct directoryEntry* entry, uint64_t address, struct fatPrivate* private, int* oErrCode)
@@ -895,6 +904,7 @@ static struct file* openFile(struct pathTracer* tracer, uint8_t create, void* pr
     file->size = fatFile->fileSize;
     file->position = 0;
     strncpy(file->path, pathTracerGetPathString(tracer), BOBAOS_MAX_PATH_SIZE);
+    strncpy(file->name, pathTracerGetFileName(tracer), BOBAOS_MAX_PATH_SIZE);
 
     kzfree(fatFile);
     return file;

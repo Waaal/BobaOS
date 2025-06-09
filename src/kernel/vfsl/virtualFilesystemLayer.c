@@ -228,21 +228,19 @@ struct file* fopen(const char* path, const char* mode, int* oErrCode)
 
     struct disk* disk = diskGet(pathTracer->diskId);
 
-    int errCode = 0;
-    struct file* file = disk->fileSystem->open(pathTracer, (((m & FILE_MODE_WRITE) > 0) && ((m & FILE_MODE_APPEND) == 0) ? 1 : 0), disk->fileSystem->private, &errCode);
+    struct file* file = disk->fileSystem->open(pathTracer, (((m & FILE_MODE_WRITE) > 0) && ((m & FILE_MODE_APPEND) == 0) ? 1 : 0), disk->fileSystem->private, oErrCode);
     destroyPathTracer(pathTracer);
-    RETNULL(file); //ErrorCdoe set by fileSystem->open
+    RETNULL(file); //ErrorCode set by fileSystem->open
 
     file->mode = m;
 
-    int err = addOpenFile(file);
-    if (err >= 0)
+    *oErrCode = addOpenFile(file);
+    if (*oErrCode >= 0)
     {
         return file;
     }
 
     kzfree(file);
-    *oErrCode = err;
     return NULL;
 }
 
