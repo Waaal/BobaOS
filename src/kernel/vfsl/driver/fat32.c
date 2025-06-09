@@ -339,6 +339,29 @@ static int compareEntryWithPath(struct directoryEntry* entry, char* path)
     return ret;
 }
 
+static char* getNameFromEntry(struct directoryEntry* entry, int* oErrCode)
+{
+    char* name = kzalloc(13);
+    RETNULLSETERROR(name, -ENMEM, oErrCode);
+    uint8_t i = 0;
+
+    for (i = 0; i < 8; i++)
+    {
+        if (entry->name[i] == 0x20) break;
+        name[i] = entry->name[i];
+    }
+
+    if (entry->ext[0] == 0x20 || entry->attributes == DIR_ENTRY_ATTRIBUTE_DIRECTORY) return name;
+
+    name[i++] = '.';
+    for (uint8_t j = 0; j < 3; j++)
+    {
+        if (entry->ext[j] == 0x20) break;
+        name[i+j] = entry->ext[j];
+    }
+    return name;
+}
+
 static int compareEntryWithEntryByFullName(struct directoryEntry* entry1, struct directoryEntry* entry2)
 {
     int ret = 0;
@@ -379,18 +402,24 @@ static struct directoryEntry* findDirEntry(uint32_t dataClusterNum, char* name, 
             }
             else
             {
-                //We found it as a normalEntry but not with a LongFileNameEntry. So now we need to check if we spelled it all in uppercase, since we are case-sensitive
-                goto found;
+                char* dirEntryName = getNameFromEntry(entries+counter, oErrCode);
+                if (dirEntryName == NULL)
+                {
+                    kzfree(longFileName);
+                    goto out;
+                }
 
+                if (strcmp(dirEntryName, name) == 0)
+                    goto found;
+                goto out;
             }
             kzfree(longFileName);
         }
         counter++;
     }
 
-    *oErrCode = -ENFOUND;
-
     out:
+    *oErrCode = -ENFOUND;
     kzfree(entries);
     kzfree(ret);
     return NULL;
