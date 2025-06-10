@@ -111,14 +111,10 @@ void kmain()
 		panic(PANIC_TYPE_KERNEL, NULL, "Failed to init the virtual filesystem layer");
 	}
 
-	int errCode = 0;
-	struct file* file = fopen("0:test.txt", "w", &errCode);
-	fclose(file);
+	uint8_t* address = (uint8_t*)0xC0000000;
+	address[0] = 5;
 
-	errCode = 0;
-	file = fopen("0:test.txt", "r", &errCode);
-	if (file)
-		kprintf("File name: %s", file->name);
+	kprintf("Address: %u\n", address[0]);
 
 	while(1){}
 }

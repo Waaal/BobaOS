@@ -402,7 +402,7 @@ static struct directoryEntry* findDirEntry(uint32_t dataClusterNum, char* name, 
             }
             else
             {
-                char* dirEntryName = getNameFromEntry(entries+counter, oErrCode);
+                char* (dirEntryName) = getNameFromEntry(entries+counter, oErrCode);
                 if (dirEntryName == NULL)
                 {
                     kzfree(longFileName);
@@ -410,7 +410,11 @@ static struct directoryEntry* findDirEntry(uint32_t dataClusterNum, char* name, 
                 }
 
                 if (strcmp(dirEntryName, name) == 0)
+                {
+                    kzfree(dirEntryName);
                     goto found;
+                }
+                kzfree(dirEntryName);
                 goto out;
             }
             kzfree(longFileName);

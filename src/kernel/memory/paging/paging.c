@@ -14,6 +14,8 @@ uint8_t memoryMapLength = 0x0;
 uint64_t upperMemorySize = 0x0;
 uint64_t totalMemorySize = 0x0;
 
+uint64_t total4KBPagesMapped = 0;
+
 static void writePointerTableEntry(uint64_t* dest, const uint64_t* src, uint64_t index, uint16_t flags)
 {
 	dest[index] = ((uint64_t)src & 0xFFFFFFFFF000) | flags;	
@@ -29,7 +31,7 @@ static uint64_t* returnTableEntryNoFlags(const uint64_t* table, uint16_t index)
 	return (uint64_t*)(table[index] & 0xFFFFFFFFFFFFF000);
 }
 
-static int sizeToPdEntries(uint64_t size)
+static int sizeToPdpEntriesUp(uint64_t size)
 {
 	if(size > 0x8000000000)
 	{
@@ -41,7 +43,12 @@ static int sizeToPdEntries(uint64_t size)
 		return -ENMEM;
 	}	
 
-	return downToPage(size) / SIZE_1GB;
+	uint64_t downSize = downToPage(size);
+	int pdEntries = (int)(downSize / (uint64_t)SIZE_1GB);
+
+	if (downSize % SIZE_1GB > 0 )
+		pdEntries++;
+	return pdEntries;
 }
 
 static uint16_t getPml4IndexFromVirtual(void* virt)
@@ -81,21 +88,21 @@ static PTTable createPTTable(uint64_t phys)
 	PTTable table = (PTTable)kzalloc(4096);
 	if(table == NULL){return NULL;}
 
-
 	for(uint16_t i = 0; i < 512; i++)
 	{
-		writePointerTableEntry(table, (uint64_t*)(phys + (i*SIZE_4KB)), i, PAGING_FLAG_P | PAGING_FLAG_RW | PAGING_FLAG_PS);
+		total4KBPagesMapped++;
+		writePointerTableEntry(table, (uint64_t*)(phys + (i*SIZE_4KB)), i, PAGING_FLAG_P | PAGING_FLAG_RW);
 	}
 
 	return table;
 } 
 
-static PDTable createPdTable(uint64_t phys, uint64_t virt)
+static PDTable createPdTable(uint64_t phys, uint16_t entries)
 {
 	PDTable table = (PDTable)kzalloc(4096);
 	if(table == NULL){return NULL;}
 
-	for(uint16_t i = 0; i < 512; i++)
+	for(uint16_t i = 0; i < entries; i++)
 	{
 		PTTable ptTable = createPTTable(phys + (i*(SIZE_1MB*2)));
 		if(ptTable == NULL){return NULL;}
@@ -107,6 +114,7 @@ static PDTable createPdTable(uint64_t phys, uint64_t virt)
 
 PML4Table createKernelTable(uint64_t physical, uint64_t virtual, uint64_t size)
 {
+	print("Paging: \n");
 	uint64_t usableSize = downToPage(size);
 
 	PML4Table pml4Table = (PML4Table)kzalloc(4096);
@@ -114,28 +122,43 @@ PML4Table createKernelTable(uint64_t physical, uint64_t virtual, uint64_t size)
 	
 	if(pml4Table == NULL || pdpTable == NULL)
 	{
+		kzfree(pml4Table);
+		kzfree(pdpTable);
+
 		return NULL;
 	}
 
 	writePointerTableEntry(pml4Table, pdpTable, getPml4IndexFromVirtual((void*)virtual), PAGING_FLAG_P | PAGING_FLAG_RW);
 	
-	int pdEntries = sizeToPdEntries(usableSize);	
-	if(pdEntries <= 0)
+	int pdpEntries = sizeToPdpEntriesUp(usableSize);
+	if(pdpEntries <= 0)
 	{
 		return NULL;
 	}
-	kprintf("Paging\n  Using: %x Wasting: %x\n\n", pdEntries * (uint64_t)SIZE_1GB, size - (pdEntries * (uint64_t)SIZE_1GB));
 
-	for(uint16_t i = 0; i < pdEntries; i++)
+	for(int i = 0; i < pdpEntries; i++)
 	{
 		uint64_t virt = virtual + (i*(uint64_t)SIZE_1GB);
+		uint64_t phys = physical + (i*(uint64_t)SIZE_1GB);
 
-		PDTable pdTable = createPdTable(physical + i*(uint64_t)SIZE_1GB, virt);
+		uint16_t pdEntries = 512;
+		if ((i+1) == pdpEntries)
+		{
+			uint64_t restSize = size - (i*(uint64_t)SIZE_1GB);
+			pdEntries = restSize / (((uint64_t)SIZE_4KB)*512);
+		}
+
+		PDTable pdTable = createPdTable(phys, pdEntries);
 		if(pdTable == NULL){return NULL;}
 		uint16_t pdpIndex = getPdpIndexFromVirtual((void*)virt);
 		writePointerTableEntry(pdpTable, pdTable, pdpIndex, PAGING_FLAG_P | PAGING_FLAG_RW);
+
+		kprintf("  Mapped %x:%x -> %x:%x\n", phys, phys+SIZE_1GB, virt, virt+SIZE_1GB);
 	}
-	
+	print("\n");
+
+	//kprintf("  Total 4KB pages mapped: %u, Total size mapped %x\n", total4KBPagesMapped, total4KBPagesMapped * (uint64_t)SIZE_4KB);
+	//kprintf("  Wasting: %x of memory\n\n", size - (total4KBPagesMapped * (uint64_t)SIZE_4KB));
 	loadNewPageTable(pml4Table);
 	return pml4Table;
 }
@@ -157,7 +180,7 @@ void remapPage(void* to, void* from, PML4Table table)
 	PTTable oldPt = getPTTable(from, table);	
 	uint16_t oldPtIndex = ((uint64_t)from >> SHIFT_PT) & FULL_512;
 
-	writePointerTableEntry(oldPt, to, oldPtIndex, PAGING_FLAG_P | PAGING_FLAG_RW | PAGING_FLAG_PS);	
+	writePointerTableEntry(oldPt, to, oldPtIndex, PAGING_FLAG_P | PAGING_FLAG_RW);
 }
 
 void removePageFlag(void* virtual, uint16_t flag, PML4Table table)
