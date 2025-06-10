@@ -153,12 +153,12 @@ PML4Table createKernelTable(uint64_t physical, uint64_t virtual, uint64_t size)
 		uint16_t pdpIndex = getPdpIndexFromVirtual((void*)virt);
 		writePointerTableEntry(pdpTable, pdTable, pdpIndex, PAGING_FLAG_P | PAGING_FLAG_RW);
 
-		kprintf("  Mapped %x:%x -> %x:%x\n", phys, phys+SIZE_1GB, virt, virt+SIZE_1GB);
+		kprintf("  Mapped %x:%x -> %x:%x\n", phys, phys+(pdEntries*(SIZE_4KB*512)), virt, virt+(pdEntries*(SIZE_4KB*512)));
 	}
 	print("\n");
 
-	//kprintf("  Total 4KB pages mapped: %u, Total size mapped %x\n", total4KBPagesMapped, total4KBPagesMapped * (uint64_t)SIZE_4KB);
-	//kprintf("  Wasting: %x of memory\n\n", size - (total4KBPagesMapped * (uint64_t)SIZE_4KB));
+	kprintf("  Total 4KB pages mapped: %u, Total size mapped %x\n", total4KBPagesMapped, total4KBPagesMapped * (uint64_t)SIZE_4KB);
+	kprintf("  Wasting: %x of memory\n\n", size - (total4KBPagesMapped * (uint64_t)SIZE_4KB));
 	loadNewPageTable(pml4Table);
 	return pml4Table;
 }
