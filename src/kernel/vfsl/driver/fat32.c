@@ -138,8 +138,8 @@ static uint8_t getCheckSumForLongFileName(char* fileName)
     uint8_t sum = 0;
     uint16_t pointPos = findChar(fileName, '.');
 
-    char name[8] = "        ";
-    char ext[3] = "   ";
+    char name[8] = {0x20, 0x20, 0x20, 0x20,0x20, 0x20, 0x20, 0x20};
+    char ext[3] = {16, 16, 16};
 
     strncpy(name, fileName, pointPos);
     strncpy(ext, fileName + pointPos + 1, 3);
@@ -269,38 +269,42 @@ static struct longFileNameEntry* toLongFileName(const char* name, int* oErrCode)
     struct longFileNameEntry* longEntry = kzalloc(sizeof(struct longFileNameEntry));
     RETNULLSETERROR(longEntry, -ENMEM, oErrCode);
 
-    uint8_t fill[13] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+    longEntry->order = 0x41;
+    longEntry->attributes = 0x0F;
+    longEntry->reserved2 = 0x00;
+    longEntry->reserved = 0x00;
+    longEntry->checkSum = getCheckSumForLongFileName((char*)name);
 
-    uint8_t s = 0;
-    char* ptr = (char*)name;
+    uint16_t* fields[3];
+    uint16_t low[5];
+    uint16_t mid[6];
+    uint16_t high[2];
 
-    for (uint8_t i = 0; i < 13; i++)
-    {
-        if (s || name[i] != 0x00)
-        {
-            if (i < 5)
-            {
-                longEntry->charsLow[i] = (uint16_t)ptr[i];
+    fields[0] = low;
+    fields[1] = mid;
+    fields[2] = high;
+
+    int len = strlen(name);
+    int idx = 0;
+    uint8_t terminated = 0;
+
+    for (int group = 0; group < 3; group++) {
+        int limit = (group == 0) ? 5 : (group == 1 ? 6 : 2);
+        for (int i = 0; i < limit; i++) {
+            if (!terminated && idx < len) {
+                fields[group][i] = (uint8_t)name[idx++];
+            } else if (!terminated) {
+                fields[group][i] = 0x0000;  // NULL-Terminator
+                terminated = 1;
+            } else {
+                fields[group][i] = 0xFFFF;  // Padding
             }
-            else if (i >= 5 && i < 11)
-            {
-                longEntry->charsMid[i-5] = (uint16_t)ptr[i];
-            }
-            else
-            {
-                longEntry->charsHigh[i-11] = (uint16_t)ptr[i];
-            }
-        }
-        else
-        {
-            ptr = (char*)fill;
-            s = 1;
         }
     }
 
-    longEntry->order = 0x41;
-    longEntry->attributes = 0x0F;
-    longEntry->checkSum = getCheckSumForLongFileName((char*)name);
+    memcpy(longEntry->charsLow, low, 10);
+    memcpy(longEntry->charsMid, mid, 12);
+    memcpy(longEntry->charsHigh, high, 4);
 
     return longEntry;
 }
@@ -328,7 +332,7 @@ static int compareEntryWithPath(struct directoryEntry* entry, char* path)
     int ret = 0;
 
     char realName[8] = {0x20, 0x20, 0x20, 0x20,0x20, 0x20, 0x20, 0x20};
-    char extension[3] = {0x20, 0x20, 0x20};
+    char extension[3] = {16, 16, 16};
     ret = toDirEntryName(path, realName, extension);
     RETERROR(ret);
 
