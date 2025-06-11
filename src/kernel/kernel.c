@@ -86,10 +86,10 @@ void kmain()
 	}	
 #endif
 	
-	PML4Table kernelPageTable = createKernelTable(0x0, 0x0, getMaxMemorySize());
+	PML4Table kernelPageTable = createKernelTable(0x0);
 	if(kernelPageTable == NULL)
 	{
-		panic(PANIC_TYPE_KERNEL, NULL, "Not enough memory for Kernel");
+		panic(PANIC_TYPE_KERNEL, NULL, "Not enough kernel heap to init paging");
 	}
 
 	pciInit();
@@ -110,11 +110,6 @@ void kmain()
 	{
 		panic(PANIC_TYPE_KERNEL, NULL, "Failed to init the virtual filesystem layer");
 	}
-
-	uint8_t* address = (uint8_t*)0xC0000000;
-	address[0] = 5;
-
-	kprintf("Address: %u\n", address[0]);
 
 	while(1){}
 }

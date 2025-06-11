@@ -13,6 +13,7 @@
 #define SHIFT_PD 0x15
 #define SHIFT_PT 0xC
 
+#define SIZE_1KB 0x400
 #define SIZE_4KB 0x1000
 #define SIZE_1MB 0x100000
 #define SIZE_1GB 0x40000000
@@ -46,7 +47,7 @@ void readMemoryMap();
 uint64_t getUpperMemorySize();
 uint64_t getMaxMemorySize();
 
-PML4Table createKernelTable(uint64_t physical, uint64_t virtual, uint64_t size);
+PML4Table createKernelTable(uint64_t virtualStart);
 void* virtualToPhysical(void* virt, PML4Table table);
 void remapPage(void* to, void* from, PML4Table table);
 void removePageFlag(void* virtual, uint16_t flag, PML4Table table);
