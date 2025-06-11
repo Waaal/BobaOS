@@ -49,8 +49,9 @@ uint64_t getMaxMemorySize();
 
 PML4Table createKernelTable(uint64_t virtualStart);
 void* virtualToPhysical(void* virt, PML4Table table);
-void remapPage(void* to, void* from, PML4Table table);
 void removePageFlag(void* virtual, uint16_t flag, PML4Table table);
+int remapPhysicalToVirtual(void* physical, void* virtual, PML4Table table);
+int remapVirtualToVirtual(void* to, void* from, PML4Table table);
 
 
 // Functions in paging.asm

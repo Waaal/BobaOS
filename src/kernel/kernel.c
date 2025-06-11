@@ -91,7 +91,7 @@ void kmain()
 	{
 		panic(PANIC_TYPE_KERNEL, NULL, "Not enough kernel heap to init paging");
 	}
-
+	
 	pciInit();
 
 	if(diskDriverInit() < 0)
@@ -110,10 +110,6 @@ void kmain()
 	{
 		panic(PANIC_TYPE_KERNEL, NULL, "Failed to init the virtual filesystem layer");
 	}
-
-	int errCode = 0;
-	struct file* file = fopen("0:test", "w", &errCode);
-	kprintf("File: %s, ErrCode: %u", file->path, errCode+25);
 
 	while(1){}
 }

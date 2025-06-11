@@ -69,9 +69,12 @@ static PTTable getPTTable(void* virt, PML4Table table)
 	uint16_t pdIndex = ((uint64_t)virt >> SHIFT_PD) & FULL_512;
 	
 	PDPTable pdpTable = (PDPTable)returnTableEntryNoFlags(table, getPml4IndexFromVirtual(virt));
+	RETNULL(pdpTable);
+
 	PDTable pdTable = (PDTable)returnTableEntryNoFlags(pdpTable, pdpIndex);
+	RETNULL(pdTable);
+
 	PTTable ptTable = (PTTable)returnTableEntryNoFlags(pdTable, pdIndex);
-	
 	return ptTable;
 }
 
@@ -146,7 +149,7 @@ static void reworkMemoryMap()
 	if (counter > 0)
 	{
 		memcpy(&memoryMap[1], memoryMap+counter+1, sizeof(struct memoryMap) * (memoryMapLength-counter));
-		memoryMapLength -=counter;
+		memoryMapLength -= counter;
 	}
 }
 
@@ -192,6 +195,8 @@ PML4Table createKernelTable(uint64_t virtualStart)
 void* virtualToPhysical(void* virt, PML4Table table)
 {	
 	PTTable ptTable = getPTTable(virt, table);
+	RETNULL(ptTable);
+
 	uint16_t ptIndex = ((uint64_t)virt >> SHIFT_PT) & FULL_512;
 
 	uint16_t offset = (uint64_t)virt & FULL_4KB;	
@@ -200,12 +205,21 @@ void* virtualToPhysical(void* virt, PML4Table table)
 	return (void*)(address + offset);
 }
 
-void remapPage(void* to, void* from, PML4Table table)
+int remapPhysicalToVirtual(void* physical, void* virtual, PML4Table table)
 {
-	PTTable oldPt = getPTTable(from, table);
-	uint16_t oldPtIndex = ((uint64_t)from >> SHIFT_PT) & FULL_512;
+	PTTable oldPt = getPTTable(virtual, table);
+	RETNULLERROR(oldPt, -ENFOUND);
 
-	writePointerTableEntry(oldPt, to, oldPtIndex, PAGING_FLAG_P | PAGING_FLAG_RW);
+	uint16_t oldPtIndex = ((uint64_t)virtual >> SHIFT_PT) & FULL_512;
+	writePointerTableEntry(oldPt, (void*)downToPage((uint64_t)physical), oldPtIndex, PAGING_FLAG_P | PAGING_FLAG_RW);
+
+	return SUCCESS;
+}
+
+int remapVirtualToVirtual(void* to, void* from, PML4Table table)
+{
+	void* fromPhysical = virtualToPhysical(from, table);
+	return mapOrCreateRange(table, (uint64_t)fromPhysical, downToPage((uint64_t)to), SIZE_4KB);
 }
 
 void removePageFlag(void* virtual, uint16_t flag, PML4Table table)
