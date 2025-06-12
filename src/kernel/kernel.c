@@ -91,7 +91,7 @@ void kmain()
 	{
 		panic(PANIC_TYPE_KERNEL, NULL, "Not enough kernel heap to init paging");
 	}
-	
+
 	pciInit();
 
 	if(diskDriverInit() < 0)
@@ -109,6 +109,17 @@ void kmain()
 	if (vfslInit() < 0)
 	{
 		panic(PANIC_TYPE_KERNEL, NULL, "Failed to init the virtual filesystem layer");
+	}
+
+	int errCode = 0;
+	struct file* file = fopen("0:big.bin", "r", &errCode);
+	void* buffer = kzalloc(file->size);
+	void* newBuffer = kzalloc(file->size);
+
+	if (file != NULL)
+	{
+		fread(file, buffer, file->size, 1);
+		remapVirtualToVirtualRange(newBuffer, buffer, file->size, kernelPageTable);
 	}
 
 	while(1){}

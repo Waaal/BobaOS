@@ -8,7 +8,7 @@
 OEMIdentifier			db 'BOBAV0.1'
 BytesPerSector			dw 0x200		; 512 bytes
 SectorsPerCluser 		db 0x1			; 1 sectors per cluster
-ReservedSectors			dw 200			; Store kernel in the reserved sectors
+ReservedSectors			dw 240			; Store kernel in the reserved sectors
 FATCopies 				db 0x02
 RootDirEntries			dw 0x00			; 0 for fat32
 NumSectors				dw 0x00

@@ -29,14 +29,12 @@ static uint64_t downToPage(uint64_t var)
 	return var - (var % SIZE_4KB);
 }
 
-/*
 static uint64_t upToPage(uint64_t var)
 {
 	if ((var % SIZE_4KB) == 0)
 		return var;
 	return var + SIZE_4KB - (var % SIZE_4KB);
 }
-*/
 
 static uint64_t* returnTableEntryNoFlags(const uint64_t* table, uint16_t index)
 {
@@ -216,10 +214,32 @@ int remapPhysicalToVirtual(void* physical, void* virtual, PML4Table table)
 	return SUCCESS;
 }
 
+int remapPhysicalToVirtualRange(void* physical, void* virtual, uint64_t size, PML4Table table)
+{
+	uint64_t blocks = upToPage(size) / SIZE_4KB;
+	for (uint64_t i = 0; i < blocks; i++)
+	{
+		if (remapPhysicalToVirtual(physical + (i*SIZE_4KB), virtual + (i*SIZE_4KB), table) > 0)
+			return -ENMEM;
+	}
+	return SUCCESS;
+}
+
 int remapVirtualToVirtual(void* to, void* from, PML4Table table)
 {
 	void* fromPhysical = virtualToPhysical(from, table);
-	return mapOrCreateRange(table, (uint64_t)fromPhysical, downToPage((uint64_t)to), SIZE_4KB);
+	return mapOrCreateRange(table, downToPage((uint64_t)fromPhysical), downToPage((uint64_t)to), SIZE_4KB);
+}
+
+int remapVirtualToVirtualRange(void* to, void* from, uint64_t size, PML4Table table)
+{
+	uint64_t blocks = upToPage(size) / SIZE_4KB;
+	for (uint64_t i = 0; i < blocks; i++)
+	{
+		if (remapVirtualToVirtual(to + (i*SIZE_4KB), from + (i*SIZE_4KB), table) > 0)
+			return -ENMEM;
+	}
+	return SUCCESS;
 }
 
 void removePageFlag(void* virtual, uint16_t flag, PML4Table table)
