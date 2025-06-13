@@ -1,6 +1,3 @@
-[org 0x7E00]
-[bits 16]
-
 ;Some extended info needed for the fat32 file system
 FSInfo:
 dd 0x41615252	; lead signature

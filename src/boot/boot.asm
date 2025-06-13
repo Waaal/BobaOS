@@ -1,6 +1,9 @@
 [bits 16]
 [org 0x7C00]
 
+;Kernel sector size
+KERNEL_TOTAL_LBAS equ 300
+
 	jmp short start
 	nop
 
@@ -8,7 +11,7 @@
 OEMIdentifier			db 'BOBAV0.1'
 BytesPerSector			dw 0x200		; 512 bytes
 SectorsPerCluser 		db 0x1			; 1 sectors per cluster
-ReservedSectors			dw 240			; Store kernel in the reserved sectors
+ReservedSectors			dw KERNEL_TOTAL_LBAS			; Store kernel in the reserved sectors
 FATCopies 				db 0x02
 RootDirEntries			dw 0x00			; 0 for fat32
 NumSectors				dw 0x00
@@ -58,26 +61,6 @@ next:
 	mov di, ax
 	mov si, ax
 
-enableA20:
-	in al, 0x92
-	or al, 2
-	out 0x92, al
-
-testA20Line:
-	mov ax, 0xFFFF
-	mov es, ax
-
-	mov word[0x80C0], 0xA200
-	mov word[es:0x80D0], 0xB200
-	
-	cmp word[0x80C0], 0xA200
-	je checkExtendedRead
-
-	mov si, a20LineErrorMsg
-	call print
-
-	jmp $
-
 checkExtendedRead:
 	mov ah, 0x41
 	mov bx, 0x55aa	
@@ -87,7 +70,7 @@ checkExtendedRead:
 	
 	jnc readLoader
 	
-	mov si, extendedReadErrorMsg 
+	mov si, extendedReadNotSupportedMsg
 	call print
 
 	jmp $
@@ -102,7 +85,9 @@ changeTextMode:
 	int 0x10
 
 	mov dl, [driveId]
-	jmp 0x8000
+	mov ax, print
+	mov bx, KERNEL_TOTAL_LBAS
+	jmp 0x7E00
 
 ; Print function
 ; Expects:
@@ -135,23 +120,23 @@ extendedRead:
 
 	int 0x13	
 	jnc .end
-	
-	;TODO print
-	;read error
+
+	mov si, extendedReadErrorMsg
+	call print
 
 	jmp $
 .end:
 	ret
 
 driveId: db 0
-extendedReadErrorMsg: db 'Extended read is not supported',0
-a20LineErrorMsg: db 'A20 line is off. Please enable A20 Line in BIOS',0
+extendedReadNotSupportedMsg: db 'Extended read is not supported.',0
+extendedReadErrorMsg: db 'There was an error reading from disk.',0
 
 extreadStage2Package:
 	dw 0x10					; Package size(0x10 or 0x16)
 	dw 0x2					; Total LBA to laod
-	dw 0x8000				; destination address(0x00:[0x8000])
-	dw 0x0					; destination (segment [0x00]:0x8000)
+	dw 0x7E00				; destination address(0x00:[0x7E00])
+	dw 0x0					; destination (segment [0x00]:0x7E00)
 	dd 0x2					; starting LBA in our img file
 	dd 0x0					; more storage bytes for bigger lbas
 
@@ -169,9 +154,7 @@ partitionTable:
 	dd 0x00			; relative sector 32 bit
 	dd 0x10000		; Total sectors 32 bit (4 bytes)
 
-times 48 db 0
-
-
-	dw 0xAA55
+times 48 db 0       ; Zero out partitionTables for partition 2 - 4
+dw 0xAA55
 
 

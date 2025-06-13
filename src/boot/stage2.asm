@@ -1,13 +1,70 @@
 [bits 16]
-[org 0x8000]
+[org 0x7E00]
 
+    mov [print], ax
 	mov [driveId], dl
+    mov [kernelSectors], bx
+
+enableA20:
+	in al, 0x92
+	or al, 2
+	out 0x92, al
+
+testA20Line:
+	mov ax, 0xFFFF
+	mov es, ax
+
+	mov word[0x80C0], 0xA200
+	mov word[es:0x80D0], 0xB200
+
+	cmp word[0x80C0], 0xA200
+	je readKernel
+
+	mov si, a20LineErrorMsg
+	call [print]
+
+	jmp $
 
 readKernel:
-	mov si, extreadKernelPackage1
-	call extendedRead
-	mov si, extreadKernelPackage2
-	call extendedRead
+    ;Calculate how many 100 sectors we need to read
+    mov ax, [kernelSectors]
+    mov cx, 100
+    xor dx, dx
+    div cx
+    mov cx, ax
+
+    ; Package we are going to modify
+    mov si, extendedReadKernelPackage
+    mov bx, 0x4
+    mov cx, 3
+    mov dx, 0x1000
+
+    test cx, cx             ; Set the ZF to 1
+
+   ;Read cx times 100 kernel sectors and modify the extendedReadKernelPackage accordinglys
+.loop:
+
+    mov word[si+6], dx
+    mov word[si+8], bx
+
+    push ax
+    push dx
+    push si
+    push di
+
+    call extendedRead
+
+    pop di
+    pop si
+    pop dx
+    pop ax
+
+    add bx, 100
+    add dx, 0xC80
+
+    dec cx
+    test cx, cx
+    jnz .loop
 
 ; Zero out 1000 bytes for the memory map
 zeroBytes:	
@@ -37,7 +94,10 @@ getMemoryMap:
 	add edi, 20
 	jnc .loop
 .error:
-	;TODO error message
+
+	mov si, memoryMapErrorMsg
+	call [print]
+
 	jmp $
 
 prepare32bit:
@@ -62,31 +122,30 @@ extendedRead:
 
 	int 0x13	
 	jnc .end
-	
-	;TODO print
-	;read error
+
+	mov si, extendedReadErrorMsg
+	call [print]
 
 	jmp $
 .end:
 	ret
 
-extreadKernelPackage1:
+print: dw 0x0               ; Print address
+
+extendedReadKernelPackage:
 	dw 0x10					; Package size(0x10 or 0x16)
-	dw 120					; Total LBA to load
+	dw 100					; Total LBA to load
 	dw 0x0					; destination address(0x00:[0x00])
 	dw 0x1000				; destination (segment [0x1000]:0x00)
 	dd 0x4					; starting LBA in our img file
 	dd 0x0					; more storage bytes for bigger lbas
 
-extreadKernelPackage2:
-	dw 0x10					; Package size(0x10 or 0x16)
-	dw 120					; Total LBA to load
-	dw 0x0					; destination address(0x00:[0x00])
-	dw 0x1F00				; destination (segment [0x1F000]:0x00)
-	dd 124				    ; starting LBA in our img file
-	dd 0x0					; more storage bytes for bigger lbas
-
 driveId: db 0
+kernelSectors: dw 0
+
+a20LineErrorMsg: db 'A20 line is off. Please enable A20 Line in BIOS.', 0
+extendedReadErrorMsg: db 'There was an error reading from disk.', 0
+memoryMapErrorMsg: db 'There was an error retrieving the memory map.', 0
 
 [bits 32]
 pml:
