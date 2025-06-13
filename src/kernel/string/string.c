@@ -64,7 +64,8 @@ int strncmp(const char* str1, const char* str2, uint64_t len)
 
 void strncpy(char* dest, const char* src, uint64_t size)
 {
-	for(uint64_t i = 0; i < size; i++)
+	uint64_t i = 0;
+	for(i = 0; i < size; i++)
 	{
 		if(src[i] == 0x0)
 		{
@@ -72,6 +73,7 @@ void strncpy(char* dest, const char* src, uint64_t size)
 		}
 		dest[i] = src[i];
 	}
+	dest[i] = 0x0;
 }
 
 void strcpy(char* dest, const char* src)
@@ -82,6 +84,7 @@ void strcpy(char* dest, const char* src)
 		dest++;
 		src++;
 	}
+	*dest = 0x0;
 }
 
 int8_t isNumber(const char c)
@@ -114,6 +117,7 @@ char* toUpperCase(const char* str, uint64_t len)
 		counter++;
 		len--;
 	}
+	ret[counter] = 0x0;
 
 	return ret;
 }
