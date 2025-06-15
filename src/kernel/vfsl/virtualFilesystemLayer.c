@@ -202,7 +202,7 @@ int vfslInit()
     ret = addStaticFileSystems();
     if (ret < 0){return ret;}
 
-    resolveStaticFileSystems();
+    ret = resolveStaticFileSystems();
     return ret;
 }
 

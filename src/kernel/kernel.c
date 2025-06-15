@@ -103,23 +103,17 @@ void kmain()
 
 	if (diskInit() < 0)
 	{
-		panic(PANIC_TYPE_KERNEL, NULL, "Kernel disk not found");
+		kprintf("  [ERROR]: Kernel disk not found\n\n");
+		//panic(PANIC_TYPE_KERNEL, NULL, "Kernel disk not found");
 	}
 
-	if (vfslInit() < 0)
+	int vfslInitVal = vfslInit();
+	if (vfslInitVal < 0)
 	{
-		panic(PANIC_TYPE_KERNEL, NULL, "Failed to init the virtual filesystem layer");
-	}
-
-	int errCode = 0;
-	struct file* file = fopen("0:big.bin", "r", &errCode);
-	void* buffer = kzalloc(file->size);
-	void* newBuffer = kzalloc(file->size);
-
-	if (file != NULL)
-	{
-		fread(file, buffer, file->size, 1);
-		remapVirtualToVirtualRange(newBuffer, buffer, file->size, kernelPageTable);
+		if (vfslInitVal == -4) // -ENFOUND
+			print("No filsystem found for any disks. Disks are not unusable :/\n");
+		else
+			panic(PANIC_TYPE_KERNEL, NULL, "Failed to init the virtual filesystem layer");
 	}
 
 	while(1){}

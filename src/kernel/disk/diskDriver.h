@@ -6,7 +6,6 @@
 enum diskDriverType
 {
 	DISK_DRIVER_TYPE_ATA_LEGACY,
-	DISK_DRIVER_TYPE_ATAPI,
 	DISK_DRIVER_TYPE_AHCI
 };
 
@@ -31,5 +30,6 @@ struct diskDriver
 };
 
 int diskDriverInit();
+struct diskDriver* copyDriver(struct diskDriver* drv);
 struct diskDriver* getDriver(enum diskDriverType driverType);
 #endif

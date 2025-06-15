@@ -33,8 +33,8 @@ static void insertAtaPioDisk(struct diskDriver* driver, uint16_t commandPort, ui
 
 	disk->id = currentDisk;
 	disk->type = DISK_TYPE_PHYSICAL;
-	disk->driver = driver;
-	if(ataPioAttach(disk, commandPort, select, devConPort) < 0)
+	disk->driver = copyDriver(driver);
+	if(driver == NULL || ataPioAttach(disk, commandPort, select, devConPort) < 0)
 	{
 		kzfree(disk);
 	}

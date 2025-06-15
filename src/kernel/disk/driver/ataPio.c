@@ -23,7 +23,7 @@ static int ataPioRead(uint64_t lba, uint64_t total, void* out, void* private);
 static int ataPioWrite(uint64_t lba, uint64_t total, void* in, void* private);
 static struct diskInfo ataPioIdentify(void* private);
 
-struct diskDriver driver =
+static struct diskDriver driver =
 {
 	.type = DISK_DRIVER_TYPE_ATA_LEGACY,
 	.getInfo = ataPioIdentify,

@@ -69,11 +69,11 @@ void strncpy(char* dest, const char* src, uint64_t size)
 	{
 		if(src[i] == 0x0)
 		{
+			dest[i] = 0x00;
 			break;
 		}
 		dest[i] = src[i];
 	}
-	dest[i] = 0x0;
 }
 
 void strcpy(char* dest, const char* src)
