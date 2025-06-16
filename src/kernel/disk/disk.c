@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <hardware/pci/pci.h>
 #include <memory/memory.h>
+#include <vfsl/driver/fat32.h>
 
 #include "config.h"
 #include "status.h"
@@ -26,29 +27,6 @@ static int insertDisk(struct disk* disk)
 	return 0;
 }
 
-static void insertAtaPioDisk(struct diskDriver* driver, uint16_t commandPort, uint16_t devConPort, uint16_t select)
-{
-	//We found a disk. YAYYYYYYYYYYY :3
-	struct disk* disk = (struct disk*)kzalloc(sizeof(struct disk));
-
-	disk->id = currentDisk;
-	disk->type = DISK_TYPE_PHYSICAL;
-	disk->driver = copyDriver(driver);
-	if(driver == NULL || ataPioAttach(disk, commandPort, select, devConPort) < 0)
-	{
-		kzfree(disk);
-	}
-	else
-	{
-		struct diskInfo info = disk->driver->getInfo(disk->driver->private);
-
-		strncpy(disk->name, info.name, sizeof(disk->name));
-		disk->size = info.size;
-
-		insertDisk(disk);
-	}
-}
-
 //See if a disk is connected to legacy ports
 static void scanLegacyPorts()
 {
@@ -56,59 +34,22 @@ static void scanLegacyPorts()
 	struct diskDriver* driver = getDriver(DISK_DRIVER_TYPE_ATA_LEGACY);
 	if(driver != NULL)
 	{
-		//Master
-		int diskAvailable = ataPioProbePort(0x1F0, 0x206);
-		if(diskAvailable > 0)
+		struct disk* tempDiskList[BOBAOS_MAX_DISKS];
+		int diskFoundCount = 0;
+
+		driver->scanForDisk(tempDiskList, &diskFoundCount, currentDisk);
+		for (uint16_t i = 0; i < diskFoundCount; i++)
 		{
-			insertAtaPioDisk(driver, 0x1F0, 0x206, 0xA);
-			print("  Found ATA_LEGACY (Master) at 0x1F0\n");
-		}
-		//Slave
-		diskAvailable = ataPioProbePort(0x170, 0x206);
-		if(diskAvailable > 0)
-		{
-			insertAtaPioDisk(driver, 0x170, 0x206, 0xB);
-			print("  Found ATA_LEGACY (Slave) at 0x1F0\n");
+			struct diskInfo info = tempDiskList[i]->driver->getInfo(tempDiskList[i]->driver->private);
+			//TODO: retunr error
+			tempDiskList[i]->size = info.size;
+			strncpy(tempDiskList[i]->name, info.name, 64);
+
+			if (insertDisk(tempDiskList[i])< 0)
+				return;
 		}
 	}
 }
-
-/*
-//See if we have a legacy ide controller connected
-static void scanPciBusAtaLegacy()
-{
-	//Check if we have a driver for ATAPIO legacy ports
-	struct diskDriver* driver = getDriver(DISK_DRIVER_TYPE_ATA_LEGACY);
-	if (driver == NULL){return;}
-
-	struct pciDevice** ideControllers = getAllPciDevicesByClass(PCI_CLASS_MASS_STORAGE_CONTROLLER, PCI_SUBCLASS_MA_IDE_CONTROLLER, 0x80);
-
-	uint8_t count = 0;
-	while (ideControllers[count] != NULL)
-	{
-		for (uint8_t i = 0; i < 3; i+=2)
-		{
-			struct pciBarInfo* barCommand = getPciBarInfo(ideControllers[count], i);
-			struct pciBarInfo* barDevcon = getPciBarInfo(ideControllers[count], i+1);
-
-			kprintf("%u, barCommand %x\n", i, barCommand->base);
-
-			uint16_t select = i < 1 ? 0xA : 0xB;
-
-			if (barCommand->isIo)
-			{
-				int diskAvailable = ataPioProbePort(barCommand->base, barDevcon->base);
-				if (diskAvailable == 1)
-				{
-					insertAtaPioDisk(driver, barCommand->base, barDevcon->base, select);
-					kprintf("  Found ATA_NATIVE at %x\n", barCommand->base);
-				}
-			}
-		}
-		count++;
-	}
-}
-*/
 
 //This function trys to find all available disks on the system
 static void scanDisks()

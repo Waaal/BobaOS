@@ -1,11 +1,11 @@
 #include "ataPio.h"
 
+#include <macros.h>
 #include <print.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string/string.h>
 
-#include "disk/diskDriver.h"
 #include "status.h"
 #include "memory/kheap/kheap.h"
 #include "memory/memory.h"
@@ -19,13 +19,15 @@ struct ataPioPrivate
 	uint8_t lba48Enabled;
 };
 
+static struct diskInfo ataPioIdentify(void* private);
+static int scanForDisk(struct disk** diskList, int* diskFoundCount, uint16_t nextId);
 static int ataPioRead(uint64_t lba, uint64_t total, void* out, void* private);
 static int ataPioWrite(uint64_t lba, uint64_t total, void* in, void* private);
-static struct diskInfo ataPioIdentify(void* private);
 
 static struct diskDriver driver =
 {
 	.type = DISK_DRIVER_TYPE_ATA_LEGACY,
+	.scanForDisk = scanForDisk,
 	.getInfo = ataPioIdentify,
 	.read = ataPioRead,
 	.write = ataPioWrite
@@ -235,4 +237,61 @@ int ataPioAttach(struct disk* disk, uint16_t base, uint16_t select, uint16_t dev
 		return 0;
 	}
 	return -ENMEM;
+}
+
+struct disk* createAndAttachDisk(uint16_t id, uint16_t base, uint16_t select, uint16_t deviceCon)
+{
+	struct disk* disk = kzalloc(sizeof(struct disk));
+	struct ataPioPrivate* private = (struct ataPioPrivate*)kzalloc(sizeof(struct ataPioPrivate));
+
+	RETNULL(disk);
+	RETNULL(private);
+
+	private->port = base;
+	private->select = select;
+	private->deviceCon = deviceCon;
+
+	disk->id = id;
+	disk->type = DISK_TYPE_PHYSICAL;
+	disk->driver = copyDriver(&driver);
+
+	RETNULL(disk->driver);
+	disk->driver->private = private;
+
+	return disk;
+}
+
+static int scanForDisk(struct disk** diskList, int* diskFoundCount, uint16_t nextId)
+{
+	*diskFoundCount = 0;
+
+	//Master
+	int diskAvailable = ataPioProbePort(0x1F0, 0x206);
+	if(diskAvailable > 0)
+	{
+		struct disk* disk = createAndAttachDisk(nextId, 0x1F0, 0xA, 0x206);
+		RETNULLERROR(disk, -ENMEM);
+		disableInterruptSend(0x1F0, 0xA, 0x206);
+
+		diskList[*diskFoundCount] = disk;
+		(*diskFoundCount)++;
+		nextId++;
+
+		print("  Found ATA_LEGACY (Master) at 0x1F0\n");
+	}
+	//Slave
+	diskAvailable = ataPioProbePort(0x170, 0x206);
+	if(diskAvailable > 0)
+	{
+		struct disk* disk = createAndAttachDisk(nextId, 0x1F0, 0xA, 0x206);
+		RETNULLERROR(disk, -ENMEM);
+		disableInterruptSend(0x170, 0xB, 0x206);
+
+		print("  Found ATA_LEGACY (Slave) at 0x1F0\n");
+
+		diskList[*diskFoundCount] = disk;
+		(*diskFoundCount)++;
+	}
+
+	return SUCCESS;
 }

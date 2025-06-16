@@ -99,6 +99,13 @@ void kmain()
 		panic(PANIC_TYPE_KERNEL, NULL, "Failed to init diskDriver-system");
 	}
 
+	/*
+	struct pciDevice* device = getPciDeviceByClass(PCI_CLASS_MASS_STORAGE_CONTROLLER, PCI_SUBCLASS_MA_SATA_CONTROLLER, 0x1);
+	struct pciBarInfo* barInfo = getPciBarInfo(device, 5);
+	kprintf("PCI-Device: offset: %x, length: %x", barInfo->base, barInfo->size);
+
+	while (1){}
+*/
 	print("Disk scan:\n");
 
 	if (diskInit() < 0)
