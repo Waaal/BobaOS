@@ -2,6 +2,7 @@
 #define KERNEL_H
 
 #include "idt/idt.h"
+#include "memory/paging/paging.h"
 
 enum panicType
 {
@@ -11,5 +12,6 @@ enum panicType
 
 void kmain();
 void panic(enum panicType type, struct trapFrame* frame, const char* message);
+PML4Table getKernelPageTable();
 
 #endif

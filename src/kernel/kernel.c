@@ -12,7 +12,6 @@
 #include "terminal.h"
 #include "print.h"
 #include "memory/kheap/kheap.h"
-#include "memory/paging/paging.h"
 #include "gdt/gdt.h"
 #include "koal/koal.h"
 #include "hardware/pci/pci.h"
@@ -22,6 +21,8 @@
 #include "disk/stream.h"
 #include "vfsl/virtualFilesystemLayer.h"
 #include "vfsl/pathTracer.h"
+
+static PML4Table kernelPageTable;
 
 void panic(enum panicType type, struct trapFrame* frame, const char* message)
 {
@@ -86,7 +87,7 @@ void kmain()
 	}	
 #endif
 	
-	PML4Table kernelPageTable = createKernelTable(0x0);
+	kernelPageTable = createKernelTable(0x0);
 	if(kernelPageTable == NULL)
 	{
 		panic(PANIC_TYPE_KERNEL, NULL, "Not enough kernel heap to init paging");
@@ -99,13 +100,6 @@ void kmain()
 		panic(PANIC_TYPE_KERNEL, NULL, "Failed to init diskDriver-system");
 	}
 
-	/*
-	struct pciDevice* device = getPciDeviceByClass(PCI_CLASS_MASS_STORAGE_CONTROLLER, PCI_SUBCLASS_MA_SATA_CONTROLLER, 0x1);
-	struct pciBarInfo* barInfo = getPciBarInfo(device, 5);
-	kprintf("PCI-Device: offset: %x, length: %x", barInfo->base, barInfo->size);
-
-	while (1){}
-*/
 	print("Disk scan:\n");
 
 	if (diskInit() < 0)
@@ -124,4 +118,9 @@ void kmain()
 	}
 
 	while(1){}
+}
+
+PML4Table getKernelPageTable()
+{
+	return kernelPageTable;
 }

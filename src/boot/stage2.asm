@@ -235,7 +235,7 @@ PICSetup:
 moveKernel:
 	mov rsi, 0x10000
 	mov rdi, 0x100000
-	mov rcx, 122880/8			; 200 sectors
+	mov rcx, 153600/8			; 300 sectors
 
 	rep movsq
 

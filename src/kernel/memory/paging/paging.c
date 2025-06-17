@@ -205,6 +205,8 @@ void* virtualToPhysical(void* virt, PML4Table table)
 
 int remapPhysicalToVirtual(void* physical, void* virtual, PML4Table table)
 {
+	return mapOrCreateRange(table, (uint64_t)physical, (uint64_t)virtual, SIZE_4KB);
+	/*
 	PTTable oldPt = getPTTable(virtual, table);
 	RETNULLERROR(oldPt, -ENFOUND);
 
@@ -212,17 +214,12 @@ int remapPhysicalToVirtual(void* physical, void* virtual, PML4Table table)
 	writePointerTableEntry(oldPt, (void*)downToPage((uint64_t)physical), oldPtIndex, PAGING_FLAG_P | PAGING_FLAG_RW);
 
 	return SUCCESS;
+	*/
 }
 
 int remapPhysicalToVirtualRange(void* physical, void* virtual, uint64_t size, PML4Table table)
 {
-	uint64_t blocks = upToPage(size) / SIZE_4KB;
-	for (uint64_t i = 0; i < blocks; i++)
-	{
-		if (remapPhysicalToVirtual(physical + (i*SIZE_4KB), virtual + (i*SIZE_4KB), table) > 0)
-			return -ENMEM;
-	}
-	return SUCCESS;
+	return mapOrCreateRange(table, (uint64_t)physical, (uint64_t)virtual, upToPage(size));
 }
 
 int remapVirtualToVirtual(void* to, void* from, PML4Table table)

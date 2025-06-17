@@ -38,7 +38,7 @@ static void scanLegacyPorts()
 		int diskFoundCount = 0;
 
 		driver->scanForDisk(tempDiskList, &diskFoundCount, currentDisk);
-		for (uint16_t i = 0; i < diskFoundCount; i++)
+		for (int i = 0; i < diskFoundCount; i++)
 		{
 			struct diskInfo info = tempDiskList[i]->driver->getInfo(tempDiskList[i]->driver->private);
 			//TODO: retunr error
@@ -51,10 +51,32 @@ static void scanLegacyPorts()
 	}
 }
 
+static void scanSata()
+{
+	struct diskDriver* driver = getDriver(DISK_DRIVER_TYPE_AHCI);
+	if(driver != NULL) {
+		struct disk* tempDiskList[BOBAOS_MAX_DISKS];
+		int diskFoundCount = 0;
+
+		driver->scanForDisk(tempDiskList, &diskFoundCount, currentDisk);
+		for (int i = 0; i < diskFoundCount; i++)
+		{
+			struct diskInfo info = tempDiskList[i]->driver->getInfo(tempDiskList[i]->driver->private);
+			//TODO: retunr error
+			tempDiskList[i]->size = info.size;
+			strncpy(tempDiskList[i]->name, info.name, 64);
+
+			//if (insertDisk(tempDiskList[i])< 0)
+				//return;
+		}
+	}
+}
+
 //This function trys to find all available disks on the system
 static void scanDisks()
 {
 	scanLegacyPorts();
+	scanSata();
 }
 
 //This function tries to find the disk the kernel boots from and give ot the id 0 (start of the diskList).
@@ -105,6 +127,7 @@ int diskInit()
 	memset(diskList, 0x0, sizeof(struct disk*) * BOBAOS_MAX_DISKS);
 
 	scanDisks();
+
 	if (findKernelDisk() == 1)
 	{
 		return 0;
