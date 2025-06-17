@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <memory/memory.h>
 #include <memory/kheap/kheap.h>
+#include <string/string.h>
 
 #include "kernel.h"
 #include "config.h"
@@ -71,6 +72,8 @@ static int remapPort(HBA_PORT port)
     uint64_t baseAddr = (uint64_t)virtualToPhysical(addr, getKernelPageTable());
 
     kprintf("    Map port commandHeader to: %x \n", baseAddr);
+
+    //TODO: Set port->interruptEnable to 0xFFFFFFFF. So every interrupt fires lel.
 
     port->commandListBase = baseAddr & 0xFFFFFFFF;
     port->commandListBaseUpper = (baseAddr >> 32) & 0xFFFFFFFF;
@@ -159,6 +162,8 @@ static int scanForDisk(struct disk** diskList, int* diskFoundCount, uint16_t nex
                         ret = remapPort(&hbaMem->port[i]);
                         RETERROR(ret);
 
+                        //TODO: activate hbaMem->ghc bit 1 for interrupts.
+
                         struct disk* disk = createDisk(&hbaMem->port[i], nextId);
 
                         RETNULLERROR(disk, -ENMEM);
@@ -172,6 +177,20 @@ static int scanForDisk(struct disk** diskList, int* diskFoundCount, uint16_t nex
         }
     }
     return SUCCESS;
+}
+
+static void zeroCommandHeaderFlags(volatile struct commandHeader* cmdHeader)
+{
+    cmdHeader->commandFisLength = 0;
+    cmdHeader->atapi = 0;
+    cmdHeader->write = 0;
+    cmdHeader->prefetchable = 0;
+    cmdHeader->reset = 0;
+    cmdHeader->bist = 0;
+    cmdHeader->clearBusy = 0;
+    cmdHeader->portMultiplierPort = 0;
+    cmdHeader->physicalRegionDescriptorTableLength = 0;
+    cmdHeader->physicalRegionDescriptorTableBytesTransferred = 0;
 }
 
 static struct diskInfo ahciIdentifyCommand(void* private)
@@ -192,15 +211,16 @@ static struct diskInfo ahciIdentifyCommand(void* private)
 
     //Setup command header
     volatile struct commandHeader* cmdHeader = (volatile struct commandHeader*)((uint64_t)pr->port->commandListBaseUpper << 32 | pr->port->commandListBase);
+    zeroCommandHeaderFlags(&cmdHeader[slot]);
 
     cmdHeader[slot].commandFisLength = sizeof(struct fisHost2Device) / sizeof(uint32_t);
-    cmdHeader[slot].write = 0; //We read
+    //cmdHeader[slot].write = 0; //We read
     cmdHeader[slot].physicalRegionDescriptorTableLength = 1;
 
     //Setup CommandTable
     volatile struct commandTable* cmdTable = (volatile struct commandTable*)((uint64_t)cmdHeader[slot].commandTableBaseAddressUpper << 32 | cmdHeader[slot].commandTableBaseAddress);
 
-    void* dataBuffer = kzalloc(512);
+    uint16_t* dataBuffer = kzalloc(512);
     if (dataBuffer == NULL) return diskInfo;
     uint64_t dataBufferAddress = (uint64_t)virtualToPhysical(dataBuffer, getKernelPageTable());
 
@@ -223,7 +243,24 @@ static struct diskInfo ahciIdentifyCommand(void* private)
 
     while (pr->port->commandIssue & (1 << slot)){} //I know we have interrupts activated, but pull this shit for now. (Just found out this bitch doesn't fire interrupts)
 
-    //NOT FINISHED, WILL RETURN ZERO. IM JUST EXTREMELY TIRED FOR NOW ITS 5AM FUCK.
+    //Extract model string
+    char model[42];
+    for (uint8_t i = 0; i < 20; i++)
+    {
+        model[i*2] = (char)(dataBuffer[27+i] >> 8);
+        model[i*2+1] = (char)(dataBuffer[27+i] & 0xFF);
+    }
+    model[41] = 0;
+
+    //Extract total LBAs
+    uint32_t totalLBA = 0;
+    totalLBA = dataBuffer[60];
+    totalLBA |= dataBuffer[61] << 16;
+
+    //Fill diskinfo return struct
+    strncpy(diskInfo.name, model, 42);
+    diskInfo.size = totalLBA * 512;
+
     return diskInfo;
 }
 

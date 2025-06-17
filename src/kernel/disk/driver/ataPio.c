@@ -106,7 +106,7 @@ static struct diskInfo ataPioIdentify(void* private)
 	uint8_t lba48Enabled = (uint8_t)((dataBuffer[83] & 0x400) >> 10);
 	pr->lba48Enabled = lba48Enabled;
 
-	//Extract mdoel string
+	//Extract model string
 	char* model = kzalloc(42);
 	for (uint8_t i = 0; i < 20; i++)
 	{
