@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	gdb \
 	sudo \
 	curl ca-certificates \
-	build-essential bison flex\
+	build-essential bison flex yacc\
 	libgmp3-dev libmpc-dev libmpfr-dev\
 	texinfo libisl-dev \
 	binutils \
