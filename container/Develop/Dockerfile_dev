@@ -1,0 +1,31 @@
+
+FROM debian:bookworm-slim
+
+ENV targ=x86_64-elf
+
+EXPOSE 5900/tcp
+EXPOSE 5900/udp
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+	vim \
+	git \
+	gdb \
+	qemu-system-x86 \
+	nasm \
+	iproute2 \
+	x11vnc xvfb \
+	xfce4 xfce4-goodies
+
+
+RUN adduser containeruser && adduser containeruser sudo
+
+USER containeruser
+
+WORKDIR /home/containeruser
+
+RUN mkdir ~/.vnc && \
+	x11vnc -storepasswd containeruser ~/.vnc/passwd
+
+COPY entrypoint.sh /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
