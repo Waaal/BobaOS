@@ -1,23 +1,26 @@
 FROM debian:bookworm-slim
 
-ENV targ=x86_64-elf
-
 RUN apt-get update && apt-get install -y --no-install-recommends \
 	vim \
 	git \
 	gdb \
 	sudo \
+	curl ca-certificates \
+	build-essential bison flex\
+	libgmp3-dev libmpc-dev libmpfr-dev\
+	texinfo libisl-dev \
+	binutils \
 	qemu-system-x86 \
 	nasm \
 	iproute2
 
-RUN adduser containeruser && adduser containeruser sudo 
+COPY container/Base/build_gcccc.sh /buildgcccc.sh
 
-RUN passwd -d containeruser
+RUN chmod +x /buildgcccc.sh && /buildgcccc.sh
 
-RUN echo "containeruser ALL=NOPASSWD: /usr/bin/apt-get install" >> /etc/sudoers
+RUN adduser containeruser && adduser containeruser sudo && passwd -d containeruser
 
-RUN cat /etc/sudoers
+#RUN echo "containeruser ALL=NOPASSWD: /usr/bin/apt-get install" >> /etc/sudoers
 
 USER containeruser
 
