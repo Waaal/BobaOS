@@ -1,4 +1,4 @@
-FROM base
+FROM xddc/bobaos:base-latest
 
 USER containeruser
 
