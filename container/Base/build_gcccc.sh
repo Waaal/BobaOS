@@ -1,13 +1,18 @@
 #!/bin/bash
 
+set -e
+
 export CC_PREFIX="usr/local"
 export CC_TARGET=x86_64-elf
 export PATH="$CC_PREFIX/bin:$PATH"
 
 mkdir -p builds builds/binutils-2.44 builds/gcc-15.1.0
 
-curl -o builds/gcc-15.1.0.tar.xz https://ftp.gnu.org/gnu/gcc/gcc-15.1.0/gcc-15.1.0.tar.xz
-curl -o builds/binutils-2.44.tar.xz https://ftp.gnu.org/gnu/binutils/binutils-2.44.tar.xz
+#curl -o builds/gcc-15.1.0.tar.xz https://ftp.gnu.org/gnu/gcc/gcc-15.1.0/gcc-15.1.0.tar.xz
+#curl -o builds/binutils-2.44.tar.xz https://ftp.gnu.org/gnu/binutils/binutils-2.44.tar.xz
+#using a mirror because the above URLs are slow
+curl -o builds/gcc-15.1.0.tar.xz https://mirror.easyname.at/gnu/gcc/gcc-15.1.0/gcc-15.1.0.tar.xz
+curl -o builds/binutils-2.44.tar.xz https://mirror.easyname.at/gnu/binutils/binutils-2.44.tar.xz
 
 tar -xf builds/gcc-15.1.0.tar.xz -C builds/gcc-15.1.0
 tar -xf builds/binutils-2.44.tar.xz -C builds/binutils-2.44
