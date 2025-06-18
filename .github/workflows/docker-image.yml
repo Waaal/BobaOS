@@ -1,0 +1,22 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "61-create-container-for-easy-development-setup" ]
+  pull_request:
+    branches: [ "61-create-container-for-easy-development-setup" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build the Base Docker image
+      run: docker build . -f /container/Base/Dockerfile_base --tag Base:$(date +%s)
+      
+    - uses: actions/checkout@v4
+    - name: Build the Develop Docker image
+      run: docker build . --file /container/Develop/Dockerfile_dev --tag Develop:$(date +%s)
