@@ -17,8 +17,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Build the Base Docker image
-      run: docker build . -f /container/Base/Dockerfile_base --tag base:$(date +%s)
+      run: docker build . -f ./container/Base/Dockerfile_base --tag base:$(date +%s)
       
     - uses: actions/checkout@v4
     - name: Build the Develop Docker image
-      run: docker build . --file /container/Develop/Dockerfile_dev --tag develop:$(date +%s)
+      run: docker build . --file ./container/Develop/Dockerfile_dev --tag develop:$(date +%s)
