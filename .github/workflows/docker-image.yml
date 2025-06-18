@@ -16,7 +16,7 @@ jobs:
 
     steps:
     - name: dockerHub login
-      run: docker login -u xddc -p &{{secrets.dockerhub}}
+      run: docker login -u xddc -p ${{secrets.dockerhub}}
       
     - uses: actions/checkout@v4
     - name: Build the Base Docker image
