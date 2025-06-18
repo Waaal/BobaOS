@@ -2,9 +2,11 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ "61-create-container-for-easy-development-setup" ]
+    branches:
+      - '**'
   pull_request:
-    branches: [ "61-create-container-for-easy-development-setup" ]
+    branches: 
+      - '**'
 
 jobs:
 
