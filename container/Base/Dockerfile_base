@@ -6,11 +6,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	vim \
 	git \
 	gdb \
+	sudo \
 	qemu-system-x86 \
 	nasm \
 	iproute2
 
-RUN adduser containeruser && adduser containeruser sudo
+RUN adduser containeruser && adduser containeruser sudo 
+
+RUN passwd -d containeruser
+
+RUN echo "containeruser ALL=NOPASSWD: /usr/bin/apt-get install" >> /etc/sudoers
+
+RUN cat /etc/sudoers
 
 USER containeruser
 

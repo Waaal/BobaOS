@@ -1,26 +1,13 @@
-FROM debian:bookworm-slim
+FROM base
 
-ENV targ=x86_64-elf
+USER containeruser
 
 EXPOSE 5900/tcp
 EXPOSE 5900/udp
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-	vim \
-	git \
-	gdb \
-	qemu-system-x86 \
-	nasm \
-	iproute2 \
+RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends \
 	x11vnc xvfb \
 	xfce4 xfce4-goodies
-
-
-RUN adduser containeruser && adduser containeruser sudo
-
-USER containeruser
-
-WORKDIR /home/containeruser
 
 RUN mkdir ~/.vnc && \
 	x11vnc -storepasswd containeruser ~/.vnc/passwd
