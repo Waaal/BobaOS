@@ -16,6 +16,7 @@
 #include "koal/koal.h"
 #include "hardware/pci/pci.h"
 
+#include "memory/mmioEngine.h"
 #include "disk/disk.h"
 #include "disk/diskDriver.h"
 #include "disk/stream.h"
@@ -71,6 +72,7 @@ void kmain()
 	
 	idtInit();
 	enableInterrupts();
+	mmioEngineInit();
 
 	readMemoryMap();	
 	kprintf("Memory\n  Available memory: %x\n  Available upper memory: %x\n\n", getMaxMemorySize(), getUpperMemorySize());

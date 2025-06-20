@@ -17,6 +17,12 @@ static int8_t timerInterrupt(struct trapFrame* frame)
 	return 0;
 }
 
+static int8_t freePeripherals(struct trapFrame* frame)
+{
+	print("TESTING TESTING\n");
+	return 0;
+}
+
 void initIrqHandler()
 {	
 	registerHandler(32, timerInterrupt);
@@ -24,4 +30,5 @@ void initIrqHandler()
 	{
 		registerHandler(i, noInterruptHandler);
 	}
+	registerHandler(43, freePeripherals);
 }

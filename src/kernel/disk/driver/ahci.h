@@ -4,6 +4,23 @@
 #include <stdint.h>
 #include "disk/diskDriver.h"
 
+#define SATA_DRIVE_SIGNATURE 0x00000101
+
+#define PORT_CMD_COMMAND_LIST_RUNNING 0x8000
+#define PORT_CMD_FIS_RECEIVE_RUNNING 0x4000
+#define PORT_CMD_FIS_RECEIVE_ENABLE 0x0010
+#define PORT_CMD_START_PORT 0x0001
+
+#define AHCI_INTERFACE_POWER_MANAGEMENT_ACTIVE 0x1
+#define AHCI_DEVICE_DETECTION_PRESENT 0x3
+
+#define ATA_DEV_BUSY 0x80
+#define ATA_DEV_DRQ 0x08
+
+#define ATA_CMD_IDENTIFY 0xEC
+#define ATA_CMD_READ_DMA_EX 0x25
+#define ATA_CMD_WRITE_DMA_EX 0x35
+
 enum frameInformationStructure
 {
     FIS_TYPE_REG_H2D = 0x27,
@@ -93,7 +110,7 @@ struct hba_mem {
 struct commandHeader
 {
     //DW0
-    uint8_t commandFisLength:5;
+    uint8_t commandFisLength:5; //In bytes
     uint8_t atapi:1;
     uint8_t write:1;
     uint8_t prefetchable:1;
@@ -126,7 +143,7 @@ struct commandTable
     uint8_t commandFis[64];
     uint8_t ataPiCommand[16];
     uint8_t reserved[48];
-    struct physicalRegionDescriptorTable physicalRegionDescriptorTableEntries[8]; //Can have up to 65535
+    struct physicalRegionDescriptorTable physicalRegionDescriptorTableEntries[BOBAOS_MAX_AHCI_PRDT_ENTRIES]; //Can have up to 65535
 } __attribute__((packed));
 
 typedef volatile struct hba_port* HBA_PORT;
