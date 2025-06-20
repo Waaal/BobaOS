@@ -47,23 +47,23 @@ static int getFreeSlot(HBA_PORT port)
 
 static void stopCommandSending(HBA_PORT port)
 {
-    port->commandAndStatus &= ~0x0001;
-    port->commandAndStatus &= ~0x0010;
+    port->commandAndStatus &= ~PORT_CMD_START_PORT;
+    port->commandAndStatus &= ~PORT_CMD_FIS_RECEIVE_ENABLE;
 
     while (1)
     {
-        if ((port->commandAndStatus & 0x4000)) continue;
-        if ((port->commandAndStatus & 0x8000)) continue;
+        if ((port->commandAndStatus & PORT_CMD_FIS_RECEIVE_RUNNING)) continue;
+        if ((port->commandAndStatus & PORT_CMD_COMMAND_LIST_RUNNING)) continue;
         break;
     }
 }
 
 static void startCommandSending(HBA_PORT port)
 {
-    while (port->commandAndStatus & 0x8000);
+    while (port->commandAndStatus & PORT_CMD_COMMAND_LIST_RUNNING);
 
-    port->commandAndStatus |= 0x0010;
-    port->commandAndStatus |= 0x0001;
+    port->commandAndStatus |= PORT_CMD_FIS_RECEIVE_ENABLE;
+    port->commandAndStatus |= PORT_CMD_START_PORT;
 }
 
 static int remapPort(HBA_PORT port)
@@ -159,10 +159,10 @@ static int scanForDisk(struct disk** diskList, int* diskFoundCount, uint16_t nex
                 uint8_t deviceDetection = hbaMem->port[i].sataStatus & 0xF;
                 uint8_t interfacePowerManagement = (hbaMem->port[i].sataStatus >> 8) & 0xF;
 
-                if (deviceDetection == 0x3 && interfacePowerManagement == 0x1)
+                if (deviceDetection == AHCI_DEVICE_DETECTION_PRESENT && interfacePowerManagement == AHCI_INTERFACE_POWER_MANAGEMENT_ACTIVE)
                 {
                     //There is something connected and active
-                    if (hbaMem->port[i].signature == 0x00000101)
+                    if (hbaMem->port[i].signature == SATA_DRIVE_SIGNATURE)
                     {
                         kprintf("  SATA-Drive found at port: %u\n", i);
                         int ret = remapPort(&hbaMem->port[i]);
@@ -249,10 +249,10 @@ static struct diskInfo ahciIdentifyCommand(void* private)
 
     fis->fisType = FIS_TYPE_REG_H2D;
     fis->c = 1;
-    fis->command = 0xEC; //ATA Identify Command
+    fis->command = ATA_CMD_IDENTIFY;
 
     //Send command
-    while (port->taskFileData & (0x80 | 0x08)){}
+    while (port->taskFileData & (ATA_DEV_BUSY | ATA_DEV_DRQ)){}
     port->commandIssue |= (1 << slot);
 
     while (port->commandIssue & (1 << slot)){} //I know we have interrupts activated, but pull this shit for now. (Just found out this bitch doesn't fire interrupts)
@@ -327,7 +327,7 @@ static int ahciRead(uint64_t lba, uint64_t total, void* out, void* private)
 
     fis->fisType = FIS_TYPE_REG_H2D;
     fis->c = 1;
-    fis->command = 0x25; //ATA_CMD_READ_DMA_EX
+    fis->command = ATA_CMD_READ_DMA_EX;
 
     fis->lba0 = (uint8_t)lba;
     fis->lba1 = (uint8_t)(lba >> 8);
@@ -340,7 +340,7 @@ static int ahciRead(uint64_t lba, uint64_t total, void* out, void* private)
     fis->countLow = total & 0xFF;
     fis->countHigh = total>> 8 & 0xFF;
 
-    while ((port->taskFileData & 0x88)){}
+    while (port->taskFileData & (ATA_DEV_BUSY | ATA_DEV_DRQ)){}
 
     port->commandIssue |= (1 << slot); //We do the OR even though we don't know if the port supports multiple slots at the same time.
 
@@ -407,7 +407,7 @@ static int ahciWrite(uint64_t lba, uint64_t total, void* in, void* private)
 
     fis->fisType = FIS_TYPE_REG_H2D;
     fis->c = 1;
-    fis->command = 0x35; //ATA_CMD_WRITE_DMA_EX
+    fis->command = ATA_CMD_WRITE_DMA_EX;
 
     fis->lba0 = (uint8_t)lba;
     fis->lba1 = (uint8_t)(lba >> 8);
@@ -420,7 +420,7 @@ static int ahciWrite(uint64_t lba, uint64_t total, void* in, void* private)
     fis->countLow = total & 0xFF;
     fis->countHigh = total>> 8 & 0xFF;
 
-    while ((port->taskFileData & 0x88)){}
+    while (port->taskFileData & (ATA_DEV_BUSY | ATA_DEV_DRQ)){}
 
     port->commandIssue |= (1 << slot); //We do the OR even tough we dont know if the port supports multiple slots at the same time.
 
