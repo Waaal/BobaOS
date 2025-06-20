@@ -3,6 +3,7 @@
 #include <macros.h>
 #include <stddef.h>
 #include <memory/memory.h>
+#include <memory/mmioEngine.h>
 #include <memory/kheap/kheap.h>
 #include <string/string.h>
 
@@ -11,7 +12,7 @@
 #include "status.h"
 #include "hardware/pci/pci.h"
 #include "print.h"
-#include "memory/paging/paging.h"
+#include "memory/mmioEngine.h"
 
 struct ahciPrivate
 {
@@ -69,7 +70,8 @@ static int remapPort(HBA_PORT port)
 {
     stopCommandSending(port);
 
-    void* addr = kzalloc(9472); //[1024 = (32* commandHeader)] + [256 = (1 * fis)] + [8192 = (32 * CommandTable with 8 PhysicalRegionDescriptorTables)]
+    uint64_t size = 32 * sizeof(struct commandHeader) + 256 + 32 * sizeof(struct commandTable);
+    void* addr = kzalloc(size); //[1024 = (32* commandHeader)] + [256 = (1 * fis)] + [8192 = (32 * CommandTable with 8 PhysicalRegionDescriptorTables)]
     RETNULLERROR(addr, -ENMEM);
     uint64_t baseAddr = (uint64_t)addr;
 
@@ -134,10 +136,8 @@ static int scanForDisk(struct disk** diskList, int* diskFoundCount, uint16_t nex
 
         kprintf("  AHCI: Base: %x, size: %x\n", barInfo->base, barInfo->size);
 
-        void* mapAddress = (void*)0xffffA00000000000;
-
-        int ret = remapPhysicalToVirtualRange((void*)((uint64_t)barInfo->base), mapAddress, barInfo->size, getKernelPageTable());
-        RETERROR(ret);
+        void* mapAddress = mmioMap(barInfo->base, barInfo->size, devices[counter-1]->bus, devices[counter-1]->device, devices[counter-1]->function);
+        RETNULLERROR(mapAddress, -ENMEM);
 
         kprintf("  Remapped: %x -> %x, size: %x\n", barInfo->base, mapAddress, barInfo->size);
 
@@ -148,7 +148,8 @@ static int scanForDisk(struct disk** diskList, int* diskFoundCount, uint16_t nex
             continue;
         }
 
-        hbaMem->ghc |= 2; //Enable global interrupts
+        //For now we dont use them
+        //hbaMem->ghc |= 2; //Enable global interrupts
 
         for (uint8_t i = 0; i < 32; i++)
         {
@@ -164,7 +165,7 @@ static int scanForDisk(struct disk** diskList, int* diskFoundCount, uint16_t nex
                     if (hbaMem->port[i].signature == 0x00000101)
                     {
                         kprintf("  SATA-Drive found at port: %u\n", i);
-                        ret = remapPort(&hbaMem->port[i]);
+                        int ret = remapPort(&hbaMem->port[i]);
                         RETERROR(ret);
 
                         //TODO:
@@ -208,15 +209,22 @@ static struct diskInfo ahciIdentifyCommand(void* private)
     memset(&diskInfo, 0, sizeof(struct diskInfo));
 
     struct ahciPrivate* pr = private;
-    pr->port->interruptStatus = (uint32_t)-1; //Reset interruptStatus
+    HBA_PORT port = pr->port;
 
-    //Just wait for now
+    //We dont use this yet because we dont have interrupts. But as soon as we have we need to acknowedge the interrupt by setting the interruptStatus to the old value as soon as a we receive the interrupt
+    uint32_t oldInterruptStatus = port->interruptStatus;
+    if (oldInterruptStatus){}
+
+    //Just wait for now till a slot is free (not optimal but this whole driver is a barebone mess)
     int slot = 0;
-    slot = getFreeSlot(pr->port);
-    if (slot < 0){return diskInfo;} //ERROR
+    while (1)
+    {
+        slot = getFreeSlot(port);
+        if (slot >= 0) break;
+    }
 
     //Setup command header
-    volatile struct commandHeader* cmdHeader = (volatile struct commandHeader*)((uint64_t)pr->port->commandListBaseUpper >> 32 | pr->port->commandListBase);
+    volatile struct commandHeader* cmdHeader = (volatile struct commandHeader*)((uint64_t)port->commandListBaseUpper >> 32 | port->commandListBase);
     zeroCommandHeaderFlags(&cmdHeader[slot]);
 
     cmdHeader[slot].commandFisLength = sizeof(struct fisHost2Device) / sizeof(uint32_t);
@@ -244,10 +252,11 @@ static struct diskInfo ahciIdentifyCommand(void* private)
     fis->command = 0xEC; //ATA Identify Command
 
     //Send command
-    while (pr->port->taskFileData & (0x80 | 0x08)){}
-    pr->port->commandIssue |= (1 << slot);
+    while (port->taskFileData & (0x80 | 0x08)){}
+    port->commandIssue |= (1 << slot);
 
-    while (pr->port->commandIssue & (1 << slot)){} //I know we have interrupts activated, but pull this shit for now. (Just found out this bitch doesn't fire interrupts)
+    while (port->commandIssue & (1 << slot)){} //I know we have interrupts activated, but pull this shit for now. (Just found out this bitch doesn't fire interrupts)
+    port->interruptStatus = oldInterruptStatus;
 
     //Extract model string
     char model[42];
@@ -276,19 +285,29 @@ static int ahciRead(uint64_t lba, uint64_t total, void* out, void* private)
     HBA_PORT port = pr->port;
     uint64_t totalDataRead = total*512;
 
-    if (total > 0x3FFFFF)
+    if (totalDataRead > 0x3FFFFF)
     {
         //0x3FFFFF is the max 1 physicalRegionDescriptorTableEntry can hold. I know we have max 8 but im to tired for this now lol.
-        //Just let it be like this
+        //Just let it be like this for now
         return -ELONG;
     }
 
-    port->interruptStatus = (uint32_t)-1; //Reset interruptStatus
-    int slot = getFreeSlot(port);
-    RETERROR(slot);
+    //We dont use this yet because we dont have interrupts. But as soon as we have we need to acknowedge the interrupt by setting the interruptStatus to the old value as soon as a we receive the interrupt
+    uint32_t oldInterruptStatus = port->interruptStatus;
+    if (oldInterruptStatus){}
+
+    port->interruptStatus = 0; //JUST AS LONG AS WE DONT USE INTERRUPTS
+
+    //Just wait for now till a slot is free (not optimal but this whole driver is a barebone mess)
+    int slot = 0;
+    while (1)
+    {
+        slot = getFreeSlot(port);
+        if (slot >= 0) break;
+    }
 
     //CmdHeader
-    volatile struct commandHeader* cmdHeader = (volatile struct commandHeader*)((uint64_t)pr->port->commandListBaseUpper >> 32 | pr->port->commandListBase);
+    volatile struct commandHeader* cmdHeader = (volatile struct commandHeader*)((uint64_t)port->commandListBaseUpper >> 32 | port->commandListBase);
     zeroCommandHeaderFlags(&cmdHeader[slot]);
     cmdHeader[slot].commandFisLength = sizeof(struct fisHost2Device) / 4;
     cmdHeader[slot].physicalRegionDescriptorTableLength = 1; //For now
@@ -323,10 +342,11 @@ static int ahciRead(uint64_t lba, uint64_t total, void* out, void* private)
 
     while ((port->taskFileData & 0x88)){}
 
-    pr->port->commandIssue |= (1 << slot); //We do the OR even tough we dont know if the port supports multiple slots at the same time.
+    port->commandIssue |= (1 << slot); //We do the OR even though we don't know if the port supports multiple slots at the same time.
 
     while (1)
     {
+        //Check TaskFileData error bit
         if ((port->commandIssue & (1 << slot)) == 0) break;
 
         if (port->interruptStatus & (1 << 30))
@@ -344,19 +364,29 @@ static int ahciWrite(uint64_t lba, uint64_t total, void* in, void* private)
     HBA_PORT port = pr->port;
     uint64_t totalDataWrite = total*512;
 
-    if (total > 0x3FFFFF)
+    if (totalDataWrite > 0x3FFFFF)
     {
         //0x3FFFFF is the max 1 physicalRegionDescriptorTableEntry can hold. I know we have max 8 but im to tired for this now lol.
-        //Just let it be like this
+        //Just let it be like this for now
         return -ELONG;
     }
 
-    port->interruptStatus = (uint32_t)-1; //Reset interruptStatus
-    int slot = getFreeSlot(port);
-    RETERROR(slot);
+    //We dont use this yet because we dont have interrupts. But as soon as we have we need to acknowedge the interrupt by setting the interruptStatus to the old value as soon as a we receive the interrupt
+    uint32_t oldInterruptStatus = port->interruptStatus;
+    if (oldInterruptStatus){}
+
+    port->interruptStatus = 0; //JUST AS LONG AS WE DONT USE INTERRUPTS
+
+    //Just wait for now till a slot is free (not optimal but this whole driver is a barebone mess)
+    int slot = 0;
+    while (1)
+    {
+        slot = getFreeSlot(port);
+        if (slot >= 0) break;
+    }
 
     //CmdHeader
-    volatile struct commandHeader* cmdHeader = (volatile struct commandHeader*)((uint64_t)pr->port->commandListBaseUpper >> 32 | pr->port->commandListBase);
+    volatile struct commandHeader* cmdHeader = (volatile struct commandHeader*)((uint64_t)port->commandListBaseUpper >> 32 | port->commandListBase);
     zeroCommandHeaderFlags(&cmdHeader[slot]);
     cmdHeader[slot].commandFisLength = sizeof(struct fisHost2Device) / 4;
     cmdHeader[slot].write = 1;
@@ -392,10 +422,11 @@ static int ahciWrite(uint64_t lba, uint64_t total, void* in, void* private)
 
     while ((port->taskFileData & 0x88)){}
 
-    pr->port->commandIssue |= (1 << slot); //We do the OR even tough we dont know if the port supports multiple slots at the same time.
+    port->commandIssue |= (1 << slot); //We do the OR even tough we dont know if the port supports multiple slots at the same time.
 
     while (1)
     {
+        //Check TaskFileData error bit
         if ((port->commandIssue & (1 << slot)) == 0) break;
 
         if (port->interruptStatus & (1 << 30))
