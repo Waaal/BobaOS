@@ -126,7 +126,7 @@ struct commandTable
     uint8_t commandFis[64];
     uint8_t ataPiCommand[16];
     uint8_t reserved[48];
-    struct physicalRegionDescriptorTable physicalRegionDescriptorTableEntries[8]; //Can have up to 65535
+    struct physicalRegionDescriptorTable physicalRegionDescriptorTableEntries[BOBAOS_MAX_AHCI_PRDT_ENTRIES]; //Can have up to 65535
 } __attribute__((packed));
 
 typedef volatile struct hba_port* HBA_PORT;

@@ -117,6 +117,10 @@ void kmain()
 			panic(PANIC_TYPE_KERNEL, NULL, "Failed to init the virtual filesystem layer");
 	}
 
+	int errCode = 0;
+	struct file* file = fopen("0:file.txt", "w", &errCode);
+	fwrite(file, "Hello from BobaOS with SATA", 27, 1);
+
 	while(1){}
 }
 

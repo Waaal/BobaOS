@@ -66,8 +66,8 @@ static void scanSata()
 			tempDiskList[i]->size = info.size;
 			strncpy(tempDiskList[i]->name, info.name, 64);
 
-			//if (insertDisk(tempDiskList[i])< 0)
-				//return;
+			if (insertDisk(tempDiskList[i])< 0)
+				return;
 		}
 	}
 }
