@@ -68,7 +68,7 @@ void kmain()
 	terminalInit();
 	koalSelectCurrentOutputByName("TEXT_TERMINAL");
 
-	kprintf("BobaOS v%u.%u.%u - Milk Tea\n\n", KERNEL_VERSION_MAJOR, KERNEL_VERSION_MINOR, KERNEL_VERSION_PATCH);
+	kprintf("BobaOS v%u.%u.%u - Tapioca Core\n\n", KERNEL_VERSION_MAJOR, KERNEL_VERSION_MINOR, KERNEL_VERSION_PATCH);
 	
 	idtInit();
 	enableInterrupts();
@@ -118,6 +118,10 @@ void kmain()
 		else
 			panic(PANIC_TYPE_KERNEL, NULL, "Failed to init the virtual filesystem layer");
 	}
+
+	int errCode = 0;
+	struct file* file = fopen("0:file.txt", "w", &errCode);
+	fwrite(file, "Hello from BobaOS with SATA", 27, 1);
 
 	while(1){}
 }
