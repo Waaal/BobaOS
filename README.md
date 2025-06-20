@@ -10,6 +10,7 @@ BobaOS is a x86-based 64 bit operating system.
 Current features include:
 
 - ATA PIO disk driver
+- AHCI SATA disk driver
 - FAT32 read and write support
 - Working with PCI devices 
 - Kernel heap with page block or buddy algorithm
@@ -102,6 +103,7 @@ break *ADDRESS_ASSEMBLY_LABEL
 ## 📦 Releases
 
 [v0.1 - Milk Tea](https://github.com/Waaal/BobaOS/releases/tag/V0.1)
+[v0.2 - Tapioca Core](https://github.com/Waaal/BobaOS/releases/tag/V0.2)
 
 ---
 
