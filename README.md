@@ -103,6 +103,7 @@ break *ADDRESS_ASSEMBLY_LABEL
 ## 📦 Releases
 
 [v0.1 - Milk Tea](https://github.com/Waaal/BobaOS/releases/tag/V0.1)
+
 [v0.2 - Tapioca Core](https://github.com/Waaal/BobaOS/releases/tag/V0.2)
 
 ---
