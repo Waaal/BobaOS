@@ -22,6 +22,7 @@
 #include "disk/stream.h"
 #include "vfsl/virtualFilesystemLayer.h"
 #include "vfsl/pathTracer.h"
+#include "task/tss.h"
 
 static PML4Table kernelPageTable;
 
@@ -57,19 +58,22 @@ void panic(enum panicType type, struct trapFrame* frame, const char* message)
 struct gdt gdt[] = {
 	{ .limit = 0x0, .base = 0x0, .access = 0x0,  .flags = 0x0 }, // NULL
 	{ .limit = 0x0, .base = 0x0, .access = 0x9A, .flags = 0x2 }, //	K CODE
-	{ .limit = 0x0, .base = 0x0, .access = 0x92, .flags = 0x2 }  // K DATA
+	{ .limit = 0x0, .base = 0x0, .access = 0x92, .flags = 0x2 }, // K DATA
+	{ .limit = sizeof(struct tss)-1, .base = 0x0, 0x89, 0x0} //TSS entry
 };
 
 void kmain()
 {
+	gdt[3].base = getTssAddress();
 	loadGdt(gdt);
-	
+
+	initTss();
 	koalInit();
 	terminalInit();
 	koalSelectCurrentOutputByName("TEXT_TERMINAL");
 
 	kprintf("BobaOS v%u.%u.%u - Tapioca Core\n\n", KERNEL_VERSION_MAJOR, KERNEL_VERSION_MINOR, KERNEL_VERSION_PATCH);
-	
+
 	idtInit();
 	enableInterrupts();
 	mmioEngineInit();
@@ -106,8 +110,8 @@ void kmain()
 
 	if (diskInit() < 0)
 	{
-		kprintf("  [ERROR]: Kernel disk not found\n\n");
-		//panic(PANIC_TYPE_KERNEL, NULL, "Kernel disk not found");
+		//kprintf("  [ERROR]: Kernel disk not found\n\n");
+		panic(PANIC_TYPE_KERNEL, NULL, "Kernel disk not found");
 	}
 
 	int vfslInitVal = vfslInit();

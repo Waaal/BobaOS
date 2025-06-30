@@ -204,7 +204,7 @@ enablePaging:
 
 [bits 64]
 longEntry:
-	mov rsp, 0x300000
+	mov rsp, 0x10FFF0
 
 	xor rax, rax
 
@@ -234,7 +234,7 @@ PICSetup:
 
 moveKernel:
 	mov rsi, 0x10000
-	mov rdi, 0x100000
+	mov rdi, 0x110000
 	mov rcx, 153600/8			; 300 sectors
 
 	rep movsq
@@ -244,7 +244,7 @@ moveKernel:
 
 	mov [0xb8000], ax
 
-	jmp 0x100000
+	jmp 0x110000
 
 
 ; A GDT entry in protected mode is 8 byte
