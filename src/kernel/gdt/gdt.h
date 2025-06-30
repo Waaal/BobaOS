@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#define GDT_ACCESS_SYSTEM 0x10
+
 struct gdt
 {
 	uint64_t limit;
@@ -11,6 +13,7 @@ struct gdt
 	uint8_t flags;
 };
 
+
 struct realGdt
 {
 	uint16_t limit1;
@@ -18,6 +21,12 @@ struct realGdt
 	uint8_t limit2_flags;
 	uint8_t base2;
 		
+} __attribute__((packed));
+
+struct realGdtSystemPart
+{
+	uint32_t base;
+	uint32_t reserved;
 } __attribute__((packed));
 
 struct gdtPtr

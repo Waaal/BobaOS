@@ -9,7 +9,7 @@ OUTPUT_ARCH(i386:x86-64)
 
 SECTIONS
 {
-	. = 0x100000;
+	. = 0x110000;
 	.text : ALIGN(4096)
 	{
 		*(.text)
