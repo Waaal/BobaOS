@@ -78,7 +78,7 @@ static struct fileSystem* attachToDisk(struct disk* disk)
 
 static int resolve(struct disk* disk)
 {
-    if (disk == NULL){ return -EIARG}
+    if (disk == NULL){ return -EIARG;}
 
     unsigned char mbr[512];
     disk->driver->read(0, 1, mbr, disk->driver->private);

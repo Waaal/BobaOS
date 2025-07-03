@@ -42,7 +42,7 @@ static int getFreeSlot(HBA_PORT port)
             return i;
         slots >>=1;
     }
-    return -ENFOUND
+    return -ENFOUND;
 }
 
 static void stopCommandSending(HBA_PORT port)
