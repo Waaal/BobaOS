@@ -22,14 +22,14 @@ static void writePointerTableEntry(uint64_t* dest, const uint64_t* src, uint64_t
 	dest[index] = ((uint64_t)src & 0xFFFFFFFFF000) | flags;	
 }
 
-static uint64_t downToPage(uint64_t var)
+uint64_t downToPage(uint64_t var)
 {
 	if ((var % SIZE_4KB) == 0)
 		return var;
 	return var - (var % SIZE_4KB);
 }
 
-static uint64_t upToPage(uint64_t var)
+uint64_t upToPage(uint64_t var)
 {
 	if ((var % SIZE_4KB) == 0)
 		return var;
@@ -282,4 +282,14 @@ void readMemoryMap()
 
 	//for (uint8_t i = 0; i < memoryMapLength; i++)
 		//kprintf("Address: %x, Length: %x, Type: %x\n", memoryMap[i].address, memoryMap[i].length, memoryMap[i].type);
+}
+
+struct memoryMap* getMemoryMapForAddress(uint64_t address)
+{
+	for (uint8_t i = 0; i < memoryMapLength; i++)
+	{
+		if (memoryMap[i].address <= address && memoryMap[i].address + memoryMap[i].length > address)
+			return &memoryMap[i];
+	}
+	return NULL;
 }

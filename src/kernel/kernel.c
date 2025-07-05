@@ -110,6 +110,7 @@ void kmain()
 		panic(PANIC_TYPE_KERNEL, NULL, "Not enough kernel heap to init paging");
 	}
 
+	saveAcpiTables();
 	pciInit();
 
 	if(diskDriverInit() < 0)

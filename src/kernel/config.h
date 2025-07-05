@@ -2,11 +2,10 @@
 #define CONFIG_H
 
 //PCI
-#define BOBOAOS_MAX_PCI_DEVICES 0xF
+#define BOBAOS_MAX_PCI_DEVICES 0xF
 
 // MEMORY
 #define BOBAOS_MEMORY_MAP_MAX_ENTRIES 0xF
-
 #define BOBAOS_USE_BUDDY_FOR_KERNEL_HEAP 0		//Change this to 1 and the kernel will use the buddy algorithm
 
 // KERNEL HEAP BUDDY
@@ -45,5 +44,9 @@
 
 //AHCI
 #define BOBAOS_MAX_AHCI_PRDT_ENTRIES 8
+
+//POWER MANAGEMENT
+#define BOBAOS_ACPI_ADDRESS 0xffffB00000000000
+#define BOBAOS_MAX_ACPI_TABLES 32
 
 #endif
