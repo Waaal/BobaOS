@@ -101,7 +101,7 @@ static int findFreePages(uint64_t pagesCount, void** memOut)
 			return 0;
 		}
 	}
-	return -ENMEM
+	return -ENMEM;
 }
 
 //Allocates memory on the kernel stack. If returned address == 0x0, then there is a -ENMEM error

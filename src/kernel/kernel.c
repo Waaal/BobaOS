@@ -23,6 +23,7 @@
 #include "vfsl/virtualFilesystemLayer.h"
 #include "vfsl/pathTracer.h"
 #include "task/tss.h"
+#include "powerManagement/acpi.h"
 
 static PML4Table kernelPageTable;
 
@@ -76,6 +77,16 @@ void kmain()
 
 	idtInit();
 	enableInterrupts();
+
+	int ret = acpiInit();
+	if (ret < 0)
+	{
+		if (ret == -EWMODE)
+			panic(PANIC_TYPE_KERNEL, NULL,"ACPI v1.0 is not supported. At least v2.0 is required.");
+		else
+			panic(PANIC_TYPE_KERNEL, NULL,"ACPI not found.");
+	}
+
 	mmioEngineInit();
 
 	readMemoryMap();	
@@ -99,6 +110,7 @@ void kmain()
 		panic(PANIC_TYPE_KERNEL, NULL, "Not enough kernel heap to init paging");
 	}
 
+	saveAcpiTables();
 	pciInit();
 
 	if(diskDriverInit() < 0)
@@ -123,9 +135,9 @@ void kmain()
 			panic(PANIC_TYPE_KERNEL, NULL, "Failed to init the virtual filesystem layer");
 	}
 
-	int errCode = 0;
-	struct file* file = fopen("0:file.txt", "w", &errCode);
-	fwrite(file, "Hello from BobaOS with SATA", 27, 1);
+	//int errCode = 0;
+	//struct file* file = fopen("0:file.txt", "w", &errCode);
+	//fwrite(file, "Hello from BobaOS with SATA", 27, 1);
 
 	while(1){}
 }

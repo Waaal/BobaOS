@@ -47,6 +47,9 @@ void readMemoryMap();
 uint64_t getUpperMemorySize();
 uint64_t getMaxMemorySize();
 
+uint64_t downToPage(uint64_t var);
+uint64_t upToPage(uint64_t var);
+
 PML4Table createKernelTable(uint64_t virtualStart);
 void* virtualToPhysical(void* virt, PML4Table table);
 void removePageFlag(void* virtual, uint16_t flag, PML4Table table);
@@ -54,6 +57,7 @@ int remapPhysicalToVirtual(void* physical, void* virtual, PML4Table table);
 int remapPhysicalToVirtualRange(void* physical, void* virtual, uint64_t size, PML4Table table);
 int remapVirtualToVirtual(void* to, void* from, PML4Table table);
 int remapVirtualToVirtualRange(void* to, void* from, uint64_t size, PML4Table table);
+struct memoryMap* getMemoryMapForAddress(uint64_t address);
 
 
 // Functions in paging.asm

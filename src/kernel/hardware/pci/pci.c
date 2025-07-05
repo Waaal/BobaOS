@@ -9,12 +9,12 @@
 #include "status.h"
 #include "stdint.h"
 
-struct pciDevice* pciDevices[BOBOAOS_MAX_PCI_DEVICES];
+struct pciDevice* pciDevices[BOBAOS_MAX_PCI_DEVICES];
 uint16_t nextDevicesIndex = 0;
 
 static int pushDevice(struct pciDevice* device)
 {
-	if(nextDevicesIndex == BOBOAOS_MAX_PCI_DEVICES)
+	if(nextDevicesIndex == BOBAOS_MAX_PCI_DEVICES)
 	{
 		return -ENMEM;
 	}
@@ -209,7 +209,7 @@ struct pciDevice* getPciDeviceByVendor(uint16_t vendorId, uint16_t deviceId)
 
 struct pciDevice** getAllPciDevicesByClass(enum pciClasses class, enum pciSubClasses subClass, uint8_t progIf)
 {
-	struct pciDevice** arr = (struct pciDevice**)kzalloc(BOBOAOS_MAX_PCI_DEVICES * sizeof(struct pciDevice));
+	struct pciDevice** arr = (struct pciDevice**)kzalloc(BOBAOS_MAX_PCI_DEVICES * sizeof(struct pciDevice));
 	
 	uint8_t counter = 0;
 	for(uint8_t i = 0; i< nextDevicesIndex; i++)

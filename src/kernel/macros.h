@@ -12,7 +12,7 @@
 #define RETNULLSETERROR(c, errCode, errPtr) \
 do { \
 if ((c) == NULL) { \
-if ((errPtr) != NULL) *(errPtr) = errCode \
+if ((errPtr) != NULL) *(errPtr) = errCode; \
 return NULL; \
 } \
 } while (0)
