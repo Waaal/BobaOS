@@ -24,6 +24,7 @@
 #include "vfsl/pathTracer.h"
 #include "task/tss.h"
 #include "powerManagement/acpi.h"
+#include "task/process.h"
 
 static PML4Table kernelPageTable;
 
@@ -130,15 +131,18 @@ void kmain()
 	if (vfslInitVal < 0)
 	{
 		if (vfslInitVal == -4) // -ENFOUND
-			print("No filsystem found for any disks. Disks are not unusable :/\n");
+			print("No fileSystem found for any disks. Disks are not unusable :/\n");
 		else
 			panic(PANIC_TYPE_KERNEL, NULL, "Failed to init the virtual filesystem layer");
 	}
 
-	//int errCode = 0;
-	//struct file* file = fopen("0:file.txt", "w", &errCode);
-	//fwrite(file, "Hello from BobaOS with SATA", 27, 1);
+	processInit();
 
+	//Prepare first ever process
+	int processErrCode = 0;
+	struct process* process = createProcess("0:programs/shell.bin", PROCESS_TYPE_USER, &processErrCode);
+
+	if (process){}
 	while(1){}
 }
 

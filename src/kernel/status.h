@@ -15,5 +15,6 @@
 #define EFORMAT    11  // Wrong format
 #define EDISKSPACE 12  // Disk space error
 #define ELONG      13  // Too long error
+#define ENSPACE    14  // No space error
 
 #endif
