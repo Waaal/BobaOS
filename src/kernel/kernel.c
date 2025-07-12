@@ -135,12 +135,12 @@ void kmain()
 		else
 			panic(PANIC_TYPE_KERNEL, NULL, "Failed to init the virtual filesystem layer");
 	}
-
+	
 	processInit();
-
+	
 	//Prepare first ever process
 	int processErrCode = 0;
-	struct process* process = createProcess("0:programs/shell.bin", PROCESS_TYPE_USER, &processErrCode);
+	struct process* process = createProcess("0:programs/shell.bin", PROCESS_TYPE_USER, &processErrCode);	
 
 	if (process){}
 	while(1){}
