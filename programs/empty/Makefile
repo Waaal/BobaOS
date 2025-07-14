@@ -9,4 +9,4 @@ all: $(FILES)
 	x86_64-elf-gcc -std=gnu99  $(FLAGS) -c ./src/empty.c -o ./build/empty.o
 
 clean:
-	rm -rf ./build/empty.o
+	rm ./build/empty.o

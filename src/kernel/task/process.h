@@ -2,27 +2,20 @@
 #define PROCESS_H
 
 #include <stdint.h>
+#include <stddef.h>
 
 #include "config.h"
 #include "task.h"
+#include "memory/paging/paging.h"
 
-enum processFormat
-{
-    PROCESS_FORMAT_BINARY,
-    PROCESS_FORMAT_ELF
-};
+#define NO_PARENT_PROCESS NULL
 
-enum processType
-{
-    PROCESS_TYPE_USER,
-    PROCESS_TYPE_KERNEL
-};
-
-enum processState
-{
-    PROCESS_STATE_RUNNING,
-    PROCESS_STATE_DIED
-};
+#define PROCESS_FLAG_FORMAT_BINARY 1
+#define PROCESS_FLAG_FORMAT_ELF 2
+#define PROCESS_FLAG_TYPE_USER 4
+#define PROCESS_FLAG_TYPE_KERNEL 8
+#define PROCESS_FLAG_STATE_ALIVE 16
+#define PROCESS_FLAG_STATE_DIED 32
 
 struct processAllocation
 {
@@ -31,21 +24,21 @@ struct processAllocation
     struct processAllocation* next;
 };
 
+typedef struct process* PROCESS;
 struct process
 {
     uint32_t pid;
+	PROCESS parentProcess;
     char path[BOBAOS_MAX_PATH_SIZE];
-    struct task* mainTask;
-    enum processFormat format;
-    enum processType type;
-    enum processState state;
+    TASK mainTask;
+    uint32_t flags;
     struct processAllocation* allocations;
-    uint16_t flags;
+	PML4Table pageTable;
     int8_t returnCode;
 };
 
 void processInit();
-struct process* createProcess(const char* path, enum processType type, int* oErrCode);
-int runProcess(struct process* process);
+PROCESS createProcess(const char* path, PROCESS parentProcess, uint8_t processType, int* oErrCode);
+int runProcess(PROCESS process);
 
 #endif

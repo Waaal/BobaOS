@@ -1,6 +1,6 @@
 #include "string.h"
 
-#include <memory/kheap/kheap.h>
+#include "memory/kheap/kheap.h"
 
 uint64_t strlen(const char* str)
 {

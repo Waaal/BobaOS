@@ -1,28 +1,30 @@
 #ifndef TASK_H
 #define TASK_H
 
-#include "process.h"
-#include "idt/idt.h"
-#include "vfsl/pathTracer.h"
+#include <stdint.h>
 
 enum taskState
 {
+	TASK_STATE_READY,
     TASK_STATE_RUNNING,
     TASK_STATE_SLEEP,
     TASK_STATE_KERNEL
 };
 
+
+typedef struct task* TASK;
 struct task
 {
     uint32_t id;
-    struct process *process;
-    struct trapframe *frame;
+    uint32_t pid;
+	struct trapFrame *frame;
     enum taskState state;
-    void* entry;
-    void* stack;
     void* kernelStack;
+
+	TASK head;
+	TASK tail;
 };
 
-struct task* createTaskFromFile(struct pathTracer* tracer, int* oErrCode);
+TASK createTaskFromFile(const char* path, uint32_t pid, int* oErrCode);
 
 #endif
