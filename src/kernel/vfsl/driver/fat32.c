@@ -311,7 +311,7 @@ static struct longFileNameEntry* toLongFileName(const char* name, int* oErrCode)
 
 static int toDirEntryName(const char* name, char* oName, char* oExtension)
 {
-    char* upperCaseName = toUpperCase(name, 8);
+    char* upperCaseName = toUpperCase(name, 13);
 
     int pointPos = findChar((char*)upperCaseName, '.');
     if (pointPos < 0)
@@ -727,7 +727,7 @@ static struct fatFile* createFileEntryAtAbsoluteAddress(uint64_t address, const 
     struct directoryEntry newEntry;
     memset(&newEntry, 0, sizeof(struct directoryEntry));
     memset(&newEntry.name, 0x20, 8);
-    memset(&newEntry.ext, 020, 3);
+    memset(&newEntry.ext, 0x20, 3);
 
     if (toDirEntryName(fileName, newEntry.name, newEntry.ext) < 0)
     {
