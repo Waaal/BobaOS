@@ -311,7 +311,7 @@ static struct longFileNameEntry* toLongFileName(const char* name, int* oErrCode)
 
 static int toDirEntryName(const char* name, char* oName, char* oExtension)
 {
-    char* upperCaseName = toUpperCase(name, 8);
+    char* upperCaseName = toUpperCase(name, 12);
 
     int pointPos = findChar((char*)upperCaseName, '.');
     if (pointPos < 0)
@@ -727,7 +727,7 @@ static struct fatFile* createFileEntryAtAbsoluteAddress(uint64_t address, const 
     struct directoryEntry newEntry;
     memset(&newEntry, 0, sizeof(struct directoryEntry));
     memset(&newEntry.name, 0x20, 8);
-    memset(&newEntry.ext, 020, 3);
+    memset(&newEntry.ext, 020, 3); //<-- THIS NEEDS TO BE 020. THIS IS NOT A MISTAKE FFS
 
     if (toDirEntryName(fileName, newEntry.name, newEntry.ext) < 0)
     {
@@ -940,8 +940,8 @@ static struct file* openFile(struct pathTracer* tracer, uint8_t create, void* pr
     file->diskId = tracer->diskId;
     file->size = fatFile->fileSize;
     file->position = 0;
-    strncpy(file->path, pathTracerGetPathString(tracer), BOBAOS_MAX_PATH_SIZE);
-    strncpy(file->name, pathTracerGetFileName(tracer), BOBAOS_MAX_PATH_SIZE);
+    strcpym(file->path, pathTracerGetPathString(tracer), BOBAOS_MAX_PATH_SIZE);
+    strcpym(file->name, pathTracerGetFileName(tracer), BOBAOS_MAX_PATH_SIZE);
 
     kzfree(fatFile);
     return file;

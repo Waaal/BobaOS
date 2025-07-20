@@ -140,14 +140,14 @@ void kmain()
 		else
 			panic(PANIC_TYPE_KERNEL, NULL, "Failed to init the virtual filesystem layer");
 	}
-	
-	//Prepare first ever process
+
+	//Prepare fist ever process
 	int processErrCode = 0;
 	processInit();
 	
-	PROCESS shellProcess = createProcess("0:programs/shell.bin", NO_PARENT_PROCESS, PROCESS_FLAG_TYPE_USER, &processErrCode);	
+	PROCESS cmdProcess = createProcess("0:programs/cmd.bin", NO_PARENT_PROCESS, PROCESS_FLAG_TYPE_USER, &processErrCode);	
 
-	if (shellProcess){}
+	if (cmdProcess){}
 	while(1){}
 }
 

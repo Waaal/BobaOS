@@ -33,7 +33,7 @@ void terminalClear(uint8_t color)
 
 void terminalInit()
 {
-	strncpy(koal.name, "TEXT_TERMINAL", 32);
+	strcpym(koal.name, "TEXT_TERMINAL", 32);
 	koalAttach(&koal);
 
 	for(uint16_t i = 0; i < VGA_WIDTH * VGA_HEIGHT; i++)

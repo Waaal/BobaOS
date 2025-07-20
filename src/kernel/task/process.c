@@ -55,7 +55,7 @@ PROCESS createProcess(const char* path, PROCESS parentProcess, uint8_t processTy
 	process->parentProcess = parentProcess;
 	process->pageTable = table;
 	
-	strncpy(process->path, path, BOBAOS_MAX_PATH_SIZE);
+	strcpym(process->path, path, BOBAOS_MAX_PATH_SIZE);
 
     *oErrCode = addToProcessList(process);
     if (*oErrCode < 0) goto error;

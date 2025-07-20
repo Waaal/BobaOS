@@ -128,7 +128,7 @@ char* pathTracerGetPathString(struct pathTracer* tracer)
     uint16_t counter = 2;
     while (part != NULL)
     {
-        strncpy(ret+counter, part->pathPart, strlen(part->pathPart));
+        strcpy(ret+counter, part->pathPart);
         part = pathTracerGetNext(part);
 
         counter+= strlen(part->pathPart);

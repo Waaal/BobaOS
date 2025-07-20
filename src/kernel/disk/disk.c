@@ -1,9 +1,6 @@
 #include "disk.h"
 
 #include <stddef.h>
-#include <hardware/pci/pci.h>
-#include <memory/memory.h>
-#include <vfsl/driver/fat32.h>
 
 #include "config.h"
 #include "status.h"
@@ -11,6 +8,8 @@
 #include "memory/kheap/kheap.h"
 #include "string/string.h"
 #include "print.h"
+#include "hardware/pci/pci.h"
+#include "memory/memory.h"
 
 struct disk* diskList[BOBAOS_MAX_DISKS];
 uint16_t currentDisk = 0;
@@ -43,7 +42,7 @@ static void scanLegacyPorts()
 			struct diskInfo info = tempDiskList[i]->driver->getInfo(tempDiskList[i]->driver->private);
 			//TODO: retunr error
 			tempDiskList[i]->size = info.size;
-			strncpy(tempDiskList[i]->name, info.name, 64);
+			strcpym(tempDiskList[i]->name, info.name, 64);
 
 			if (insertDisk(tempDiskList[i])< 0)
 				return;
@@ -64,7 +63,7 @@ static void scanSata()
 			struct diskInfo info = tempDiskList[i]->driver->getInfo(tempDiskList[i]->driver->private);
 			//TODO: retunr error
 			tempDiskList[i]->size = info.size;
-			strncpy(tempDiskList[i]->name, info.name, 64);
+			strcpym(tempDiskList[i]->name, info.name, 64);
 
 			if (insertDisk(tempDiskList[i])< 0)
 				return;

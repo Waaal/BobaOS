@@ -67,11 +67,7 @@ void strncpy(char* dest, const char* src, uint64_t size)
 	uint64_t i = 0;
 	for(i = 0; i < size; i++)
 	{
-		if(src[i] == 0x0)
-		{
-			dest[i] = 0x00;
-			break;
-		}
+		if(src[i] == 0x0) break;
 		dest[i] = src[i];
 	}
 }
@@ -85,6 +81,21 @@ void strcpy(char* dest, const char* src)
 		src++;
 	}
 	*dest = 0x0;
+}
+
+//Copys max bytes. Is null terminated
+void strcpym(char* dest, const char* src, uint64_t max)
+{
+	uint64_t i = 0;
+	for(i = 0; i < max; i++)
+	{
+		if(src[i] == 0x0)
+		{
+			break;
+		}
+		dest[i] = src[i];
+	}
+	dest[i] = 0x00;
 }
 
 int8_t isNumber(const char c)
