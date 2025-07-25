@@ -3,11 +3,20 @@ project(BOBAOS C ASM)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Read directory from setup.sh
+if(NOT DEFINED SCRIPT_PLATFORM_DIR)
+    message(FATAL_ERROR "SCRIPT_PLATFORM_DIR not set. Pleas run ./setup.sh")
+endif()
+
+if(NOT DEFINED CROSS_PREFIX)
+    message(FATAL_ERROR "CROSS_PREFIX not set. Pleas run ./setup.sh")
+endif()
+
 # Cross Compiler Toolchain
 set(CMAKE_SYSTEM_NAME Generic)
-set(CMAKE_C_COMPILER $ENV{HOME}/opt/cross64/bin/x86_64-elf-gcc)
-set(LINKER $ENV{HOME}/opt/cross64/bin/x86_64-elf-ld)
-set(OBJCOPY $ENV{HOME}/opt/cross64/bin/x86_64-elf-objcopy)
+set(CMAKE_C_COMPILER ${CROSS_PREFIX}x86_64-elf-gcc)
+set(LINKER ${CROSS_PREFIX}x86_64-elf-ld)
+set(OBJCOPY ${CROSS_PREFIX}x86_64-elf-objcopy)
 
 # Compiler Flags
 set(KERNEL_C_FLAGS 
@@ -127,7 +136,7 @@ add_custom_command(
 )
 
 add_custom_target(BobaOS ALL
-	COMMAND /bin/bash ${CMAKE_SOURCE_DIR}/script/addFat32Tables.sh ${CMAKE_BINARY_DIR}/os.bin
+    COMMAND /bin/bash ${CMAKE_SOURCE_DIR}/${SCRIPT_PLATFORM_DIR}/addFat32Tables.sh ${CMAKE_BINARY_DIR}/os.bin
 	DEPENDS ${CMAKE_BINARY_DIR}/os.bin
 )
 
