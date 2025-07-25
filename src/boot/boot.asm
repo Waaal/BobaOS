@@ -8,7 +8,7 @@ KERNEL_TOTAL_LBAS equ 300
 	nop
 
 ; FAT32 header
-OEMIdentifier			db 'BOBAV0.1'
+OEMIdEntifier			db 'BOBAV0.1'
 BytesPerSector			dw 0x200		; 512 bytes
 SectorsPerCluser 		db 0x1			; 1 sectors per cluster
 ReservedSectors			dw KERNEL_TOTAL_LBAS			; Store kernel in the reserved sectors
@@ -147,7 +147,7 @@ partitionTable:
 	db 0x00			; starting head
 	db 0x00			; starting sector and cylinder
 	db 0x00			; starting cylinder
-	db 0x0E			; partition type
+	db 0x0C			; partition type
 	db 0x00			; ending head
 	db 0x00			; ending sector 6bit
 	db 0x00			; ending sector 10 bit

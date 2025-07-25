@@ -387,7 +387,7 @@ static struct directoryEntry* findDirEntry(uint32_t dataClusterNum, char* name, 
     if (entries == NULL){goto out;}
 
     uint32_t counter = 0;
-    while (entries+counter != NULL && counter < maxEntires)
+    while ((entries+counter)->attributes != 0 && counter < maxEntires)
     {
         if (compareEntryWithPath(entries+counter, name) == 0 && (entries+counter)->attributes == attribute)
         {

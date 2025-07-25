@@ -6,6 +6,8 @@
 .gdbinit
 .gdbbinit
 build/
+./build.sh
+./boot.sh
 
 # Specific stuff
 create_compileJson.sh
