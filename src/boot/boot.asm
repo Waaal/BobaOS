@@ -140,8 +140,9 @@ extreadStage2Package:
 	dd 0x2					; starting LBA in our img file
 	dd 0x0					; more storage bytes for bigger lbas
 
-times 446 - ($-$$) db 0
+times 442 - ($-$$) db 0
 
+bobaosDiskSignature: db 'BOBA'
 partitionTable:
 	db 0x80			; bootable flag
 	db 0x00			; starting head

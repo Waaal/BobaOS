@@ -1,10 +1,7 @@
 #include "kernel.h"
 
-#include <macros.h>
 #include <status.h>
 #include <stddef.h>
-#include <memory/memory.h>
-#include <string/string.h>
 
 #include "config.h"
 #include "version.h"
@@ -19,9 +16,7 @@
 #include "memory/mmioEngine.h"
 #include "disk/disk.h"
 #include "disk/diskDriver.h"
-#include "disk/stream.h"
 #include "vfsl/virtualFilesystemLayer.h"
-#include "vfsl/pathTracer.h"
 #include "task/tss.h"
 #include "powerManagement/acpi.h"
 
@@ -123,21 +118,8 @@ void kmain()
 	if (diskInit() < 0)
 	{
 		//kprintf("  [ERROR]: Kernel disk not found\n\n");
-		panic(PANIC_TYPE_KERNEL, NULL, "Kernel disk not found");
+		panic(PANIC_TYPE_KERNEL, NULL, "Kernel disk or partition not found");
 	}
-
-	int vfslInitVal = vfslInit();
-	if (vfslInitVal < 0)
-	{
-		if (vfslInitVal == -4) // -ENFOUND
-			print("No filsystem found for any disks. Disks are not unusable :/\n");
-		else
-			panic(PANIC_TYPE_KERNEL, NULL, "Failed to init the virtual filesystem layer");
-	}
-
-	//int errCode = 0;
-	//struct file* file = fopen("0:file.txt", "w", &errCode);
-	//fwrite(file, "Hello from BobaOS with SATA", 27, 1);
 
 	while(1){}
 }

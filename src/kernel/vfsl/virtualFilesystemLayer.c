@@ -7,9 +7,9 @@
 #include "macros.h"
 
 #include "status.h"
-#include "memory/memory.h"
 #include "string/string.h"
 #include "driver/fat32.h"
+#include "memory/memory.h"
 
 struct fileSystem* fileSystemList[BOBAOS_MAX_FILESYSTEMS];
 struct fileListEntry openFiles[BOBAOS_MAX_OPEN_FILES];

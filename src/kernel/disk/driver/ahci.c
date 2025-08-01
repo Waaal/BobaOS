@@ -13,6 +13,7 @@
 #include "hardware/pci/pci.h"
 #include "print.h"
 #include "memory/mmioEngine.h"
+#include "disk/disk.h"
 
 struct ahciPrivate
 {

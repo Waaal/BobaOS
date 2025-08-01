@@ -4,8 +4,8 @@
 #include <stdint.h>
 
 #include "config.h"
-#include "disk/disk.h"
 #include "pathTracer.h"
+#include "disk/disk.h"
 
 #define FILE_MODE_READ 1
 #define FILE_MODE_WRITE 2
@@ -32,7 +32,6 @@ struct fileListEntry
     struct fileListEntry* prev;
 };
 
-struct disk;
 typedef int (*RESOLVE)(struct disk* disk);
 typedef struct fileSystem* (*ATTACH_CALLBACK)(struct disk* disk);
 typedef struct file* (*OPEN_FILE)(struct pathTracer* tracer, uint8_t create, void* private, int* oErrCode);
