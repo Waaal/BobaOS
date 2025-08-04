@@ -2,6 +2,7 @@
 #define VIRTUALFILESYSTEMLAYER_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "config.h"
 #include "pathTracer.h"
@@ -13,7 +14,7 @@
 
 struct file
 {
-    uint16_t diskId;
+    VOLUMELABEL label;
     char path[BOBAOS_MAX_PATH_SIZE];
     char name[BOBAOS_MAX_PATH_SIZE];
     uint8_t mode;
@@ -32,8 +33,8 @@ struct fileListEntry
     struct fileListEntry* prev;
 };
 
-typedef int (*RESOLVE)(struct disk* disk);
-typedef struct fileSystem* (*ATTACH_CALLBACK)(struct disk* disk);
+typedef bool (*RESOLVE)(struct diskPartition* partition);
+typedef struct fileSystem* (*ATTACH_CALLBACK)(struct diskPartition* partition);
 typedef struct file* (*OPEN_FILE)(struct pathTracer* tracer, uint8_t create, void* private, int* oErrCode);
 typedef int (*READ_FILE)(void* ptr, uint64_t size, struct file* file, void* private);
 typedef int (*WRITE_FILE)(const void* ptr, uint64_t size, struct file* file, void* private);

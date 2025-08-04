@@ -1,13 +1,17 @@
 #include "fat32.h"
 
-#include <macros.h>
-#include <print.h>
+
 #include <stdint.h>
+#include <stdbool.h>
 #include <stddef.h>
+
+#include <macros.h>
 #include <memory/memory.h>
 #include <memory/kheap/kheap.h>
 #include <string/string.h>
+#include <print.h>
 
+#include "disk/partitionStream.h"
 #include "status.h"
 #include "disk/disk.h"
 #include "disk/stream.h"
@@ -22,13 +26,13 @@ struct fatPrivate
     uint32_t fatCopyStartAddress;
     uint32_t dataClusterStartAddress;
     uint32_t rootDirStartAddress;
-
-    struct diskStream* readStream;
-    struct diskStream* writeStream;
+    
+    struct partitionStream* readStream;
+    struct partitionStream* writeStream;
 };
 
-static int resolve(struct disk* disk);
-static struct fileSystem* attachToDisk(struct disk* disk);
+static bool resolve(struct diskPartition* partition);
+static struct fileSystem* attachToDisk(struct diskPartition* partition);
 static struct file* openFile(struct pathTracer* tracer, uint8_t create, void* private, int* oErrCode);
 static int readFile(void* ptr, uint64_t size, struct file* file, void* private);
 static int writeFile(const void* ptr, uint64_t size, struct file* file, void* private);
@@ -43,22 +47,22 @@ struct fileSystem fs =
     .private = NULL
 };
 
-static struct fileSystem* attachToDisk(struct disk* disk)
+static struct fileSystem* attachToDisk(struct diskPartition* partition)
 {
-    RETNULL(disk);
+    RETNULL(partition);
 
     struct fatPrivate* private = kzalloc(sizeof(struct fatPrivate));
     RETNULL(private);
 
-    struct diskStream* rStream = diskStreamCreate(disk->id,0);
-    struct diskStream* wStream = diskStreamCreate(disk->id,0);
+    struct partitionStream* rStream = partitionStreamCreate(partition->label, 0);
+    struct partitionStream* wStream = partitionStreamCreate(partition->label, 0);
 
     RETNULL(rStream);
     RETNULL(wStream);
 
     int errCode = 0;
-    errCode = diskStreamRead(rStream, &private->bootRecord, sizeof(struct masterBootRecord));
-    RETERRORDIFF(errCode, NULL);
+    errCode = partitionStreamRead(rStream, &private->bootRecord, sizeof(struct masterBootRecord));
+    GOTOERROR(errCode, error)
 
     private->readStream = rStream;
     private->writeStream = wStream;
@@ -69,25 +73,35 @@ static struct fileSystem* attachToDisk(struct disk* disk)
     private->rootDirStartAddress = (private->bootRecord.reservedSectors * private->bootRecord.bytesPerSector + (private->bootRecord.sectorsPerFat32 * private->bootRecord.bytesPerSector * private->bootRecord.fatCopies)) + ((private->bootRecord.rootDirCluster - 2) * (private->bootRecord.bytesPerSector * private->bootRecord.sectorsPerCluster));
 
     struct fileSystem* retFs = kzalloc(sizeof(struct fileSystem));
-    if (retFs == NULL){ kzfree(private); return NULL; }
+    if (retFs == NULL){ goto error; }
 
     memcpy(retFs, &fs, sizeof(struct fileSystem));
     retFs->private = private;
     return retFs;
+
+error:
+    kzfree(private);
+    partitionStreamDestroy(rStream);
+    partitionStreamDestroy(wStream);
+    return NULL;
 }
 
-static int resolve(struct disk* disk)
+static bool resolve(struct diskPartition* partition)
 {
-    if (disk == NULL){ return -EIARG;}
+    bool ret = false;
 
-    unsigned char mbr[512];
-    disk->driver->read(0, 1, mbr, disk->driver->private);
+    struct partitionStream* volumeStream = partitionStreamCreate(partition->label, 0);
 
-    if (strncmp(((struct masterBootRecord*)mbr)->systemIdString, "FAT32   ", 8) == 0)
+    unsigned char fatHeader[512];
+    partitionStreamRead(volumeStream, fatHeader, 512);
+
+    if (strncmp(((struct masterBootRecord*)fatHeader)->systemIdString, "FAT32   ", 8) == 0)
     {
-        return 1;
+        ret = true;
     }
-    return 0;
+
+    partitionStreamDestroy(volumeStream);
+    return ret;
 }
 
 static uint32_t absoluteAddressToCluster(uint32_t absolute, struct fatPrivate* private)
@@ -121,10 +135,10 @@ static FAT_ENTRY* getMultipleFatEntries(uint32_t start, uint32_t end, struct fat
     FAT_ENTRY* ret = kzalloc(sizeof(FAT_ENTRY) * (end-start));
     RETNULL(ret);
 
-    *oErrCode = diskStreamSeek(private->readStream, start * sizeof(FAT_ENTRY) + private->fatAddress);
+    *oErrCode = partitionStreamSeek(private->readStream, start * sizeof(FAT_ENTRY) + private->fatAddress);
     RETERRORDIFF(*oErrCode, NULL);
 
-    *oErrCode = diskStreamRead(private->readStream, ret, sizeof(FAT_ENTRY) * (end-start));
+    *oErrCode = partitionStreamRead(private->readStream, ret, sizeof(FAT_ENTRY) * (end-start));
     RETERRORDIFF(*oErrCode, NULL);
 
     for (uint32_t i = 0; i < (end-start); i++)
@@ -186,10 +200,10 @@ static FAT_ENTRY getFreeFatEntryCluster(struct fatPrivate* private, int* oErrCod
 static FAT_ENTRY getFatEntry(uint32_t entry, struct fatPrivate* private, int* oErrCode)
 {
     FAT_ENTRY ret = 0;
-    *oErrCode = diskStreamSeek(private->readStream, entry * sizeof(FAT_ENTRY) + private->fatAddress);
+    *oErrCode = partitionStreamSeek(private->readStream, entry * sizeof(FAT_ENTRY) + private->fatAddress);
     RETERROR(*oErrCode);
 
-    *oErrCode = diskStreamRead(private->readStream, &ret, sizeof(FAT_ENTRY));
+    *oErrCode = partitionStreamRead(private->readStream, &ret, sizeof(FAT_ENTRY));
     RETERROR(*oErrCode);
 
     return ret & FAT_ENTRY_AND;
@@ -205,10 +219,10 @@ static struct directoryEntry* getDirEntrySingleCluster(uint32_t clusterNum, stru
     struct directoryEntry* entries = kzalloc(sizeof(struct directoryEntry));
     RETNULL(entries);
 
-    *oErrCode = diskStreamSeek(private->readStream, dataClusterToAbsoluteAddress(clusterNum, private));
+    *oErrCode = partitionStreamSeek(private->readStream, dataClusterToAbsoluteAddress(clusterNum, private));
     RETERRORDIFF(*oErrCode, NULL);
 
-    *oErrCode = diskStreamRead(private->readStream, entries, private->clusterSize);
+    *oErrCode = partitionStreamRead(private->readStream, entries, private->clusterSize);
     RETERRORDIFF(*oErrCode, NULL);
 
     *outMaxEntries = private->clusterSize / sizeof(struct directoryEntry);
@@ -253,10 +267,10 @@ static struct directoryEntry* getDirEntries(uint32_t dataClusterNum, struct fatP
 
     for (uint32_t i = 0; i < clustersTotal; i++)
     {
-        *oErrCode = diskStreamSeek(private->readStream, dataClusterToAbsoluteAddress(clusterList[i], private));
+        *oErrCode = partitionStreamSeek(private->readStream, dataClusterToAbsoluteAddress(clusterList[i], private));
         if (oErrCode < 0){kzfree(ret); return NULL; }
 
-        *oErrCode = diskStreamRead(private->readStream, ret+(i*private->clusterSize), private->clusterSize);
+        *oErrCode = partitionStreamRead(private->readStream, ret+(i*private->clusterSize), private->clusterSize);
         if (oErrCode < 0){kzfree(ret); return NULL; }
     }
 
@@ -418,6 +432,7 @@ static struct directoryEntry* findDirEntry(uint32_t dataClusterNum, char* name, 
                     kzfree(dirEntryName);
                     goto found;
                 }
+                //There is no longFileName entry. But we are case sensitive so if the user did not search for the uppercase name we return not found
                 kzfree(dirEntryName);
                 goto out;
             }
@@ -440,10 +455,10 @@ static struct directoryEntry* findDirEntry(uint32_t dataClusterNum, char* name, 
 
 static void writeEntryAtAddress(struct directoryEntry* entry, uint64_t address, struct fatPrivate* private, int* oErrCode)
 {
-    *oErrCode = diskStreamSeek(private->writeStream, address);
+    *oErrCode = partitionStreamSeek(private->writeStream, address);
     if (*oErrCode < 0){return;}
 
-    *oErrCode = diskStreamWrite(private->writeStream, entry, sizeof(struct directoryEntry));
+    *oErrCode = partitionStreamWrite(private->writeStream, entry, sizeof(struct directoryEntry));
 }
 
 //This function updates a directoryEntry in a directory
@@ -610,9 +625,9 @@ static int readFatFile(struct fatFile* fatFile, uint64_t size, uint64_t filePos,
     {
         if (currentCluster == FAT_ENTRY_USED || currentCluster ==  FAT_ENTRY_FREE){break;}
 
-        ret = diskStreamSeek(private->readStream,  dataClusterToAbsoluteAddress(currentCluster, private) + currentFilePos);
+        ret = partitionStreamSeek(private->readStream,  dataClusterToAbsoluteAddress(currentCluster, private) + currentFilePos);
         RETERROR(ret);
-        ret = diskStreamRead(private->readStream,ptr + totalRead, currentToRead);
+        ret = partitionStreamRead(private->readStream,ptr + totalRead, currentToRead);
         RETERROR(ret);
 
         totalRead += currentToRead;
@@ -639,14 +654,14 @@ static int readFatFile(struct fatFile* fatFile, uint64_t size, uint64_t filePos,
 static int writeFATEntry(uint32_t cluster, uint32_t value, struct fatPrivate* private)
 {
     int ret = 0;
-    ret = diskStreamSeek(private->writeStream, clusterToFATTableAddress(cluster, private));
+    ret = partitionStreamSeek(private->writeStream, clusterToFATTableAddress(cluster, private));
     RETERROR(ret);
-    ret = diskStreamWrite(private->writeStream, &value, 4);
+    ret = partitionStreamWrite(private->writeStream, &value, 4);
     RETERROR(ret);
 
-    ret = diskStreamSeek(private->writeStream, clusterToFATCopyTableAddress(cluster, private));
+    ret = partitionStreamSeek(private->writeStream, clusterToFATCopyTableAddress(cluster, private));
     RETERROR(ret);
-    ret = diskStreamWrite(private->writeStream, &value, 4);
+    ret = partitionStreamWrite(private->writeStream, &value, 4);
 
     return ret;
 }
@@ -681,13 +696,13 @@ static uint64_t getFreeDirEntryAddress(struct directoryEntry* entry, struct fatP
                 *oErrCode = writeFATEntry(newFatEntryCluster, FAT_ENTRY_USED, private);
                 if (*oErrCode < 0){return 0;}
 
-                //Zero new entries space on disk
-                *oErrCode = diskStreamSeek(private->writeStream, dataClusterToAbsoluteAddress(newFatEntryCluster, private));
+                //Zero new entries space on partition
+                *oErrCode = partitionStreamSeek(private->writeStream, dataClusterToAbsoluteAddress(newFatEntryCluster, private));
                 if (*oErrCode < 0){return 0;}
                 //Stupid I know
                 char temp[private->clusterSize];
                 memset(temp, 0, private->clusterSize);
-                *oErrCode = diskStreamWrite(private->writeStream, temp, private->clusterSize);
+                *oErrCode = partitionStreamWrite(private->writeStream, temp, private->clusterSize);
                 if (*oErrCode < 0){return 0;}
 
                 entries = getDirEntrySingleCluster(newFatEntryCluster, private, &entriesPerCluster, oErrCode);
@@ -743,10 +758,10 @@ static struct fatFile* createFileEntryAtAbsoluteAddress(uint64_t address, const 
     *oErrCode = writeFATEntry(freeCluster, 0x0FFFFFFF, private);
     RETERRORDIFF(*oErrCode, NULL);
 
-    *oErrCode = diskStreamSeek(private->writeStream, address);
+    *oErrCode = partitionStreamSeek(private->writeStream, address);
     RETERRORDIFF(*oErrCode, NULL);
 
-    *oErrCode = diskStreamWrite(private->writeStream, &newEntry, sizeof(struct directoryEntry));
+    *oErrCode = partitionStreamWrite(private->writeStream, &newEntry, sizeof(struct directoryEntry));
     RETERRORDIFF(*oErrCode, NULL);
 
     struct fatFile* fatFile = kzalloc(sizeof(struct fatFile));
@@ -763,10 +778,10 @@ static int createLongFileNameEntryAtAddress(uint64_t address, const char* fileNa
     struct longFileNameEntry* longEntry =  toLongFileName(fileName, oErrCode);
     RETERROR(*oErrCode);
 
-    *oErrCode = diskStreamSeek(private->writeStream, address);
+    *oErrCode = partitionStreamSeek(private->writeStream, address);
     RETERROR(*oErrCode);
 
-    *oErrCode = diskStreamWrite(private->writeStream, longEntry, sizeof(struct longFileNameEntry));
+    *oErrCode = partitionStreamWrite(private->writeStream, longEntry, sizeof(struct longFileNameEntry));
     RETERROR(*oErrCode);
 
     kzfree(longEntry);
@@ -881,9 +896,9 @@ static int writeFatFile(struct fatFile* fatFile, uint64_t size, uint64_t startPo
 
     for (uint32_t i = 0; i < clustersToWrite; i++)
     {
-        ret = diskStreamSeek(private->writeStream, dataClusterToAbsoluteAddress(currCluster, private) + startClusterPos);
+        ret = partitionStreamSeek(private->writeStream, dataClusterToAbsoluteAddress(currCluster, private) + startClusterPos);
         RETERROR(ret);
-        ret = diskStreamWrite(private->writeStream, in + totalWritten, currentClusterToWrite);
+        ret = partitionStreamWrite(private->writeStream, in + totalWritten, currentClusterToWrite);
         RETERROR(ret);
 
         totalWritten += currentClusterToWrite;
@@ -920,7 +935,7 @@ static struct file* openFile(struct pathTracer* tracer, uint8_t create, void* pr
     struct fatPrivate* pr = (struct fatPrivate*)private;
 
     struct fatFile* fatFile = findFile(tracer, pr, oErrCode);
-    if (fatFile == NULL && create && (*oErrCode == 0 || *oErrCode == -4)) // -ENFOUND (-4) is okay in this case
+    if (fatFile == NULL && create && (*oErrCode == 0 || *oErrCode == -ENFOUND))// Not found is okay in this case
     {
         struct directoryEntry* entry = findDirectory(tracer, pr, NULL, oErrCode);
         if (entry != NULL)
@@ -937,7 +952,7 @@ static struct file* openFile(struct pathTracer* tracer, uint8_t create, void* pr
     struct file* file = (struct file*)kzalloc(sizeof(struct file));
     RETNULLSETERROR(file, -ENMEM, oErrCode);
 
-    file->diskId = tracer->diskId;
+    file->label = tracer->label;
     file->size = fatFile->fileSize;
     file->position = 0;
     strncpy(file->path, pathTracerGetPathString(tracer), BOBAOS_MAX_PATH_SIZE);

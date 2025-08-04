@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 
-#include "config.h"
 #include "diskDriver.h"
 
 #define LABEL_ASCII_OFFSET 67 //C
@@ -58,7 +57,6 @@ struct disk
     enum diskPartitionsType partitionType;
     struct diskPartition partition[4];
     struct diskDriver* driver;
-	struct fileSystem* fileSystem;
 };
 
 int diskInit();
@@ -66,5 +64,6 @@ struct disk* diskGet(uint8_t id);
 struct disk** diskGetAll();
 struct diskPartition* partitionGet(uint8_t diskId, uint8_t partitionId);
 struct diskPartition* partitionGetByVolumeLabel(VOLUMELABEL label);
+struct diskPartition** partitionGetAll();
 
 #endif

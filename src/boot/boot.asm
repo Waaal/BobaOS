@@ -32,7 +32,7 @@ checkExtendedRead:
 	mov dl, [driveId]
 	
 	int 0x13
-	
+   
 	jnc readLoader
 	
 	mov si, extendedReadNotSupportedMsg
@@ -102,7 +102,7 @@ extreadStage2Package:
 	dw 0x2					; Total LBA to laod
 	dw 0x7E00				; destination address(0x00:[0x7E00])
 	dw 0x0					; destination (segment [0x00]:0x7E00)
-	dd 0x2					; starting LBA in our img file
+	dd 0x1					; starting LBA in our img file
 	dd 0x0					; more storage bytes for bigger lbas
 
 times 442 - ($-$$) db 0

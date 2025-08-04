@@ -16,6 +16,7 @@
 #include "memory/mmioEngine.h"
 #include "disk/disk.h"
 #include "disk/diskDriver.h"
+#include "vfsl/pathTracer.h"
 #include "vfsl/virtualFilesystemLayer.h"
 #include "task/tss.h"
 #include "powerManagement/acpi.h"
@@ -120,7 +121,20 @@ void kmain()
 		//kprintf("  [ERROR]: Kernel disk not found\n\n");
 		panic(PANIC_TYPE_KERNEL, NULL, "Kernel disk or partition not found");
 	}
-
+    
+    int vfslInitErr = vfslInit();
+    if(vfslInitErr < 0)
+    {
+        if(vfslInitErr == -ENFOUND)
+        {
+            print("No Filesystem found on any disk. Disks are unusable\n");
+        }
+        else
+        {
+            panic(PANIC_TYPE_KERNEL, NULL, "Error init the virtual filesystem layer");
+        }
+    }
+    
 	while(1){}
 }
 

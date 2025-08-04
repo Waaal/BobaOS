@@ -1,12 +1,21 @@
 #include "pathTracer.h"
 
 #include <stddef.h>
+#include <stdbool.h>
 
+#include "config.h"
 #include "status.h"
 #include "macros.h"
 #include "memory/kheap/kheap.h"
 #include "string/string.h"
 #include "disk/disk.h"
+
+static bool checkVolumeLabel(const char label)
+{
+    if(label >= BOBAOS_DEFAULT_VOLUME_LABEL && label <= 'Z')
+        return true;
+    return false;
+}
 
 void destroyPathTracer(struct pathTracer* tracer)
 {
@@ -25,8 +34,8 @@ void destroyPathTracer(struct pathTracer* tracer)
 struct pathTracer* createPathTracer(const char* path, int* oErrCode)
 {
     RETNULLSETERROR(path, -EIARG, oErrCode);
-
-    if (!isNumber(path[0]))
+    
+    if (!checkVolumeLabel(path[0]))
     {
         *oErrCode = -EFORMAT;
         return NULL;
@@ -39,15 +48,21 @@ struct pathTracer* createPathTracer(const char* path, int* oErrCode)
         return NULL;
     }
 
-    uint8_t diskId = toNumber(path[0]);
+    VOLUMELABEL label = path[0];
+    
+    if(path[1] != ':' || path[2] != '/')
+    {
+        *oErrCode = -EFORMAT;
+        return NULL;
+    }
 
-    struct disk* disk = diskGet(diskId);
-    RETNULLSETERROR(disk, -ENFOUND, oErrCode);
+    struct diskPartition* volume = partitionGetByVolumeLabel(label);
+    RETNULLSETERROR(volume, -ENFOUND, oErrCode);
 
     struct pathTracer* pathTracer = kzalloc(sizeof(struct pathTracer));
     RETNULLSETERROR(pathTracer, -ENMEM, oErrCode);
 
-    pathTracer->diskId = diskId;
+    pathTracer->label = label;
 
     struct pathTracerPart* part = kzalloc(sizeof(struct pathTracerPart));
     if (part == NULL)
@@ -62,14 +77,25 @@ struct pathTracer* createPathTracer(const char* path, int* oErrCode)
     char pathPart[BOBAOS_MAX_PATH_SIZE];
     uint8_t pathPartCounter = 0;
 
-    for (uint64_t i = 2; i < strLen; i++)
+    for (uint64_t i = 3; i < strLen; i++)
     {
-        if (path[i] == '/')
+        if (pathPartCounter == (BOBAOS_MAX_PATH_SIZE-1) || path[i] == '/')
         {
+            if(pathPartCounter == 0)
+            {
+                //Wrong path. Something like C:/dir//test.txt
+                *oErrCode = -EFORMAT;
+                goto free;
+            }
+
             pathPart[pathPartCounter] = 0x0;
             strcpy(part->pathPart, pathPart);
             struct pathTracerPart* tempPath = kzalloc(sizeof(struct pathTracerPart));
-            if (tempPath == NULL){ goto free; }
+            if (tempPath == NULL)
+            { 
+                *oErrCode = -ENMEM;
+                goto free; 
+            }
 
             part->type = PATH_TRACER_PART_DIRECTORY;
             part->next = tempPath;
@@ -85,7 +111,7 @@ struct pathTracer* createPathTracer(const char* path, int* oErrCode)
 
     if (pathPartCounter == 0)
     {
-        //Nothing more path had no file just a directory
+        //Nothing more. The path had no file just a directory
         if (part->prev != NULL)
             part->prev->next = NULL;
         kzfree(part);
@@ -100,7 +126,6 @@ struct pathTracer* createPathTracer(const char* path, int* oErrCode)
 
     free:
     destroyPathTracer(pathTracer);
-    *oErrCode = -ENMEM;
     return NULL;
 }
 
@@ -121,18 +146,21 @@ char* pathTracerGetPathString(struct pathTracer* tracer)
     char* ret = kzalloc(BOBAOS_MAX_PATH_SIZE);
     RETNULL(ret);
 
-    ret[0] = (char)(tracer->diskId + '0');
+    ret[0] = (char)(tracer->label);
     ret[1] = ':';
+    ret[2] = '/';
 
     struct pathTracerPart* part = pathTracerStartTrace(tracer);
-    uint16_t counter = 2;
+    uint16_t counter = 3;
     while (part != NULL)
     {
         strncpy(ret+counter, part->pathPart, strlen(part->pathPart));
-        part = pathTracerGetNext(part);
-
         counter+= strlen(part->pathPart);
-        *(ret+counter) += '/';
+        
+        if(part->type == PATH_TRACER_PART_DIRECTORY)
+            *(ret+counter) += '/';
+        
+        part = pathTracerGetNext(part);
         counter++;
     }
     return ret;

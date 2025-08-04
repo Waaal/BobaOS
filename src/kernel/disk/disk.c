@@ -245,6 +245,11 @@ struct diskPartition* partitionGetByVolumeLabel(VOLUMELABEL label)
     return partitionList[LABEL_ASCII_OFFSET-label];
 }
 
+struct diskPartition** partitionGetAll()
+{
+    return partitionList;
+}
+
 int diskInit()
 {
 	memset(diskList, 0x0, sizeof(struct disk*) * BOBAOS_MAX_DISKS);
