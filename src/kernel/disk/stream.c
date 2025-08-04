@@ -9,7 +9,7 @@
 static int checkDiskStream(struct diskStream* stream)
 {
     if (stream == NULL){return -EIARG;}
-    if (stream->position >= stream->disk->size){return -ENMEM;}
+    if (stream->position >= stream->disk->sizeBytes){return -ENMEM;}
     return  0;
 }
 
@@ -31,7 +31,7 @@ int diskStreamSeek(struct diskStream* stream, uint64_t position)
     ret = checkDiskStream(stream);
     if (ret < 0){return ret;}
 
-    if (position > (stream->disk->size * 512))
+    if (position > (stream->disk->sizeBytes * 512))
     {
         return -EDISKSPACE;
     }
@@ -47,7 +47,7 @@ int diskStreamRead(struct diskStream* stream, void* out, uint64_t length)
     ret = checkDiskStream(stream);
     if (ret < 0){return ret;}
 
-    if (stream->position + length > stream->disk->size){return -ENMEM;}
+    if (stream->position + length > stream->disk->sizeBytes){return -ENMEM;}
 
     uint64_t currLba = stream->position / 512;
     uint64_t currLbaPos = stream->position % 512;
@@ -78,7 +78,7 @@ int diskStreamWrite(struct diskStream* stream, const void* in, uint64_t length)
     ret = checkDiskStream(stream);
     if (ret < 0){return ret;}
 
-    if (stream->position + length > stream->disk->size){return -ENMEM;}
+    if (stream->position + length > stream->disk->sizeBytes){return -ENMEM;}
 
     uint64_t currLba = stream->position / 512;
     uint64_t currLbaPos = stream->position % 512;

@@ -4,41 +4,6 @@
 ;Kernel sector size
 KERNEL_TOTAL_LBAS equ 300
 
-	jmp short start
-	nop
-
-; FAT32 header
-OEMIdEntifier			db 'BOBAV0.1'
-BytesPerSector			dw 0x200		; 512 bytes
-SectorsPerCluser 		db 0x1			; 1 sectors per cluster
-ReservedSectors			dw KERNEL_TOTAL_LBAS			; Store kernel in the reserved sectors
-FATCopies 				db 0x02
-RootDirEntries			dw 0x00			; 0 for fat32
-NumSectors				dw 0x00
-MediaType				db 0xF8
-SectorsPerFat12_16		dw 0			; 0 for fat32
-SectorsPerTrack			dw 0x20	
-NumberOfHeads			dw 0x04
-HiddenSectors			dd 0x00
-SectorsBig 				dd 0x10000		; 32 MB
-
-; FAT32 extended
-SectorsPerFat32			dd 0x200		; (numClusters * 4) / sizeOfSector (512) (also minus reserved and actuall FAT because the FAT only holds data clusters but eh)
-Flags					dw 0
-FatVersion				dw 0
-RootDirCluster			dd 2 			; Cluster 2 is always start of data cluster (hard coded in FAT standarts)
-										; Start of data cluster (2): reserved 200 + (2*FAT = 1024) = 1224 = start of data cluster. (Next cluster = 1225,1226 etc)
-FsInfoSector			dw 1
-backUpBoot				dw 6			; We dont have one... but fuck it
-times 12 db 0							; reserved
-DriveNumber				db 0x80
-WinNTBit				db 0x00
-Signature 				db 0x29
-VolumeID				dd 0xD106
-VolumeIDString 			db 'BOBAOS BOOT'
-SystemIDString 			db 'FAT32   '
-
-start:
 	jmp 0x0:next			; set CS register to 0
 
 next:
@@ -67,7 +32,7 @@ checkExtendedRead:
 	mov dl, [driveId]
 	
 	int 0x13
-	
+   
 	jnc readLoader
 	
 	mov si, extendedReadNotSupportedMsg
@@ -137,11 +102,12 @@ extreadStage2Package:
 	dw 0x2					; Total LBA to laod
 	dw 0x7E00				; destination address(0x00:[0x7E00])
 	dw 0x0					; destination (segment [0x00]:0x7E00)
-	dd 0x2					; starting LBA in our img file
+	dd 0x1					; starting LBA in our img file
 	dd 0x0					; more storage bytes for bigger lbas
 
-times 446 - ($-$$) db 0
+times 442 - ($-$$) db 0
 
+bobaosDiskSignature: db 'BOBA'
 partitionTable:
 	db 0x80			; bootable flag
 	db 0x00			; starting head
@@ -151,8 +117,8 @@ partitionTable:
 	db 0x00			; ending head
 	db 0x00			; ending sector 6bit
 	db 0x00			; ending sector 10 bit
-	dd 0x00			; relative sector 32 bit
-	dd 0x10000		; Total sectors 32 bit (4 bytes)
+	dd 2048			; relative sector 32 bit
+	dd 0x11000		; Total sectors 32 bit (4 bytes)
 
 times 48 db 0       ; Zero out partitionTables for partition 2 - 4
 dw 0xAA55

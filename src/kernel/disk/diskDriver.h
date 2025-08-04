@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 
-#include "disk.h"
 
 enum diskDriverType
 {

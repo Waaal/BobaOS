@@ -8,6 +8,7 @@
 build/
 ./build.sh
 ./boot.sh
+.DS_STORE
 
 # Specific stuff
 create_compileJson.sh
