@@ -135,6 +135,13 @@ void kmain()
         }
     }
     
+    int errCode = 0;
+    struct file* file = fopen("C:/ThisIsLongreallyLoooong.txt", "w", &errCode);
+    if(file)
+    {
+        fwrite(file, "Hello", 5, 1);
+    }
+
 	while(1){}
 }
 
