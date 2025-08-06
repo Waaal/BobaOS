@@ -134,15 +134,8 @@ void kmain()
             panic(PANIC_TYPE_KERNEL, NULL, "Error init the virtual filesystem layer");
         }
     }
-    
-    int errCode = 0;
-    struct file* file = fopen("C:/ThisIsLongreallyLoooong.txt", "w", &errCode);
-    if(file)
-    {
-        fwrite(file, "Hello", 5, 1);
-    }
 
-	while(1){}
+    while(1){}
 }
 
 PML4Table getKernelPageTable()

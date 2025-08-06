@@ -313,52 +313,26 @@ static struct longFileNameEntry* toLongFileName(const char* name, int orderNumbe
     return longEntry;
 }
 
-/*
-static int compareEntryWithPath(struct directoryEntry* entry, char* path)
+//This function expects that the given name is a valid shortFileName
+static bool compareShortWithName(struct directoryEntry* entry, char* name)
 {
-    int ret = 0;
-
     char realName[8] = {0x20, 0x20, 0x20, 0x20,0x20, 0x20, 0x20, 0x20};
     char extension[3] = {020, 020, 020};
-
-    bool isLong = false;
-    ret = toDirEntryName(path, realName, extension, &isLong);
-    RETERROR(ret);
     
-    uint8_t compLength = 8;
-    if(isLong)
-        compLength = 6;
+    int pointPos = findChar(name, '.');
     
-    ret = strncmp(entry->name, realName, compLength);
-    if (ret == 0)
-        ret = strncmp(entry->ext, extension, 3);
-
-    return ret;
+    strncpy(realName, name, pointPos > 0 ? pointPos : strlen(name));
+    if(pointPos > 0)
+        strncpy(extension, name+pointPos+1, strlen(name)-pointPos-1);
+    
+    int val;
+    val = strncmp(entry->name, realName, 8);
+    if (val == 0)
+        val = strncmp(entry->ext, extension, 3);
+    
+    return val == 0 ? true : false;
 }
 
-static char* getNameFromEntry(struct directoryEntry* entry, int* oErrCode)
-{
-    char* name = kzalloc(13);
-    RETNULLSETERROR(name, -ENMEM, oErrCode);
-    uint8_t i = 0;
-
-    for (i = 0; i < 8; i++)
-    {
-        if (entry->name[i] == 0x20) break;
-        name[i] = entry->name[i];
-    }
-
-    if (entry->ext[0] == 0x20 || entry->attributes == DIR_ENTRY_ATTRIBUTE_DIRECTORY) return name;
-
-    name[i++] = '.';
-    for (uint8_t j = 0; j < 3; j++)
-    {
-        if (entry->ext[j] == 0x20) break;
-        name[i+j] = entry->ext[j];
-    }
-    return name;
-}
-*/
 static int compareEntryWithEntryByFullName(struct directoryEntry* entry1, struct directoryEntry* entry2)
 {
     int ret = 0;
@@ -506,16 +480,17 @@ static struct directoryEntry* findDirEntry(uint32_t dataClusterNum, char* name, 
                     }
                 }
             }
-
-            //TODO: If there isnt a LFN entry then the SFN entry doesnt have one.
-            //      Check this case 
-
+            else
+            {
+                //Maybe this entry doesnt have a LFN entry
+                if (compareShortWithName((entries+counter), name))
+                    goto found;
+            }
+                
             curLfnChainCounter = 0;
         }
         counter++;
     }
-    
-    if(lfnChain[0] == NULL){}
 
     out:
     *oErrCode = -ENFOUND;
@@ -571,11 +546,8 @@ static int updateDirectoryEntry(uint32_t clusterOfDirectory, struct directoryEnt
 
 
 //Returns the directory of a file. Also returns the ClusterNumber (*outCluster) of this directory for potential use
-static struct directoryEntry* findDirectory(struct pathTracer* tracer, struct fatPrivate* private, uint32_t* oCluster, int* oErrCode)
+static struct directoryEntry* findDirectory(struct pathTracer* tracer, struct fatPrivate* private, int* oErrCode)
 {
-    if (oCluster != NULL)
-        *oCluster = 0;
-
     struct pathTracerPart* part = pathTracerStartTrace(tracer);
     RETNULLSETERROR(part, -EIARG, oErrCode);
 
@@ -595,8 +567,6 @@ static struct directoryEntry* findDirectory(struct pathTracer* tracer, struct fa
         entry->startClusterLow = dataClusterNum & 0xFFFF;
         entry->attributes = DIR_ENTRY_ATTRIBUTE_DIRECTORY;
 
-        if (oCluster != NULL)
-            *oCluster = dataClusterNum;
         return entry;
     }
 
@@ -612,9 +582,9 @@ static struct directoryEntry* findDirectory(struct pathTracer* tracer, struct fa
 
         if (curAttribute == DIR_ENTRY_ATTRIBUTE_DIRECTORY)
         {
+            dataClusterNum = entry->startClusterHigh << 16 | entry->startClusterLow;
             if (part->next != NULL && part->next->type == PATH_TRACER_PART_DIRECTORY)
             {
-                dataClusterNum = entry->startClusterHigh << 16 | entry->startClusterLow;
                 curAttribute = part->type == PATH_TRACER_PART_FILE ? DIR_ENTRY_ATTRIBUTE_ARCHIVE : DIR_ENTRY_ATTRIBUTE_DIRECTORY;
                 kzfree(entry);
             }
@@ -629,10 +599,7 @@ static struct directoryEntry* findDirectory(struct pathTracer* tracer, struct fa
     }
 
     if (entry != NULL && entry->attributes == DIR_ENTRY_ATTRIBUTE_DIRECTORY)
-    {
-        if (oCluster != NULL)
-            *oCluster = dataClusterNum;
-    }
+        return entry;
 
     *oErrCode = -ENFOUND;
     return NULL;
@@ -640,7 +607,7 @@ static struct directoryEntry* findDirectory(struct pathTracer* tracer, struct fa
 
 static struct fatFile* findFile(struct pathTracer* tracer, struct fatPrivate* private, int* oErrCode)
 {
-    struct directoryEntry* entry = findDirectory(tracer, private, NULL, oErrCode);
+    struct directoryEntry* entry = findDirectory(tracer, private, oErrCode);
     RETNULL(entry);
 
     char* fileName = pathTracerGetFileName(tracer);
@@ -1059,7 +1026,7 @@ static struct file* openFile(struct pathTracer* tracer, uint8_t create, void* pr
     struct fatFile* fatFile = findFile(tracer, pr, oErrCode);
     if (fatFile == NULL && create && (*oErrCode == 0 || *oErrCode == -ENFOUND))// Not found is okay in this case
     {
-        struct directoryEntry* entry = findDirectory(tracer, pr, NULL, oErrCode);
+        struct directoryEntry* entry = findDirectory(tracer, pr, oErrCode);
         if (entry != NULL)
         {
             const char* fileName = pathTracerGetFileName(tracer);
@@ -1112,6 +1079,25 @@ static int writeFile(const void* ptr, uint64_t size, struct file* file, void* pr
         destroyPathTracer(tracer);
         return errCode;
     }
+    
+    uint64_t startClusterWritten = 0;
+    if(fatFile->startCluster == 0)
+    {
+        //Doesnt has one jet. We need to give one.
+        FAT_ENTRY fat = getFreeFatEntryCluster(private, &errCode);
+        if(fat <= 0)
+        {
+            errCode = -EDISKSPACE;
+            goto out;
+        }
+        
+        errCode = writeFATEntry(fat, FAT_ENTRY_USED, private);
+        if(errCode < 0)
+            goto out;
+
+        startClusterWritten = fat;
+        fatFile->startCluster = fat;
+    }
 
     uint64_t startPos = file->position;
     uint8_t append = (file->mode & FILE_MODE_APPEND) > 0 ? 1 : 0;
@@ -1122,20 +1108,28 @@ static int writeFile(const void* ptr, uint64_t size, struct file* file, void* pr
     errCode = writeFatFile(fatFile, size, startPos, ptr, pr);
     if (errCode == 0)
     {
-        uint32_t clusterOfDirectory;
-        findDirectory(tracer, pr, &clusterOfDirectory, &errCode);
+        struct directoryEntry* dir = findDirectory(tracer, pr, &errCode);
         RETERROR(errCode);
 
-        struct directoryEntry* fileEntry = findDirEntry(clusterOfDirectory, pathTracerGetFileName(tracer), DIR_ENTRY_ATTRIBUTE_ARCHIVE, private, &errCode);
+        struct directoryEntry* fileEntry = findDirEntry(dir->startClusterHigh << 16 | dir->startClusterLow, pathTracerGetFileName(tracer), DIR_ENTRY_ATTRIBUTE_ARCHIVE, private, &errCode);
         RETNULLERROR(fileEntry, errCode);
 
         struct directoryEntry newEntry;
         memcpy(&newEntry, fileEntry, sizeof(struct directoryEntry));
         newEntry.fileSize = (append == 1 ? (file->size + size) : (size + startPos));
-
-        errCode = updateDirectoryEntry(clusterOfDirectory, fileEntry, &newEntry, private);
+        
+        if(startClusterWritten > 0)
+        {
+            newEntry.startClusterHigh = startClusterWritten >> 16;
+            newEntry.startClusterLow = startClusterWritten & 0xFFFF;
+        }
+        errCode = updateDirectoryEntry(dir->startClusterHigh << 16 | dir->startClusterLow, fileEntry, &newEntry, private);
+        kzfree(dir);
     }
 
+out:
+    if(fatFile != NULL)
+        kzfree(fatFile);
     destroyPathTracer(tracer);
     return errCode;
 }
