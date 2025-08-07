@@ -3,15 +3,14 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#include <hardware/pci/pci.h>
-#include <memory/memory.h>
-
 #include "macros.h"
 #include "memory/kheap/kheap.h"
 #include "print.h"
 #include "config.h"
 #include "status.h"
 #include "string/string.h"
+#include "hardware/pci/pci.h"
+#include "memory/memory.h"
 #include "stream.h"
 
 struct disk* diskList[BOBAOS_MAX_DISKS];
