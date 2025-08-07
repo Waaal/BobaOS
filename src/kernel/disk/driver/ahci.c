@@ -274,7 +274,7 @@ static struct diskInfo ahciIdentifyCommand(void* private)
     totalLBA |= dataBuffer[61] << 16;
 
     //Fill diskinfo return struct
-    strcpym(diskInfo.name, model, 42);
+    strncpy(diskInfo.name, model, 42);
     diskInfo.size = totalLBA * 512;
 
     return diskInfo;

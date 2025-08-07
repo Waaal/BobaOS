@@ -8,16 +8,19 @@
 #include "string/string.h"
 #include "koal/koal.h"
 
-static void strToUInt(uint64_t num, char* oRes)
+static char* strToUInt(uint64_t num)
 {
 	char* numberMap = "0123456789";
+	char* ret = (char*)kzalloc(21);
+	
+	if(ret == NULL){return NULL;}
 
 	uint8_t i = 0;
 	for(i = 0; i < 20; i++)
 	{
 		uint8_t number = num % 10;
 		char c = numberMap[number];
-		oRes[19 - i] = c;
+		ret[19 - i] = c;
 		
 		num /= 10;
 		if(num == 0)
@@ -26,23 +29,28 @@ static void strToUInt(uint64_t num, char* oRes)
 		}
 	}
 
-	memcpy(oRes, oRes+(19-i), i+1);
-	oRes[i+1] = 0x0;	
+	memcpy(ret, ret+(19-i), i+1);
+	ret[i+1] = 0x0;
+	
+	return ret;
 }
 
-static void strToHex(uint64_t num, char* oRes)
+static char* strToHex(uint64_t num)
 {
 	char* numberMap = "0123456789ABCDEF";
+	char* ret = (char*)kzalloc(23);
+	
+	if(ret == NULL){return NULL;}
 
-	oRes[0] = '0';
-	oRes[1] = 'x';
+	ret[0] = '0';
+	ret[1] = 'x';
 
 	uint8_t i = 0;
 	for(i = 2; i < 22; i++)
 	{
 		uint8_t number = num % 16;
 		char c = numberMap[number];
-		oRes[22 - i] = c;
+		ret[22 - i] = c;
 		
 		num /= 16;
 		if(num == 0)
@@ -51,8 +59,10 @@ static void strToHex(uint64_t num, char* oRes)
 		}
 	}
 
-	memcpy(oRes+2, oRes+(22-i), i+1);
-	oRes[i+1] = 0x0;
+	memcpy(ret+2, ret+(22-i), i+1);
+	ret[i+1] = 0x0;
+	
+	return ret;
 }
 
 void kprintf(const char* str, ...)
@@ -70,16 +80,20 @@ void kprintf(const char* str, ...)
 			{
 				case 'x':
 				{
-					char hexChar[32];
-					strToHex(va_arg(args, uint64_t), hexChar);
+					char* hexChar = strToHex(va_arg(args, uint64_t));
+					if(hexChar == NULL){break;}
 					koalPrint(hexChar);
+
+					kzfree(hexChar);
 					break;
 				}
 				case 'u':
 				{
-					char uIntChar[32];
-					strToUInt(va_arg(args, uint64_t), uIntChar);
+					char* uIntChar = strToUInt(va_arg(args, uint64_t));
+					if(uIntChar == NULL){break;}
 					koalPrint(uIntChar);
+
+					kzfree(uIntChar);
 					break;
 				}
 				case 's':

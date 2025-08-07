@@ -44,7 +44,7 @@ struct pathTracer* createPathTracer(const char* path, int* oErrCode)
     uint64_t strLen = strlen(path);
     if (strLen >= BOBAOS_MAX_PATH_SIZE)
     {
-        *oErrCode = -ELONG;
+        *oErrCode = -EFORMAT;
         return NULL;
     }
 

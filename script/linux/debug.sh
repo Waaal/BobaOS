@@ -1,4 +1,4 @@
 #/bin/bash
 
-qemu-system-x86_64 -m 4G -drive id=disk,file=/home/luke/BobaOS/build/os.bin,format=raw,if=none -device ahci,id=ahci -device ide-hd,drive=disk,bus=ahci.0 -s -S &
+qemu-system-x86_64 -m 4G -s -S -hda ./build/os.bin &
 gdb -x script/debug.gdb
