@@ -39,30 +39,39 @@ BobaOS is being developed in versioned stages:
 
 ### Requirements
 
-- Linux as development environment
+- Linux or MacOS as development environment
 - NASM
 - x86_64-elf cross-compiler
 - CMAKE
 - QEMU
 - GDB
 
+### Setup
+Run the setup.sh script to init the project after cloning it. This script will run the cmake setup with the scripts either for MacOS or Linux and copy the build and boot scripts to the main directory.
+
+
+If you are running Linux the setup script expects you to have the x86_64-elf cross compiler under **~/opt/cross64/**.
+
+
+If you are running MacOS the setup script expects that you have the x86_64-elf cross compiler installed via brew and systemwide available.
+```bash
+setup.sh    # Run this once after cloning the repo.
+```
+
 ### Building, Booting & Debugging
 The buildsystem is CMAKE.
+
 ```bash
-cmake -B build -S .                 # Use on first time init
 cmake --build build                 # Use to build the project
 cmake --build build --target clean  # Also always use clean before building again
 ```
 
 
-There is a boot and debug script provided for booting and debugging with qemu and gdb
+After the setup there is a boot and debug script provided for booting and debugging with qemu and gdb
 ```bash
 boot.sh     # Boot the project with qemu
 debug.sh    # Debug the project with qemu and gdb
 ```
-
-
-The buildscript requires that you have the cross compiler at /home/USERNAME/opt/cross64
 
 
 The debugging script will launch gdb and qemu for you and break at the kernel entry

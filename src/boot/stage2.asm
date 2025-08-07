@@ -35,7 +35,7 @@ readKernel:
 
     ; Package we are going to modify
     mov si, extendedReadKernelPackage
-    mov bx, 0x4
+    mov bx, 0x3
     mov cx, 3
     mov dx, 0x1000
 
@@ -137,7 +137,7 @@ extendedReadKernelPackage:
 	dw 100					; Total LBA to load
 	dw 0x0					; destination address(0x00:[0x00])
 	dw 0x1000				; destination (segment [0x1000]:0x00)
-	dd 0x4					; starting LBA in our img file
+	dd 0x3					; starting LBA in our img file
 	dd 0x0					; more storage bytes for bigger lbas
 
 driveId: db 0
@@ -241,9 +241,9 @@ moveKernel:
 
 	mov ax, 'L'
 	mov ah, 0x4
-
+    
 	mov [0xb8000], ax
-
+    
 	jmp 0x110000
 
 

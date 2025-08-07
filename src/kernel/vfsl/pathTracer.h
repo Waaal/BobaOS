@@ -4,13 +4,15 @@
 #include <config.h>
 #include <stdint.h>
 
+#include "disk/disk.h"
+
 #define PATH_TRACER_PART_DIRECTORY 1
 #define PATH_TRACER_PART_FILE 2
 typedef uint8_t PATH_TRACER_TYPE;
 
 struct pathTracer
 {
-    uint64_t diskId;
+    VOLUMELABEL label;
     struct pathTracerPart* root;
 };
 
