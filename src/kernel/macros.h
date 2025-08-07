@@ -8,7 +8,6 @@
 #define RETERROR(c) if ((c) < 0) return c;
 #define RETERRORDIFF(c, e) if ((c) < 0) return e;
 #define GOTOERROR(c, label) if ((c) < 0) goto label;
-#define GOTOERRORNULL(c, label) if((c) == NULL) goto label;
 
 #define RETNULLSETERROR(c, errCode, errPtr) \
 do { \

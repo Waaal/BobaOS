@@ -246,12 +246,6 @@ void removePageFlag(void* virtual, uint16_t flag, PML4Table table)
 	ptTable[ptIndex] &= ~flag;
 }
 
-PML4Table createEmptyPageTable()
-{
-	PML4Table table = kzalloc(SIZE_4KB);
-	return table;
-}
-
 uint64_t getUpperMemorySize()
 {
 	return upperMemorySize;
