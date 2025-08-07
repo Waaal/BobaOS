@@ -2,6 +2,8 @@
 #define AHCI_H
 
 #include <stdint.h>
+
+#include "config.h"
 #include "disk/diskDriver.h"
 
 #define SATA_DRIVE_SIGNATURE 0x00000101

@@ -3,11 +3,20 @@ project(BOBAOS C ASM)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Read directory from setup.sh
+if(NOT DEFINED SCRIPT_PLATFORM_DIR)
+    message(FATAL_ERROR "SCRIPT_PLATFORM_DIR not set. Pleas run ./setup.sh")
+endif()
+
+if(NOT DEFINED CROSS_PREFIX)
+    message(FATAL_ERROR "CROSS_PREFIX not set. Pleas run ./setup.sh")
+endif()
+
 # Cross Compiler Toolchain
 set(CMAKE_SYSTEM_NAME Generic)
-set(CMAKE_C_COMPILER $ENV{HOME}/opt/cross64/bin/x86_64-elf-gcc)
-set(LINKER $ENV{HOME}/opt/cross64/bin/x86_64-elf-ld)
-set(OBJCOPY $ENV{HOME}/opt/cross64/bin/x86_64-elf-objcopy)
+set(CMAKE_C_COMPILER ${CROSS_PREFIX}x86_64-elf-gcc)
+set(LINKER ${CROSS_PREFIX}x86_64-elf-ld)
+set(OBJCOPY ${CROSS_PREFIX}x86_64-elf-objcopy)
 
 # Compiler Flags
 set(KERNEL_C_FLAGS 
@@ -17,15 +26,18 @@ set(INCLUDE_DIRS
 	-I${CMAKE_SOURCE_DIR}/src/kernel -I${CMAKE_SOURCE_DIR}/inc
 	)
 
-# Handle bootloader files
+# Handle bootloader and filesystem files
 set(BOOT_ASM_BOOTLOADER_SRC ${CMAKE_SOURCE_DIR}/src/boot/boot.asm)
 set(BOOT_ASM_BOOTLOADER_BIN ${CMAKE_BINARY_DIR}/bin/boot.bin)
 
-set(BOOT_ASM_FSINFO_SRC ${CMAKE_SOURCE_DIR}/src/boot/fsinfo.asm)
-set(BOOT_ASM_FSINFO_BIN ${CMAKE_BINARY_DIR}/bin/fsinfo.bin)
-
 set(BOOT_ASM_STAGE2_SRC ${CMAKE_SOURCE_DIR}/src/boot/stage2.asm)
 set(BOOT_ASM_STAGE2_BIN ${CMAKE_BINARY_DIR}/bin/stage2.bin)
+
+set(FILESYSTEM_ASM_FAT32HEADER_SRC ${CMAKE_SOURCE_DIR}/src/boot/fat32Header.asm)
+SET(FILESYSTEM_ASM_FAT32HEADER_BIN ${CMAKE_BINARY_DIR}/bin/fat32Header.bin)
+
+set(FILESYSTEM_ASM_FSINFO_SRC ${CMAKE_SOURCE_DIR}/src/boot/fsinfo.asm)
+set(FILESYSTEM_ASM_FSINFO_BIN ${CMAKE_BINARY_DIR}/bin/fsinfo.bin)
 
 set(BIN_DIR ${CMAKE_BINARY_DIR}/bin)
 
@@ -37,17 +49,24 @@ add_custom_command(
 )
 
 add_custom_command(
-	OUTPUT ${BOOT_ASM_FSINFO_BIN}
-	COMMAND ${CMAKE_COMMAND} -E make_directory ${BIN_DIR}
-	COMMAND nasm -f bin ${BOOT_ASM_FSINFO_SRC} -o ${BOOT_ASM_FSINFO_BIN}
-	DEPENDS ${BOOT_ASM_FSINFO_SRC}
-)
-
-add_custom_command(
 	OUTPUT ${BOOT_ASM_STAGE2_BIN}
 	COMMAND ${CMAKE_COMMAND} -E make_directory ${BIN_DIR}
 	COMMAND nasm -f bin ${BOOT_ASM_STAGE2_SRC} -o ${BOOT_ASM_STAGE2_BIN}
 	DEPENDS ${BOOT_ASM_STAGE2_SRC}
+)
+
+add_custom_command(
+	OUTPUT ${FILESYSTEM_ASM_FSINFO_BIN}
+	COMMAND ${CMAKE_COMMAND} -E make_directory ${BIN_DIR}
+    COMMAND nasm -f bin ${FILESYSTEM_ASM_FSINFO_SRC} -o ${FILESYSTEM_ASM_FSINFO_BIN}
+	DEPENDS ${FILESYSTEM_ASM_FSINFO_SRC}
+)
+
+add_custom_command(
+	OUTPUT ${FILESYSTEM_ASM_FAT32HEADER_BIN}
+	COMMAND ${CMAKE_COMMAND} -E make_directory ${BIN_DIR}
+    COMMAND nasm -f bin ${FILESYSTEM_ASM_FAT32HEADER_SRC} -o ${FILESYSTEM_ASM_FAT32HEADER_BIN}
+	DEPENDS ${FILESYSTEM_ASM_FAT32HEADER_SRC}
 )
 
 # Handle kernel.asm
@@ -117,18 +136,17 @@ add_custom_command(
 # Create final os.bin file
 add_custom_command(
 	OUTPUT ${CMAKE_BINARY_DIR}/os.bin
-	COMMAND dd if=${CMAKE_BINARY_DIR}/bin/boot.bin >> ${CMAKE_BINARY_DIR}/os.bin
-	COMMAND dd if=${CMAKE_BINARY_DIR}/bin/fsinfo.bin >> ${CMAKE_BINARY_DIR}/os.bin
-	COMMAND dd if=${CMAKE_BINARY_DIR}/bin/stage2.bin >> ${CMAKE_BINARY_DIR}/os.bin
-    COMMAND dd if=${CMAKE_BINARY_DIR}/kernel.bin >> ${CMAKE_BINARY_DIR}/os.bin
-    COMMAND dd if=/dev/zero bs=512 count=200 >> ${CMAKE_BINARY_DIR}/os.bin
-    COMMAND truncate -s 32M ${CMAKE_BINARY_DIR}/os.bin 
-	DEPENDS ${BOOT_ASM_BOOTLOADER_BIN} ${BOOT_ASM_FSINFO_BIN} ${BOOT_ASM_STAGE2_BIN} ${CMAKE_BINARY_DIR}/kernel.bin
+    COMMAND dd if=${CMAKE_BINARY_DIR}/bin/boot.bin of=${CMAKE_BINARY_DIR}/os.bin conv=notrunc
+    COMMAND dd if=${CMAKE_BINARY_DIR}/bin/stage2.bin of=${CMAKE_BINARY_DIR}/os.bin seek=1 conv=notrunc
+    COMMAND dd if=${CMAKE_BINARY_DIR}/kernel.bin of=${CMAKE_BINARY_DIR}/os.bin seek=3 conv=notrunc
+    COMMAND dd if=${CMAKE_BINARY_DIR}/bin/fat32header.bin of=${CMAKE_BINARY_DIR}/os.bin seek=2048 conv=notrunc
+    COMMAND dd if=${CMAKE_BINARY_DIR}/bin/fsinfo.bin of=${CMAKE_BINARY_DIR}/os.bin seek=2049 conv=notrunc
+    COMMAND truncate -s 35M ${CMAKE_BINARY_DIR}/os.bin 
+    DEPENDS ${BOOT_ASM_BOOTLOADER_BIN} ${FILESYSTEM_ASM_FAT32HEADER_BIN} ${FILESYSTEM_ASM_FSINFO_BIN} ${BOOT_ASM_STAGE2_BIN} ${CMAKE_BINARY_DIR}/kernel.bin
 )
 
 add_custom_target(BobaOS ALL
-	COMMAND /bin/bash ${CMAKE_SOURCE_DIR}/script/addFat32Tables.sh ${CMAKE_BINARY_DIR}/os.bin
-	COMMAND /bin/bash ${CMAKE_SOURCE_DIR}/script/copyProgramsToOs.sh
+    COMMAND /bin/bash ${CMAKE_SOURCE_DIR}/${SCRIPT_PLATFORM_DIR}/addFat32Tables.sh ${CMAKE_BINARY_DIR}/os.bin
 	DEPENDS ${CMAKE_BINARY_DIR}/os.bin
  )
 

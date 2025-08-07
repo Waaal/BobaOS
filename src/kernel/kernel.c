@@ -1,5 +1,6 @@
 #include "kernel.h"
 
+#include <status.h>
 #include <stddef.h>
 
 #include "memory/paging/paging.h"
@@ -18,6 +19,7 @@
 #include "memory/mmioEngine.h"
 #include "disk/disk.h"
 #include "disk/diskDriver.h"
+#include "vfsl/pathTracer.h"
 #include "vfsl/virtualFilesystemLayer.h"
 #include "task/tss.h"
 #include "powerManagement/acpi.h"
@@ -129,26 +131,23 @@ void kmain()
 	if (diskInit() < 0)
 	{
 		//kprintf("  [ERROR]: Kernel disk not found\n\n");
-		panic(PANIC_TYPE_KERNEL, NULL, "Kernel disk not found");
+		panic(PANIC_TYPE_KERNEL, NULL, "Kernel disk or partition not found");
 	}
+    
+    int vfslInitErr = vfslInit();
+    if(vfslInitErr < 0)
+    {
+        if(vfslInitErr == -ENFOUND)
+        {
+            print("No Filesystem found on any disk. Disks are unusable\n");
+        }
+        else
+        {
+            panic(PANIC_TYPE_KERNEL, NULL, "Error init the virtual filesystem layer");
+        }
+    }
 
-	int vfslInitVal = vfslInit();
-	if (vfslInitVal < 0)
-	{
-		if (vfslInitVal == -ENFOUND) 
-			print("No fileSystem found for any disks. Disks are not unusable :/\n");
-		else
-			panic(PANIC_TYPE_KERNEL, NULL, "Failed to init the virtual filesystem layer");
-	}
-
-	//Prepare fist ever process
-	int processErrCode = 0;
-	processInit();
-	
-	PROCESS cmdProcess = createProcess("0:programs/cmd.bin", NO_PARENT_PROCESS, PROCESS_FLAG_TYPE_USER, &processErrCode);	
-
-	if (cmdProcess){}
-	while(1){}
+    while(1){}
 }
 
 PML4Table getKernelPageTable()

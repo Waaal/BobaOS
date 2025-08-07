@@ -4,12 +4,13 @@
 #include <stddef.h>
 #include <memory/kheap/kheap.h>
 
+#include "disk/disk.h"
 #include "macros.h"
 
 #include "status.h"
-#include "memory/memory.h"
 #include "string/string.h"
 #include "driver/fat32.h"
+#include "memory/memory.h"
 
 struct fileSystem* fileSystemList[BOBAOS_MAX_FILESYSTEMS];
 struct fileListEntry openFiles[BOBAOS_MAX_OPEN_FILES];
@@ -34,11 +35,11 @@ static int addFileSystem(struct fileSystem* fileSystem)
     return 0;
 }
 
-static int appendFileSystemToDisk(struct fileSystem* fileSystem, struct disk* disk)
+static int appendFileSystemToDisk(struct fileSystem* fileSystem, struct diskPartition* volume)
 {
-    if (disk != NULL && fileSystem != NULL)
+    if (volume != NULL && fileSystem != NULL)
     {
-        disk->fileSystem = fileSystem;
+        volume->fileSystem = fileSystem;
         return 0;
     }
     return -EIARG;
@@ -53,23 +54,23 @@ static int addStaticFileSystems()
 
 static int resolveStaticFileSystems()
 {
-    struct disk** allDisks = diskGetAll();
-    if (allDisks == NULL){return -ENFOUND;}
+    struct diskPartition** volumes = partitionGetAll();
+    RETNULLERROR(volumes, -ENFOUND);
 
-    while (*allDisks != NULL)
+    while (*volumes != NULL)
     {
-        for (uint8_t i = 0; i < currentFileSystem; i++)
+        for (uint16_t i = 0; i < currentFileSystem; i++)
         {
-            if (fileSystemList[i]->resolve(*allDisks))
+            if (fileSystemList[i]->resolve(*volumes))
             {
-                if (appendFileSystemToDisk(fileSystemList[i]->attach(*allDisks), *allDisks) < 0)
+                if (appendFileSystemToDisk(fileSystemList[i]->attach(*volumes), *volumes) < 0)
                 {
                     return -EIARG;
                 }
                 return SUCCESS;
             }
         }
-        allDisks++;
+        volumes++;
     }
 
     return -ENFOUND;
@@ -225,10 +226,10 @@ struct file* fopen(const char* path, const char* mode, int* oErrCode)
 
     struct pathTracer* pathTracer = createPathTracer(path, oErrCode);
     RETNULL(pathTracer);
+    
+    struct diskPartition* volume = partitionGetByVolumeLabel(pathTracer->label);
 
-    struct disk* disk = diskGet(pathTracer->diskId);
-
-    struct file* file = disk->fileSystem->open(pathTracer, (((m & FILE_MODE_WRITE) > 0) && ((m & FILE_MODE_APPEND) == 0) ? 1 : 0), disk->fileSystem->private, oErrCode);
+    struct file* file = volume->fileSystem->open(pathTracer, (((m & FILE_MODE_WRITE) > 0) && ((m & FILE_MODE_APPEND) == 0) ? 1 : 0), volume->fileSystem->private, oErrCode);
     destroyPathTracer(pathTracer);
     RETNULL(file); //ErrorCode set by fileSystem->open
 
@@ -258,13 +259,13 @@ int fread(struct file* file, void* out, uint64_t size, uint64_t count)
 {
     if (!checkIfFileIsOpen(file)){return -ENFOUND;}
     if ((file->mode & FILE_MODE_READ) == 0){return -EWMODE;}
-
-    struct disk* disk = diskGet(file->diskId);
-    RETNULLERROR(disk, -EIARG);
+    
+    struct diskPartition* volume = partitionGetByVolumeLabel(file->label);
+    RETNULLERROR(volume, -EIARG);
 
     if (size*count > file->size + file->position){return -EOF;}
 
-    int ret = disk->fileSystem->read(out, size*count, file, disk->fileSystem->private);
+    int ret = volume->fileSystem->read(out, size*count, file, volume->fileSystem->private);
     if (ret == 0)
     {
         file->position += (size*count);
@@ -277,10 +278,10 @@ int fwrite(struct file* file, const void* in, uint64_t size, uint64_t count)
     if (!checkIfFileIsOpen(file)){return -ENFOUND;}
     if ((file->mode & FILE_MODE_WRITE) == 0){return -EWMODE;}
 
-    struct disk* disk = diskGet(file->diskId);
-    RETNULLERROR(disk, -EIARG);
+    struct diskPartition* volume = partitionGetByVolumeLabel(file->label); 
+    RETNULLERROR(volume, -EIARG);
 
-    int ret = disk->fileSystem->write(in, size*count, file, disk->fileSystem->private);
+    int ret = volume->fileSystem->write(in, size*count, file, volume->fileSystem->private);
     if (ret == 0)
     {
         if ((file->mode & FILE_MODE_APPEND) > 0)

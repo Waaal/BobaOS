@@ -10,6 +10,8 @@
 #define FAT_ENTRY_FREE 0x0
 #define FAT_ENTRY_USED 0x0FFFFFFF
 
+#define LFN_ENTRY_LAST_FLAG 0x40
+
 enum dirEntryAttribute
 {
     DIR_ENTRY_ATTRIBUTE_READ_ONLY = 0x1,
@@ -89,7 +91,6 @@ struct fatFile
 {
     uint32_t startCluster;
     uint32_t fileSize;
-    uint8_t longFileName;
 };
 
 struct fileSystem* insertIntoFileSystem();
