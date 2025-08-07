@@ -1044,8 +1044,8 @@ static struct file* openFile(struct pathTracer* tracer, uint8_t create, void* pr
     file->label = tracer->label;
     file->size = fatFile->fileSize;
     file->position = 0;
-    strncpy(file->path, pathTracerGetPathString(tracer), BOBAOS_MAX_PATH_SIZE);
-    strncpy(file->name, pathTracerGetFileName(tracer), BOBAOS_MAX_PATH_SIZE);
+    strcpym(file->path, pathTracerGetPathString(tracer), BOBAOS_MAX_PATH_SIZE);
+    strcpym(file->name, pathTracerGetFileName(tracer), BOBAOS_MAX_PATH_SIZE);
 
     kzfree(fatFile);
     return file;

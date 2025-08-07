@@ -148,7 +148,7 @@ add_custom_command(
 add_custom_target(BobaOS ALL
     COMMAND /bin/bash ${CMAKE_SOURCE_DIR}/${SCRIPT_PLATFORM_DIR}/addFat32Tables.sh ${CMAKE_BINARY_DIR}/os.bin
 	DEPENDS ${CMAKE_BINARY_DIR}/os.bin
-)
+ )
 
 add_custom_target(build_all DEPENDS BobaOS)
 

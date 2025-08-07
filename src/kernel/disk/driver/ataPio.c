@@ -121,7 +121,7 @@ static struct diskInfo ataPioIdentify(void* private)
 
 	//Fill diskinfo return struct
 	struct diskInfo info;
-	strncpy(info.name, model, 42);
+	strcpym(info.name, model, 42);
 	info.size = totalLBA * 512;
 
 	return info;

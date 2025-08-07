@@ -1,7 +1,7 @@
 #ifndef STATUS_H
 #define STATUS_H
 
-#define SUCCESS 0
+#define SUCCESS 	0
 #define ENMEM 	    1  // No memory error
 #define EIO	  	    2  // Input/Output error
 #define EIARG	    3  // Invalid argument
@@ -15,5 +15,7 @@
 #define EFORMAT    11  // Wrong format
 #define EDISKSPACE 12  // Disk space error
 #define ELONG      13  // Too long error
+#define ENSPACE    14  // No space error
 
+#define ENIMPLEMENTED 255 // Not implemented error
 #endif

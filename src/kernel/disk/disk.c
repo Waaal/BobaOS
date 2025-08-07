@@ -3,8 +3,6 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#include <hardware/pci/pci.h>
-#include <memory/memory.h>
 
 #include "macros.h"
 #include "memory/kheap/kheap.h"
@@ -13,6 +11,8 @@
 #include "status.h"
 #include "string/string.h"
 #include "stream.h"
+#include "hardware/pci/pci.h"
+#include "memory/memory.h"
 
 struct disk* diskList[BOBAOS_MAX_DISKS];
 struct diskPartition* partitionList[BOBAOS_MAX_DISKS * BOBAOS_MAX_PARTITIONS_PER_DISK];
