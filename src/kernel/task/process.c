@@ -26,7 +26,7 @@ void processInit()
     memset(processList, 0x0, sizeof(processList));
 }
 
-PROCESS createProcess(const char* path, PROCESS parentProcess, uint8_t processType, int* oErrCode)
+PROCESS createProcess(const char* path, PROCESS parentProcess, enum processType processType, int* oErrCode)
 {
 	if(processType == PROCESS_FLAG_TYPE_KERNEL)
 	{

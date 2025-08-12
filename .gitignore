@@ -6,9 +6,13 @@
 .gdbinit
 .gdbbinit
 build/
+lib/
 ./build.sh
 ./boot.sh
 .DS_STORE
+
+!.gitkeep
+!*/
 
 # Specific stuff
 create_compileJson.sh

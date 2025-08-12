@@ -3,7 +3,7 @@
 #include <config.h>
 #include <status.h>
 
-static struct taskList* taskList;
+static TASK taskList;
 
 int runScheduler()
 {
@@ -12,7 +12,7 @@ int runScheduler()
 
 int addTask(struct task* task)
 {
-    if (task && taskList){}
+    if (task){}
     return SUCCESS;
 }
 

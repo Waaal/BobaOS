@@ -17,7 +17,7 @@ struct task
 {
     uint32_t id;
     uint32_t pid;
-	struct trapFrame *frame;
+	struct trapFrame* frame;
     enum taskState state;
     void* kernelStack;
 

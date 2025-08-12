@@ -22,7 +22,7 @@ static struct trapFrame* createNewTaskFrame(uint64_t taskStack, uint64_t taskEnt
 	frame->cs = BOBAOS_USER_SELECTOR_CODE;
 	frame->ds = BOBAOS_USER_SELECTOR_DATA;
 
-	return NULL;	
+	return frame;	
 }
 
 static TASK createTaskFromBinFile(const char* path, uint32_t pid, int* oErrCode)

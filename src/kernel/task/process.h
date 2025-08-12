@@ -17,6 +17,12 @@
 #define PROCESS_FLAG_STATE_ALIVE 16
 #define PROCESS_FLAG_STATE_DIED 32
 
+enum processType
+{
+    PROCESS_TYPE_USER = 0x4,
+    PROCESS_TYPER_KERNEL = 0x8
+};
+
 struct processAllocation
 {
     void* address;
@@ -34,11 +40,11 @@ struct process
     uint32_t flags;
     struct processAllocation* allocations;
 	PML4Table pageTable;
-    int8_t returnCode;
+    int returnCode;
 };
 
 void processInit();
-PROCESS createProcess(const char* path, PROCESS parentProcess, uint8_t processType, int* oErrCode);
+PROCESS createProcess(const char* path, PROCESS parentProcess, enum processType processType, int* oErrCode);
 int runProcess(PROCESS process);
 
 #endif
